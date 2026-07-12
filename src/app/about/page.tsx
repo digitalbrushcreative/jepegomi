@@ -39,8 +39,8 @@ export default function AboutPage() {
             width={438}
             height={924}
             priority
-            sizes="(max-width: 640px) 60vw, 224px"
-            className="w-44 shrink-0 sm:w-56"
+            sizes="(max-width: 640px) 60vw, 192px"
+            className="w-44 shrink-0 sm:w-48"
           />
         </div>
       </section>
