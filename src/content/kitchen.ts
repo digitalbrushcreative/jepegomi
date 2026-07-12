@@ -89,51 +89,142 @@ export const stats = [
   { value: "1", label: "Kitchen Rising in Nairobi" },
 ] as const;
 
+/**
+ * The three things the $8,000 could not reach. Costs are Simon's own estimates
+ * from the reconciliation letter — see `outstanding` below, which is the same
+ * list with its figures.
+ */
 export const remainingNeeds = [
-  { icon: "🍽️", text: "Stainless steel plates and cups for the children" },
-  { icon: "🪑", text: "Dining tables and chairs for the eating area" },
-  { icon: "🏗️", text: "Iron sheets to complete the dining area roofing" },
-  { icon: "🔲", text: "Floor tiles for the dining room and the store room" },
-  { icon: "🧱", text: "Sand and cement to plaster all walls smooth" },
-  { icon: "🔧", text: "Labour and miscellaneous finishing costs" },
+  {
+    icon: "🚰",
+    text: "A water tank to harvest rainwater, and the pipes to run it",
+    costUsd: 850,
+  },
+  {
+    icon: "🔲",
+    text: "Cabro stones to floor the area where the children eat",
+    costUsd: 1000,
+  },
+  {
+    icon: "💡",
+    text: "Plastering and electricity for the dining hall",
+    costUsd: 1138,
+  },
 ] as const;
 
 export type BudgetLine = {
   item: string;
-  /** null = figure not yet confirmed; the table renders "TBC" rather than a guess. */
-  costUsd: number | null;
-  complete: boolean;
+  estimatedUsd: number;
+  /** null = never bought/done, because the money ran out. */
+  actualUsd: number | null;
+  note: string;
+  done: boolean;
 };
 
 /**
- * OPEN ITEM — every line cost below is unconfirmed.
+ * The estimated-vs-actual reconciliation from Simon's letter to Encounter Church.
  *
- * The source report's dollar amounts arrived corrupted: each "$" and the digit
- * immediately after it had been eaten, so "$8,000" survived only as ",000" and
- * "$400" as "00". The surviving fragments were, in order:
+ * Both columns balance to the $8,000 gift exactly: the estimates sum to $8,000,
+ * and the six actual figures sum to $8,000. Transport is the one line the letter
+ * marks "Used" without giving a figure, so it stays null rather than guessed.
  *
- *   structure ~?,200 · store room ~?50 · iron sheets ?00 · floor tiles ?50
- *   sand & cement ?50 · plates & cups ?00 · tables ?00 · chairs ?00
- *   labour ?00 · TOTAL ~?,650
- *
- * The leading digits are unrecoverable, so guessing them would put invented
- * numbers in front of donors. They stay null until Simon & Joyce confirm.
- * The $8,000 donation is the one figure that survived intact.
+ * Lines 1–6 came in over estimate; the roofing-and-labour line came in *under*
+ * because Pastor Simon did the building he knew how to do himself, as his own
+ * giving to the ministry, and put the saved labour into materials.
  */
 export const budget: BudgetLine[] = [
-  { item: "Kitchen structure — brickwork, roofing, doors, windows", costUsd: null, complete: true },
-  { item: "Store room walls and roof", costUsd: null, complete: true },
-  { item: "Iron sheets — dining area roof", costUsd: null, complete: false },
-  { item: "Floor tiles — dining room & store", costUsd: null, complete: false },
-  { item: "Sand & cement — wall plastering", costUsd: null, complete: false },
-  { item: "Stainless steel plates & cups", costUsd: null, complete: false },
-  { item: "Dining tables", costUsd: null, complete: false },
-  { item: "Dining chairs", costUsd: null, complete: false },
-  { item: "Labour & miscellaneous finishing", costUsd: null, complete: false },
+  {
+    item: "Cement",
+    estimatedUsd: 900,
+    actualUsd: 1550,
+    note: "More needed for drainage work",
+    done: true,
+  },
+  {
+    item: "Sand",
+    estimatedUsd: 1200,
+    actualUsd: 1650,
+    note: "Price rose, and the job grew",
+    done: true,
+  },
+  {
+    item: "Drainage",
+    estimatedUsd: 900,
+    actualUsd: 1450,
+    note: "Larger area required under NEEMA regulations",
+    done: true,
+  },
+  {
+    item: "Ballast",
+    estimatedUsd: 700,
+    actualUsd: 1175,
+    note: "More area to cover",
+    done: true,
+  },
+  {
+    item: "Jiko — wood-burning stoves",
+    estimatedUsd: 656,
+    actualUsd: 1055,
+    note: "Better quality and a bigger size than planned",
+    done: true,
+  },
+  {
+    item: "Roofing & labour",
+    estimatedUsd: 1554,
+    actualUsd: 1120,
+    note: "Came in under — Pastor Simon did the building he could himself, as his giving to the ministry",
+    done: true,
+  },
+  {
+    item: "Transport",
+    estimatedUsd: 240,
+    actualUsd: null,
+    note: "Used",
+    done: true,
+  },
 ];
 
-/** Total project cost — also unconfirmed, for the reason above. */
-export const budgetTotalUsd: number | null = null;
+/** Never started — the gift was fully spent before these could be reached. */
+export const outstanding: BudgetLine[] = [
+  {
+    item: "Water tank for harvesting water, plus pipes",
+    estimatedUsd: 850,
+    actualUsd: null,
+    note: "Not bought — funds ran out",
+    done: false,
+  },
+  {
+    item: "Cabro stones — the children's eating area floor",
+    estimatedUsd: 1000,
+    actualUsd: null,
+    note: "Not done — funds ran out",
+    done: false,
+  },
+  {
+    item: "Dining hall — plastering and electricity",
+    estimatedUsd: 1138,
+    actualUsd: null,
+    note: "Not done — funds ran out",
+    done: false,
+  },
+];
+
+export const budgetTotals = {
+  given: donation.amountUsd,
+  spent: budget.reduce((sum, line) => sum + (line.actualUsd ?? 0), 0),
+  stillNeeded: outstanding.reduce((sum, line) => sum + line.estimatedUsd, 0),
+};
 
 export const budgetNote =
-  "Estimates in USD. Any surplus supports ongoing feeding program operations. A final reconciliation report will be shared on project completion.";
+  "Figures in USD, as reported by Pastor Simon to Encounter Church. The $8,000 gift is fully spent. The three items above were never reached.";
+
+/**
+ * The first-pass itemised estimate, before it was consolidated into the
+ * reconciliation above. Kept for the record; not shown on the site.
+ *
+ * Cement $900 · sand $1,200 · ballast $700 · floor hardcore stones $750 ·
+ * cabro floor stones $1,000 · drainage culverts and concrete $150 ·
+ * water tank and pipes $850 · 2 wood-burning jikos $56 · stones for raising
+ * sides $400 · cooking sufurias and pots $200 · roofing $500 ·
+ * children's tables, chairs and utensils $200 · labour $1,004.
+ */

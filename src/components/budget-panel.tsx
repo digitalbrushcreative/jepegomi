@@ -4,11 +4,47 @@ import { useEffect, useState } from "react";
 import {
   budget,
   budgetNote,
-  budgetTotalUsd,
+  budgetTotals,
   donation,
+  outstanding,
 } from "@/content/kitchen";
 
 const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
+
+function Row({
+  item,
+  estimated,
+  actual,
+  note,
+  muted,
+}: {
+  item: string;
+  estimated: number;
+  actual: string;
+  note: string;
+  muted?: boolean;
+}) {
+  return (
+    <tr>
+      <td className="border-b border-sand py-3.5 pr-4 align-top">
+        <p className={`text-sm ${muted ? "text-smoke" : "text-charcoal"}`}>
+          {item}
+        </p>
+        <p className="mt-0.5 text-xs leading-snug text-smoke">{note}</p>
+      </td>
+      <td className="font-mono border-b border-sand py-3.5 text-right align-top text-sm text-smoke">
+        {usd(estimated)}
+      </td>
+      <td
+        className={`font-mono border-b border-sand py-3.5 pl-4 text-right align-top text-sm ${
+          muted ? "text-smoke" : "text-plum"
+        }`}
+      >
+        {actual}
+      </td>
+    </tr>
+  );
+}
 
 export function BudgetPanel() {
   const [open, setOpen] = useState(false);
@@ -34,14 +70,14 @@ export function BudgetPanel() {
     <>
       <div className="bg-sand px-6 py-20 text-center">
         <p className="text-smoke">
-          Want to see how the {usd(donation.amountUsd)} is being used?
+          Every shilling of the {usd(budgetTotals.given)} is accounted for.
         </p>
         <button
           type="button"
           onClick={() => setOpen(true)}
           className="label-mono mt-6 cursor-pointer rounded-sm bg-green px-10 py-4 text-white transition-colors hover:bg-green-light"
         >
-          View Budget Breakdown
+          See where it went
         </button>
       </div>
 
@@ -55,42 +91,34 @@ export function BudgetPanel() {
           }}
           className="fixed inset-0 z-100 flex items-center justify-center bg-plum-deep/80 p-5 backdrop-blur-sm"
         >
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded bg-white">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded bg-white">
             <div className="flex items-center justify-between bg-green px-8 py-7">
               <h2
                 id="budget-heading"
                 className="font-display text-2xl font-bold text-white"
               >
-                Budget Breakdown
+                Where the {usd(budgetTotals.given)} went
               </h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/30"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/30"
               >
                 ✕
               </button>
             </div>
 
             <div className="p-8">
-              <p className="border-b border-sand pb-6 leading-relaxed text-smoke">
+              <p className="leading-relaxed text-smoke">
+                {donation.donor} of {donation.donorLocation} gave{" "}
                 <strong className="text-charcoal">
                   {usd(donation.amountUsd)}
                 </strong>{" "}
-                donated by {donation.donor} · Jepegomi Academy Kitchen · 2025
+                to build the kitchen and dining area. Below is Pastor Simon&apos;s
+                own reconciliation of what was estimated against what things
+                actually cost.
               </p>
-
-              <div className="mt-6 rounded-sm border border-dashed border-smoke/30 bg-sand p-4">
-                <p className="label-mono text-plum">Figures not yet confirmed</p>
-                <p className="mt-2 text-sm leading-relaxed text-smoke">
-                  The per-item costs below were lost in transfer from the
-                  original report and have not been re-confirmed by Simon and
-                  Joyce. Rather than show a guess, they are marked{" "}
-                  <span className="font-mono">TBC</span>. The{" "}
-                  {usd(donation.amountUsd)} donation figure is confirmed.
-                </p>
-              </div>
 
               <table className="mt-8 w-full border-collapse">
                 <thead>
@@ -99,59 +127,87 @@ export function BudgetPanel() {
                       Item
                     </th>
                     <th className="label-mono border-b border-sand pb-3 text-right text-smoke">
-                      Est. Cost
+                      Estimated
+                    </th>
+                    <th className="label-mono border-b border-sand pb-3 pl-4 text-right text-smoke">
+                      Actual
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {budget.map((line) => (
-                    <tr key={line.item}>
-                      <td
-                        className={`border-b border-sand py-3.5 text-sm leading-snug ${
-                          line.complete ? "text-smoke/60" : "text-charcoal"
-                        }`}
-                      >
-                        {line.item}
-                        {line.complete && (
-                          <span className="label-mono mt-1 block w-fit rounded-sm bg-[#edf7ee] px-2 py-0.5 text-green">
-                            ✓ Complete
-                          </span>
-                        )}
-                      </td>
-                      <td className="font-mono border-b border-sand py-3.5 text-right text-sm text-plum">
-                        {line.costUsd === null ? (
-                          <span className="text-smoke/50">TBC</span>
-                        ) : (
-                          usd(line.costUsd)
-                        )}
-                      </td>
-                    </tr>
+                    <Row
+                      key={line.item}
+                      item={line.item}
+                      estimated={line.estimatedUsd}
+                      actual={line.actualUsd === null ? "Used" : usd(line.actualUsd)}
+                      note={line.note}
+                    />
                   ))}
                   <tr>
-                    <td className="pt-5 text-sm font-semibold">
-                      Total estimated project cost
+                    <td className="py-4 text-sm font-semibold">Total</td>
+                    <td className="font-mono py-4 text-right text-sm font-semibold">
+                      {usd(budgetTotals.given)}
                     </td>
-                    <td className="font-mono pt-5 text-right text-sm font-semibold text-green">
-                      {budgetTotalUsd === null ? (
-                        <span className="text-smoke/50">TBC</span>
-                      ) : (
-                        usd(budgetTotalUsd)
-                      )}
+                    <td className="font-mono py-4 pl-4 text-right text-sm font-semibold text-green">
+                      {usd(budgetTotals.spent)}
                     </td>
                   </tr>
                 </tbody>
               </table>
 
-              <div className="mt-6 flex items-center justify-between rounded-sm bg-[#f3eef1] px-5 py-4">
-                <span className="label-mono text-plum">
-                  Donated by {donation.donor}, {donation.donorLocation}
-                </span>
-                <span className="font-display text-2xl font-bold text-plum">
-                  {usd(donation.amountUsd)}
-                </span>
+              <div className="mt-6 rounded-sm bg-[#f3eef1] px-5 py-4">
+                <p className="text-sm leading-relaxed text-charcoal">
+                  Costs ran over on almost every line — cement, sand, drainage
+                  and ballast all cost more than planned, and the drainage work
+                  had to grow to satisfy NEEMA regulations. The one line that
+                  came in <em>under</em> was roofing and labour, because Pastor
+                  Simon did the building he knew how to do himself, and put the
+                  saved labour cost back into materials.
+                </p>
               </div>
 
-              <p className="mt-4 text-xs leading-relaxed text-smoke">
+              <h3 className="font-display mt-10 text-xl font-bold">
+                Never reached — {usd(budgetTotals.stillNeeded)} still needed
+              </h3>
+              <table className="mt-4 w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="label-mono border-b border-sand pb-3 text-left text-smoke">
+                      Item
+                    </th>
+                    <th className="label-mono border-b border-sand pb-3 text-right text-smoke">
+                      Estimated
+                    </th>
+                    <th className="label-mono border-b border-sand pb-3 pl-4 text-right text-smoke">
+                      Actual
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {outstanding.map((line) => (
+                    <Row
+                      key={line.item}
+                      item={line.item}
+                      estimated={line.estimatedUsd}
+                      actual="—"
+                      note={line.note}
+                      muted
+                    />
+                  ))}
+                  <tr>
+                    <td className="py-4 text-sm font-semibold">
+                      Still needed to finish
+                    </td>
+                    <td className="font-mono py-4 text-right text-sm font-semibold text-plum">
+                      {usd(budgetTotals.stillNeeded)}
+                    </td>
+                    <td className="py-4" />
+                  </tr>
+                </tbody>
+              </table>
+
+              <p className="mt-6 text-xs leading-relaxed text-smoke">
                 {budgetNote}
               </p>
             </div>
