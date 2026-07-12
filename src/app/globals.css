@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/*
+  Design tokens — carried over from the original kitchen progress report so
+  /projects/kitchen sits inside the wider site without looking like a guest.
+*/
+@theme {
+  --color-plum: #721a56;
+  --color-plum-light: #8c2068;
+  --color-plum-deep: #4a1038;
+  --color-green: #4a7c2a;
+  --color-green-light: #5a9030;
+  --color-brown: #3d2010;
+  --color-cream: #faf8f5;
+  --color-sand: #f0ebe3;
+  --color-smoke: #6b5e65;
+  --color-charcoal: #2a1c24;
+
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+  The report leans on a monospace, wide-tracked label style in ~15 places
+  (eyebrows, tabs, table headers, stat captions). Naming it once keeps the
+  tracking and casing from drifting as pages get added.
+*/
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
