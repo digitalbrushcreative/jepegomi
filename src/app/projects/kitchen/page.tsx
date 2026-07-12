@@ -5,13 +5,16 @@ import { PhotoGallery } from "@/components/photo-gallery";
 import { ButtonLink } from "@/components/ui";
 import {
   beforeAfter,
+  budgetTotals,
   donation,
-  photos,
   progress,
   remainingNeeds,
   stats,
 } from "@/content/kitchen";
+import { getBeforeAfterSources, getGalleryPhotos } from "@/lib/photos";
 import { giving, site } from "@/lib/site";
+
+const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
 
 export const metadata: Metadata = {
   title: "Kitchen Build",
@@ -139,9 +142,11 @@ function ProgressPot({ percent }: { percent: number }) {
 
 function BeforeAfterCard({
   card,
+  src,
   tone,
 }: {
   card: typeof beforeAfter.before | typeof beforeAfter.after;
+  src: string;
   tone: "before" | "after";
 }) {
   return (
@@ -154,9 +159,9 @@ function BeforeAfterCard({
         {card.heading}
       </p>
       <div className="relative flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-[#d8cfd4] to-[#c4b8be]">
-        {card.src ? (
+        {src ? (
           <Image
-            src={card.src}
+            src={src}
             alt={card.alt}
             fill
             sizes="(max-width: 768px) 100vw, 470px"
@@ -182,7 +187,12 @@ function BeforeAfterCard({
   );
 }
 
-export default function KitchenPage() {
+export default async function KitchenPage() {
+  const [photos, beforeAfterSrc] = await Promise.all([
+    getGalleryPhotos(),
+    getBeforeAfterSources(),
+  ]);
+
   return (
     <>
       <section className="relative overflow-hidden bg-plum-deep px-6 py-16">
@@ -332,8 +342,16 @@ export default function KitchenPage() {
             From open fires to a proper kitchen
           </h2>
           <div className="mt-12 grid gap-5 md:grid-cols-2">
-            <BeforeAfterCard card={beforeAfter.before} tone="before" />
-            <BeforeAfterCard card={beforeAfter.after} tone="after" />
+            <BeforeAfterCard
+              card={beforeAfter.before}
+              src={beforeAfterSrc.before}
+              tone="before"
+            />
+            <BeforeAfterCard
+              card={beforeAfter.after}
+              src={beforeAfterSrc.after}
+              tone="after"
+            />
           </div>
         </div>
       </section>
@@ -357,22 +375,37 @@ export default function KitchenPage() {
             Still to Complete
           </p>
           <h2 className="font-display mt-3 text-center text-3xl font-bold text-white sm:text-4xl">
-            What the final stretch looks like
+            What the {usd(budgetTotals.given)} could not reach
           </h2>
-          <div className="mt-12 grid gap-3.5 sm:grid-cols-2">
+          <p className="mx-auto mt-4 max-w-xl text-center leading-relaxed text-white/60">
+            The gift is fully spent, and the building stands. These three things
+            ran out of money before they were reached.
+          </p>
+
+          <div className="mt-12 grid gap-3.5 sm:grid-cols-3">
             {remainingNeeds.map((need) => (
               <div
                 key={need.text}
-                className="flex gap-3.5 rounded-sm border border-white/15 bg-white/8 px-5 py-6"
+                className="flex flex-col rounded-sm border border-white/15 bg-white/8 px-5 py-6"
               >
-                <span aria-hidden="true" className="text-xl">
+                <span aria-hidden="true" className="text-2xl">
                   {need.icon}
                 </span>
-                <p className="text-sm leading-relaxed text-white/80">
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-white/80">
                   {need.text}
+                </p>
+                <p className="font-display mt-4 text-2xl font-bold text-white">
+                  {usd(need.costUsd)}
                 </p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-sm border border-white/25 bg-white/10 px-7 py-6">
+            <p className="label-mono text-white/60">Still needed to finish</p>
+            <p className="font-display text-4xl font-bold text-white">
+              {usd(budgetTotals.stillNeeded)}
+            </p>
           </div>
         </div>
       </section>

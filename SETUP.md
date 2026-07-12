@@ -4,76 +4,100 @@
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+cp .env.example .env.local     # fill in the two APP_ values
+npm run dev                    # http://localhost:3000
 ```
 
-Everything except the `/app` photo tool works with no configuration.
+Everything except the `/app` photo tool works with no configuration at all.
 
-## Environment
+## Photos
 
-Copy `.env.example` to `.env.local` and fill it in.
+Photos live in [`public/photos/kitchen/`](public/photos/kitchen/). **The filename
+is the slot**: `07.jpg` is photo 7 on the report, `before.jpg` and `after.jpg`
+are the comparison pair. Slots run 1–23.
 
-| Variable              | Needed for            | Notes                                             |
-| --------------------- | --------------------- | ------------------------------------------------- |
-| `APP_PASSPHRASE`      | The `/app` gate       | The shared passphrase Simon & Joyce type in.      |
-| `APP_SESSION_SECRET`  | The `/app` gate       | Random string. `openssl rand -hex 32`.            |
+There are two ways to add one, and they are the same thing:
 
-Without these two, `/app` shows a "not set up yet" notice instead of the tool.
+- **Copy files into the folder.** Nothing else to do — they show up on
+  `/projects/kitchen`.
+- **Use the `/app` tool.** Drag a photo onto a slot. It writes into that same
+  folder.
 
-## The one open decision: where photos are stored
+Captions and categories for each slot live in
+[`src/content/kitchen.ts`](src/content/kitchen.ts).
 
-`/app` is built and the drag-and-drop works, but **nothing is saved yet** — there
-is no storage backend connected, so a dropped photo previews locally and is lost
-on refresh. The tool says so on screen.
+## The `/app` photo tool
 
-Everything storage-related sits behind the `PhotoStore` interface in
-[`src/lib/storage.ts`](src/lib/storage.ts). Wiring a backend means writing one
-implementation of that interface and flipping `STORAGE_READY` in
-[`src/app/app/page.tsx`](src/app/app/page.tsx). Nothing else changes.
+`/app` is gated by a shared passphrase.
 
-Three options, all free at this size:
+| Variable             | What it is                                    |
+| -------------------- | --------------------------------------------- |
+| `APP_PASSPHRASE`     | The passphrase Simon & Joyce type in.         |
+| `APP_SESSION_SECRET` | Signs the session cookie. `openssl rand -hex 32`. |
 
-**Vercel Blob** — simplest if the site is on Vercel. Photos upload straight to
-blob storage, appear on `/projects/kitchen` immediately, no rebuild. Free tier
-covers this easily. Ties the site to Vercel.
+### Where uploads get written
 
-**Cloudflare R2** — 10 GB free, no egress charges, host-agnostic. Slightly more
-setup than Blob.
+Reading photos is always the same — they are files in the repo, so they ship
+with the deployment. **Writing** depends on where the site is running, because a
+serverless host's filesystem is read-only and a file written into it dies with
+the request.
 
-**Commit to the repo via the GitHub API** — the CMS pushes the photo into `git`
-and the host rebuilds. Free forever, versioned, works on any host, no vendor
-lock-in. Cost is a ~1 minute delay before a new photo appears.
+| Where          | Driver               | What happens                                                        |
+| -------------- | -------------------- | ------------------------------------------------------------------- |
+| Local `npm run dev` | filesystem      | Photo is written to the folder. Appears instantly.                  |
+| Production     | GitHub Contents API  | Photo is **committed to the repo**. Appears once the site rebuilds. |
 
-For a site updated a handful of times a month, the git approach is the most
-durable and the cheapest. Vercel Blob is the fastest to get working.
+The driver is picked automatically: if `GITHUB_TOKEN` and `GITHUB_REPO` are set
+it commits, otherwise it writes to disk. The tool tells you on screen which one
+happened, so a photo is never silently lost.
 
-> Note on Supabase: its free tier **pauses a project after a week of
-> inactivity**, which would break a low-traffic site like this one. That is why
-> it is not the recommendation here.
+To turn on production uploads, create a GitHub fine-grained token with
+**Contents: read and write** on this repo, then set:
+
+```
+GITHUB_TOKEN=github_pat_...
+GITHUB_REPO=digitalbrushcreative/jepegomi
+GITHUB_BRANCH=main
+```
+
+This keeps the repo as the single source of truth: photos are versioned, cost
+nothing to host, and can be added by hand or through the browser. The trade is a
+~1 minute delay before an upload on the live site is visible.
 
 ## Deploy
 
-The site is a standard Next.js app and builds static pages for every route.
+The site is a standard Next.js app. `/projects/kitchen` and the marketing pages
+prerender as static; `/app` is server-rendered.
 
-1. Push the branch and connect the repo to Vercel (or Cloudflare Pages).
-2. Set `APP_PASSPHRASE` and `APP_SESSION_SECRET` in the host's environment.
-3. Point `jepegomi.org` DNS at the host.
+1. Push the branch and import the repo at [vercel.com/new](https://vercel.com/new).
+   The free Hobby tier is enough. No build configuration needed.
+2. Set the environment variables above in the Vercel project settings.
+3. Point `jepegomi.org` DNS at Vercel.
+
+Every pull request then gets its own preview URL automatically.
 
 ## Still to confirm with Simon & Joyce
 
-These are marked in the UI as placeholders so they cannot be mistaken for real
-figures:
+Marked in the UI as placeholders so they cannot be mistaken for real figures:
 
-- **Budget figures.** Every per-item cost in the budget panel is `TBC`. The
-  original report's dollar amounts arrived corrupted — each `$` and the digit
-  right after it had been eaten, so `$8,000` survived only as `,000`. The
-  surviving fragments are recorded in a comment in
-  [`src/content/kitchen.ts`](src/content/kitchen.ts). The $8,000 donation is the
-  one figure that came through intact.
 - **Academy details** — ages/grades, pupils enrolled, teachers, year founded.
 - **Bank routing number and SWIFT/BIC**, without which nobody outside the US can
   actually send money.
 - **The photos** — all 23 gallery slots and the before/after pair are empty.
-- **Logo source files.** The three logos were recovered from the report, but the
-  Academy one is a bad crop: its leading "J" is clipped off. A clean original
-  would fix it.
+- **Logo source files.** The three logos were recovered from base64 inside the
+  original report, but the Academy one is a bad crop: its leading "J" is clipped
+  off. A clean original would fix it.
+
+## Budget figures
+
+The budget on `/projects/kitchen` is the real estimated-vs-actual reconciliation
+from Pastor Simon's letter to Encounter Church, in
+[`src/content/kitchen.ts`](src/content/kitchen.ts). Both columns balance to
+$8,000: the estimates sum to $8,000 and the six actual figures sum to $8,000.
+
+Three items were never reached because the money ran out — the water tank
+($850), the cabro flooring ($1,000), and the dining hall's plastering and
+electricity ($1,138) — which is the **$2,988** the page asks for.
+
+One thing to check: transport is the only line the letter marks "Used" without a
+figure, so the page prints "Used" rather than inventing a number.

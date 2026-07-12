@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { beforeAfter } from "@/content/kitchen";
 import { isConfigured, isSignedIn } from "@/lib/auth";
+import { getBeforeAfterSources, getGalleryPhotos } from "@/lib/photos";
 import { signOutAction } from "./actions";
-import { Editor } from "./editor";
+import { Editor, type Slot } from "./editor";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -10,8 +12,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** Storage has no driver yet — see SETUP.md. Flips to true once one is wired. */
-const STORAGE_READY = false;
+/** The folder is read on every request, so a photo shows up the moment it lands. */
+export const dynamic = "force-dynamic";
 
 function Shell({
   title,
@@ -37,17 +39,14 @@ function Shell({
 export default async function AppPage() {
   if (!isConfigured()) {
     return (
-      <Shell
-        title="Photo Tool"
-        intro="This tool is not set up yet."
-      >
+      <Shell title="Photo Tool" intro="This tool is not set up yet.">
         <div className="mt-8 rounded border border-dashed border-smoke/40 bg-sand p-6">
           <p className="label-mono text-plum">Needs configuration</p>
           <p className="mt-3 text-sm leading-relaxed text-smoke">
             Set <code className="font-mono">APP_PASSPHRASE</code> and{" "}
-            <code className="font-mono">APP_SESSION_SECRET</code> in the
-            environment to enable the passphrase gate. See{" "}
-            <code className="font-mono">SETUP.md</code>.
+            <code className="font-mono">APP_SESSION_SECRET</code> in{" "}
+            <code className="font-mono">.env.local</code> to enable the
+            passphrase gate. See <code className="font-mono">SETUP.md</code>.
           </p>
         </div>
       </Shell>
@@ -65,6 +64,28 @@ export default async function AppPage() {
     );
   }
 
+  const [gallery, sources] = await Promise.all([
+    getGalleryPhotos(),
+    getBeforeAfterSources(),
+  ]);
+
+  const beforeAfterSlots: Slot[] = [
+    {
+      key: "before",
+      label: "B",
+      caption: beforeAfter.before.heading,
+      category: null,
+      src: sources.before,
+    },
+    {
+      key: "after",
+      label: "A",
+      caption: beforeAfter.after.heading,
+      category: null,
+      src: sources.after,
+    },
+  ];
+
   return (
     <section className="px-6 py-16">
       <div className="mx-auto max-w-6xl">
@@ -75,9 +96,10 @@ export default async function AppPage() {
               Kitchen Build photos
             </h1>
             <p className="mt-3 max-w-xl leading-relaxed text-smoke">
-              Drop a photo onto a numbered slot to fill it. The slots and
-              categories match the Kitchen Build page exactly, so photo 7 here is
-              photo 7 there.
+              Drop a photo onto a slot to fill it. Slot 7 here is photo 7 on the
+              Kitchen Build page. Photos save into{" "}
+              <code className="font-mono text-xs">public/photos/kitchen/</code>,
+              so you can also just copy files into that folder by hand.
             </p>
           </div>
 
@@ -91,20 +113,8 @@ export default async function AppPage() {
           </form>
         </div>
 
-        {!STORAGE_READY && (
-          <div className="mt-10 rounded border border-dashed border-smoke/40 bg-sand p-6">
-            <p className="label-mono text-plum">Not saving yet</p>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-smoke">
-              No photo storage backend is connected, so anything you drop here
-              previews locally and is lost on refresh — it will not reach the
-              Kitchen Build page. Choosing and wiring a backend is the last
-              step; see <code className="font-mono">SETUP.md</code>.
-            </p>
-          </div>
-        )}
-
         <div className="mt-10">
-          <Editor storageReady={STORAGE_READY} />
+          <Editor gallery={gallery} beforeAfter={beforeAfterSlots} />
         </div>
       </div>
     </section>
