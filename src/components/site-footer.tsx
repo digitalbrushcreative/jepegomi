@@ -1,11 +1,17 @@
-import Image from "next/image";
 import Link from "next/link";
+import {
+  AcademyLogo,
+  BibleCollegeLogo,
+  FoodAtSchoolLogo,
+  JepegomiLogo,
+} from "@/components/logos";
 import { site } from "@/lib/site";
 
 const logos = [
-  { src: "/logos/jepegomi.png", alt: "Jepegomi — Jesus People Gospel Ministries", w: 630, h: 215 },
-  { src: "/logos/jepegomi-academy.png", alt: "Jepegomi Academy", w: 225, h: 211 },
-  { src: "/logos/food-at-school.png", alt: "Food at School", w: 287, h: 163 },
+  { Mark: JepegomiLogo, label: "Jepegomi — Jesus People Gospel Ministries" },
+  { Mark: AcademyLogo, label: "Jepegomi Academy" },
+  { Mark: BibleCollegeLogo, label: "Contextual Bible Training College" },
+  { Mark: FoodAtSchoolLogo, label: "Food at School" },
 ];
 
 export function SiteFooter() {
@@ -14,14 +20,12 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="flex flex-wrap items-center justify-between gap-8">
           <div className="flex flex-wrap items-center gap-6">
-            {logos.map((logo) => (
-              <Image
-                key={logo.src}
-                src={logo.src}
-                alt={logo.alt}
-                width={logo.w}
-                height={logo.h}
-                className="h-10 w-auto opacity-85 brightness-0 invert"
+            {logos.map(({ Mark, label }) => (
+              <Mark
+                key={label}
+                variant="mono"
+                title={label}
+                className="h-10 w-auto text-white/85"
               />
             ))}
           </div>

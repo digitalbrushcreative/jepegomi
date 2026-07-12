@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { JepegomiLogo } from "@/components/logos";
 import { navLinks } from "@/lib/site";
 
 export function SiteHeader() {
@@ -17,13 +17,10 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-charcoal">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
         <Link href="/" className="flex shrink-0 items-center gap-3">
-          <Image
-            src="/logos/jepegomi.png"
-            alt="Jepegomi — Jesus People Gospel Ministries"
-            width={630}
-            height={215}
-            priority
-            className="h-9 w-auto brightness-0 invert"
+          <JepegomiLogo
+            variant="mono"
+            title="Jepegomi — Jesus People Gospel Ministries"
+            className="h-9 w-auto text-white"
           />
         </Link>
 

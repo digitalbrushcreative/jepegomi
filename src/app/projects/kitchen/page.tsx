@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { BudgetPanel } from "@/components/budget-panel";
+import { FoodAtSchoolLogo } from "@/components/logos";
 import { PhotoGallery } from "@/components/photo-gallery";
 import { ButtonLink } from "@/components/ui";
 import {
@@ -207,13 +208,10 @@ export default async function KitchenPage() {
               Funded by {donation.donor} · {donation.donorLocation}
             </p>
 
-            <Image
-              src="/logos/food-at-school.png"
-              alt="Food at School"
-              width={287}
-              height={163}
-              priority
-              className="mt-6 h-32 w-auto"
+            <FoodAtSchoolLogo
+              variant="mono"
+              title="Food at School"
+              className="mt-6 h-32 w-auto text-white"
             />
 
             <h1 className="sr-only">
