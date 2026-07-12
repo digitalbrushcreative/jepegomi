@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { FoodAtSchoolLogo } from "@/components/logos";
 import { ButtonLink, Eyebrow, SectionTitle } from "@/components/ui";
 import { donation, progress } from "@/content/kitchen";
 
@@ -33,13 +33,10 @@ export default function HomePage() {
           className="pointer-events-none absolute -top-24 -right-24 h-[480px] w-[480px] rounded-full bg-plum/35"
         />
         <div className="relative mx-auto max-w-4xl">
-          <Image
-            src="/logos/food-at-school.png"
-            alt="Food at School"
-            width={287}
-            height={163}
-            priority
-            className="h-24 w-auto"
+          <FoodAtSchoolLogo
+            variant="mono"
+            title="Food at School"
+            className="h-24 w-auto text-white"
           />
           <h1 className="font-display mt-8 text-4xl leading-[1.1] font-bold text-white sm:text-6xl">
             Feeding children, building futures — in Nairobi.

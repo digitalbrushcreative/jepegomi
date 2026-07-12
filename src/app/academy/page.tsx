@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { AcademyLogo } from "@/components/logos";
 import { ButtonLink, Eyebrow, Placeholder, SectionTitle } from "@/components/ui";
 import { site } from "@/lib/site";
 
@@ -14,13 +14,10 @@ export default function AcademyPage() {
     <>
       <section className="bg-plum-deep px-6 py-20">
         <div className="mx-auto max-w-4xl">
-          <Image
-            src="/logos/jepegomi-academy.png"
-            alt="Jepegomi Academy"
-            width={225}
-            height={211}
-            priority
-            className="h-20 w-auto brightness-0 invert"
+          <AcademyLogo
+            variant="mono"
+            title="Jepegomi Academy"
+            className="h-20 w-auto text-white"
           />
           <p className="label-mono mt-8 text-white/45">The School</p>
           <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
