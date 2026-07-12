@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ButtonLink, PageHero } from "@/components/ui";
+import Image from "next/image";
+import { ButtonLink } from "@/components/ui";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -10,11 +11,39 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <PageHero
-        eyebrow="The Ministry"
-        title="The church & the Nderitus"
-        intro="Jepegomi — Jesus People Gospel Ministries — is a church and academy in Nairobi led by Pastor Simon and Joyce Nderitu."
-      />
+      {/*
+        Not PageHero: this one stands the founders' cut-out on the hero's bottom
+        edge, so the section can't have bottom padding. Everything else matches
+        PageHero's plum-deep treatment so the page still reads as part of the set.
+      */}
+      <section className="relative overflow-hidden bg-plum-deep px-6 pt-20">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 -right-24 h-[480px] w-[480px] rounded-full bg-plum/35"
+        />
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 sm:flex-row sm:items-end sm:gap-12">
+          <div className="flex-1 pb-20">
+            <p className="label-mono text-white/45">The Ministry</p>
+            <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+              The church &amp; the Nderitus
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65">
+              {site.longName} is a church and academy in Nairobi led by{" "}
+              {site.leaders}.
+            </p>
+          </div>
+
+          <Image
+            src="/photos/founders/simon-and-joyce.png"
+            alt={`${site.leaders}, who lead ${site.longName}`}
+            width={438}
+            height={924}
+            priority
+            sizes="(max-width: 640px) 60vw, 224px"
+            className="w-44 shrink-0 sm:w-56"
+          />
+        </div>
+      </section>
 
       <section className="px-6 py-24">
         <div className="mx-auto max-w-3xl">
