@@ -1,30 +1,13 @@
 import Link from "next/link";
+import { getContent } from "@/cms/content";
+import { paragraphs } from "@/cms/prose";
 import { FoodAtSchoolLogo } from "@/components/logos";
 import { ButtonLink, Eyebrow, SectionTitle } from "@/components/ui";
-import { donation, progress } from "@/content/kitchen";
+import { progress } from "@/content/kitchen";
 
-const blocks = [
-  {
-    title: "Food at School",
-    body: "Every school day, children receive morning porridge and a hot lunch. For many it's their main meal of the day.",
-    href: "/programs/food-at-school",
-    cta: "See the program",
-  },
-  {
-    title: "A real kitchen",
-    body: "Right now meals are cooked outdoors over open fires. With Encounter Church, we're building a proper kitchen.",
-    href: "/projects/kitchen",
-    cta: "See the progress",
-  },
-  {
-    title: "The ministry",
-    body: "Led by Pastor Simon & Joyce Nderitu, Jepegomi serves its community through worship, education, and care.",
-    href: "/about",
-    cta: "About Jepegomi",
-  },
-];
+export default async function HomePage() {
+  const home = await getContent("home");
 
-export default function HomePage() {
   return (
     <>
       <section className="relative overflow-hidden bg-plum-deep px-6 py-24 sm:py-32">
@@ -39,13 +22,16 @@ export default function HomePage() {
             className="h-24 w-auto text-white"
           />
           <h1 className="font-display mt-8 text-4xl leading-[1.1] font-bold text-white sm:text-6xl">
-            Feeding children, building futures — in Nairobi.
+            {home.heading}
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65">
-            Jesus People Gospel Ministries runs Jepegomi Academy and the Food at
-            School program, giving children a hot meal and an education every
-            day.
-          </p>
+          {paragraphs(home.intro).map((text) => (
+            <p
+              key={text}
+              className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+            >
+              {text}
+            </p>
+          ))}
           <div className="mt-10 flex flex-wrap gap-4">
             <ButtonLink href="/projects/kitchen">
               See the Kitchen Build
@@ -58,6 +44,8 @@ export default function HomePage() {
               Give
             </ButtonLink>
           </div>
+          {/* Derived from the real budget, not typed by hand — so it cannot
+              drift out of step with the figures on the Kitchen Build page. */}
           <p className="label-mono mt-12 text-white/40">
             Kitchen {progress.percentComplete}% complete · {progress.caption}
           </p>
@@ -66,16 +54,20 @@ export default function HomePage() {
 
       <section className="px-6 py-24">
         <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
-          {blocks.map((block) => (
+          {home.cards.map((card) => (
             <Link
-              key={block.href}
-              href={block.href}
+              key={card.href}
+              href={card.href}
               className="group rounded border border-black/8 bg-white p-8 transition-shadow hover:shadow-lg"
             >
-              <h2 className="font-display text-2xl font-bold">{block.title}</h2>
-              <p className="mt-3 leading-relaxed text-smoke">{block.body}</p>
+              <h2 className="font-display text-2xl font-bold">{card.title}</h2>
+              {paragraphs(card.body).map((text) => (
+                <p key={text} className="mt-3 leading-relaxed text-smoke">
+                  {text}
+                </p>
+              ))}
               <span className="mt-6 inline-block text-sm font-medium text-plum">
-                {block.cta}{" "}
+                {card.cta}{" "}
                 <span
                   aria-hidden="true"
                   className="inline-block transition-transform group-hover:translate-x-1"
@@ -90,16 +82,13 @@ export default function HomePage() {
 
       <section className="bg-sand px-6 py-24">
         <div className="mx-auto max-w-3xl text-center">
-          <Eyebrow className="!text-plum">Partner With Us</Eyebrow>
-          <SectionTitle className="mt-4">
-            Help us finish the kitchen
-          </SectionTitle>
-          <p className="mt-5 leading-relaxed text-smoke">
-            {donation.donor} of {donation.donorLocation} gave $
-            {donation.amountUsd.toLocaleString("en-US")} to replace the open
-            fires with a proper kitchen. The structure is up. The finishing work
-            is what&apos;s left.
-          </p>
+          <Eyebrow className="!text-plum">{home.closingEyebrow}</Eyebrow>
+          <SectionTitle className="mt-4">{home.closingHeading}</SectionTitle>
+          {paragraphs(home.closingBody).map((text) => (
+            <p key={text} className="mt-5 leading-relaxed text-smoke">
+              {text}
+            </p>
+          ))}
           <ButtonLink href="/give" className="mt-8">
             Give
           </ButtonLink>

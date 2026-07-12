@@ -1,19 +1,28 @@
 import type { Metadata } from "next";
+import { getContent } from "@/cms/content";
 import { ButtonLink, PageHero } from "@/components/ui";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: `Get in touch with ${site.longName} in ${site.location}.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const details = await getContent("site");
+  return {
+    title: "Contact",
+    description: `Get in touch with ${details.longName} in ${details.location}.`,
+  };
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const [contact, details] = await Promise.all([
+    getContent("contact"),
+    getContent("site"),
+  ]);
+
   return (
     <>
       <PageHero
-        eyebrow="Get in touch"
-        title="Contact"
-        intro="We would love to hear from you — whether you want to give, partner, or just ask a question."
+        eyebrow={contact.eyebrow}
+        title={contact.heading}
+        intro={contact.intro}
       />
 
       <section className="px-6 py-24">
@@ -24,16 +33,18 @@ export default function ContactPage() {
                 <dt className="label-mono text-plum">Email</dt>
                 <dd className="mt-2">
                   <a
-                    href={`mailto:${site.email}`}
+                    href={`mailto:${details.email}`}
                     className="text-lg font-medium underline underline-offset-4 hover:text-plum"
                   >
-                    {site.email}
+                    {details.email}
                   </a>
                 </dd>
               </div>
               <div className="py-5">
                 <dt className="label-mono text-plum">Web</dt>
                 <dd className="mt-2">
+                  {/* The domain is where the site lives, not something written
+                      about it — so it stays in code, not in a text box. */}
                   <a
                     href={site.url}
                     className="text-lg font-medium underline underline-offset-4 hover:text-plum"
@@ -44,7 +55,7 @@ export default function ContactPage() {
               </div>
               <div className="py-5">
                 <dt className="label-mono text-plum">Location</dt>
-                <dd className="mt-2 text-lg font-medium">{site.location}</dd>
+                <dd className="mt-2 text-lg font-medium">{details.location}</dd>
               </div>
             </dl>
 

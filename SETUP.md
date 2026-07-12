@@ -4,11 +4,54 @@
 
 ```bash
 npm install
-cp .env.example .env.local     # fill in the two APP_ values
+cp .env.example .env.local     # fill in APP_SESSION_SECRET and DATABASE_URL
+createdb jepegomi              # the CMS needs a Postgres to write into
 npm run dev                    # http://localhost:3000
 ```
 
-Everything except the `/app` photo tool works with no configuration at all.
+Then open `/app`. It creates its own tables on first visit and offers to make
+the first account — that is the whole installation.
+
+**The public site needs none of this.** With no database at all, every page
+renders the wording that ships in the code and the site behaves exactly as it
+did before the CMS existed. A database that is missing, asleep or broken takes
+`/app` down with it and leaves the public site untouched.
+
+## The CMS
+
+`/app` edits the words and photos on the site. It is deliberately not a page
+builder: **words and images are content, links and layout are structure.** Simon
+and Joyce can change any wording on any page; they cannot dismantle the design.
+
+Every editable field on the site is declared in one file,
+[`src/cms/schema.ts`](src/cms/schema.ts). A field's declaration is the single
+source of three things at once — the form control in `/app`, the page's
+TypeScript type, and the wording used when nothing has been saved yet. To make
+something new editable, add a field there; there is no second place to register
+it and no editor screen to write.
+
+| Field type | What the editor sees                                            |
+| ---------- | --------------------------------------------------------------- |
+| `text`     | A single line.                                                  |
+| `prose`    | A box. One blank line starts a new paragraph — that is the whole formatting language, on purpose. |
+| `image`    | A path, with a preview.                                         |
+| `list`     | A repeatable group with Add / Remove, like the About fact cards. |
+
+### How a save reaches the page
+
+Pages read content inside a `use cache` scope tagged per document, so visitors
+are served a prerendered page. Saving calls `updateTag` for **that one
+document**, which expires that entry and nothing else. The editor sees their own
+words immediately; no other page is rebuilt. This is why the site is both static
+and instantly editable, and it is why `cacheComponents` is on in
+`next.config.ts`.
+
+### Content that has never been edited
+
+Saved values are layered over the defaults field by field. A field nobody has
+touched — or one added to the schema after the last save — still renders its
+default. Clearing the `content` table reverts the site to its original wording;
+it does not empty it.
 
 ## Photos
 
@@ -28,12 +71,21 @@ Captions and categories for each slot live in
 
 ## The `/app` photo tool
 
-`/app` is gated by a shared passphrase.
+`/app/photos` is part of the CMS and needs the same sign-in.
 
-| Variable             | What it is                                    |
-| -------------------- | --------------------------------------------- |
-| `APP_PASSPHRASE`     | The passphrase Simon & Joyce type in.         |
-| `APP_SESSION_SECRET` | Signs the session cookie. `openssl rand -hex 32`. |
+| Variable             | What it is                                             |
+| -------------------- | ------------------------------------------------------ |
+| `APP_SESSION_SECRET` | Signs the session cookie. `openssl rand -hex 32`.      |
+| `DATABASE_URL`       | Postgres. Locally `postgres://you@localhost:5432/jepegomi`; in production the Neon connection string. |
+
+Everyone who edits has their own account and password, so an edit is
+attributable and one person can be removed without disturbing anybody else. Add
+people from the **People** tab. There is no shared passphrase any more.
+
+The database driver is chosen from the URL, the same way the photo writer is
+chosen from the environment: a `.neon.tech` host uses Neon's HTTP driver (a
+serverless function cannot keep a TCP pool alive), anything else uses an
+ordinary Postgres connection. So local development needs no cloud account.
 
 ### Where uploads get written
 
@@ -71,8 +123,12 @@ prerender as static; `/app` is server-rendered.
 
 1. Push the branch and import the repo at [vercel.com/new](https://vercel.com/new).
    The free Hobby tier is enough. No build configuration needed.
-2. Set the environment variables above in the Vercel project settings.
-3. Point `jepegomi.org` DNS at Vercel.
+2. Create a Postgres database at [neon.tech](https://neon.tech) — the free tier
+   is far more than this site needs — and copy its connection string into
+   `DATABASE_URL` in the Vercel project settings.
+3. Set the other environment variables above in the Vercel project settings.
+4. Open `/app` on the live site once and create the first account.
+5. Point `jepegomi.org` DNS at Vercel.
 
 Every pull request then gets its own preview URL automatically.
 

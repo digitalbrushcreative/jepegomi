@@ -8,7 +8,7 @@ import {
   type PhotoCategory,
 } from "@/content/kitchen";
 import { ACCEPTED_MIME, MAX_BYTES } from "@/lib/photo-rules";
-import { deletePhotoAction, uploadPhotoAction } from "./actions";
+import { deletePhotoAction, uploadPhotoAction } from "../actions";
 
 type Filter = PhotoCategory | "all" | "beforeafter";
 

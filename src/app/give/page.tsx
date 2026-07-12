@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
+import { getContent } from "@/cms/content";
 import { Eyebrow, Placeholder } from "@/components/ui";
-import { giving, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Give",
@@ -8,7 +8,28 @@ export const metadata: Metadata = {
     "Support Food at School and the kitchen build at Jepegomi Academy, Nairobi.",
 };
 
-export default function GivePage() {
+/**
+ * A bank detail that has been confirmed shows; one that hasn't stays flagged as
+ * a placeholder, so a missing routing number can never be mistaken for a real
+ * one. Filling it in on /app is what turns the flag into the figure.
+ */
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="py-5">
+      <dt className="label-mono text-smoke">{label}</dt>
+      <dd className="font-mono mt-1.5 text-lg font-medium">
+        {value ? value : <Placeholder>To be confirmed</Placeholder>}
+      </dd>
+    </div>
+  );
+}
+
+export default async function GivePage() {
+  const [giving, site] = await Promise.all([
+    getContent("giving"),
+    getContent("site"),
+  ]);
+
   return (
     <>
       <section className="bg-plum-deep px-6 py-20">
@@ -40,26 +61,12 @@ export default function GivePage() {
                   {giving.accountName}
                 </dd>
               </div>
-              <div className="py-5">
-                <dt className="label-mono text-smoke">Account number</dt>
-                <dd className="font-mono mt-1.5 text-lg font-medium">
-                  {giving.accountNumber}
-                </dd>
-              </div>
-              <div className="py-5">
-                <dt className="label-mono text-smoke">Routing number</dt>
-                <dd className="mt-1.5">
-                  <Placeholder>To be confirmed</Placeholder>
-                </dd>
-              </div>
-              <div className="py-5">
-                <dt className="label-mono text-smoke">
-                  SWIFT / BIC (from outside the US)
-                </dt>
-                <dd className="mt-1.5">
-                  <Placeholder>To be confirmed</Placeholder>
-                </dd>
-              </div>
+              <Detail label="Account number" value={giving.accountNumber} />
+              <Detail label="Routing number" value={giving.routingNumber} />
+              <Detail
+                label="SWIFT / BIC (from outside the US)"
+                value={giving.swift}
+              />
             </dl>
 
             <p className="border-t border-sand bg-sand/60 px-8 py-5 text-sm leading-relaxed text-smoke">

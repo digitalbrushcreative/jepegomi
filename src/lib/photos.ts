@@ -1,5 +1,6 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { cacheLife, cacheTag } from "next/cache";
 import { photos as slots, type Photo } from "@/content/kitchen";
 import {
   ACCEPTED_EXTENSIONS,
@@ -45,7 +46,20 @@ function slotFromFilename(filename: string): SlotId | null {
   return parseSlotId(path.basename(filename, ext).toLowerCase());
 }
 
-/** Maps each filled slot to its public URL. Missing slots are simply absent. */
+/**
+ * Everything that lists photos shares this tag. Uploading or deleting one
+ * expires it, which is what makes a new photo appear on the Kitchen Build page
+ * and in the /app grid at the same moment.
+ */
+export const PHOTOS_TAG = "photos";
+
+/**
+ * Maps each filled slot to its public URL. Missing slots are simply absent.
+ *
+ * Deliberately NOT cached: the write path calls this to find the file it is
+ * about to replace, and that answer has to be the truth on disk right now, not
+ * whatever was cached before the last upload.
+ */
 export async function readPhotoFiles(): Promise<Map<string, string>> {
   let filenames: string[];
   try {
@@ -65,6 +79,10 @@ export async function readPhotoFiles(): Promise<Map<string, string>> {
 
 /** The 23 gallery slots with any uploaded photo resolved onto them. */
 export async function getGalleryPhotos(): Promise<Photo[]> {
+  "use cache";
+  cacheTag(PHOTOS_TAG);
+  cacheLife("max");
+
   const files = await readPhotoFiles();
   return slots.map((photo) => ({
     ...photo,
@@ -73,6 +91,10 @@ export async function getGalleryPhotos(): Promise<Photo[]> {
 }
 
 export async function getBeforeAfterSources() {
+  "use cache";
+  cacheTag(PHOTOS_TAG);
+  cacheLife("max");
+
   const files = await readPhotoFiles();
   return {
     before: files.get("before") ?? "",
