@@ -64,10 +64,10 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
             type="button"
             onClick={() => setFilter(tab.id)}
             aria-pressed={filter === tab.id}
-            className={`label-mono cursor-pointer rounded-full border px-5 py-2 transition-colors ${
+            className={`eyebrow cursor-pointer rounded-full border-2 px-5 py-2 transition-colors ${
               filter === tab.id
-                ? "border-plum bg-plum text-white"
-                : "border-plum/50 text-white/40 hover:bg-plum hover:text-white"
+                ? "border-marigold bg-marigold text-plum-deep"
+                : "border-white/20 text-white/55 hover:border-white/50 hover:text-white"
             }`}
           >
             {tab.label}
@@ -81,10 +81,10 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
             key={photo.id}
             type="button"
             onClick={() => setLightboxIndex(index)}
-            className="group cursor-pointer overflow-hidden rounded-sm bg-[#1e1018] text-left"
+            className="group cursor-pointer overflow-hidden rounded-xl bg-white/8 text-left transition-colors hover:bg-white/12"
           >
             <div className="aspect-[4/3] overflow-hidden">
-              <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-[#2a1018] to-[#180c14] transition-transform duration-300 group-hover:scale-[1.04]">
+              <div className="relative flex h-full w-full items-center justify-center bg-plum/30 transition-transform duration-300 group-hover:scale-[1.04]">
                 {photo.src ? (
                   <Image
                     src={photo.src}
@@ -95,17 +95,18 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
                     className="object-cover"
                   />
                 ) : (
-                  <span className="font-display text-4xl font-bold text-plum/30">
+                  // An empty slot, waiting for Simon to send the photo.
+                  <span className="font-display text-4xl font-semibold text-marigold/25">
                     {photo.id}
                   </span>
                 )}
               </div>
             </div>
-            <div className="px-3.5 pt-2.5 pb-3.5">
-              <p className="label-mono text-plum-light">
+            <div className="px-4 pt-3 pb-4">
+              <p className="eyebrow text-marigold/80">
                 {PHOTO_CATEGORIES.find((c) => c.id === photo.category)?.label}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-white/45">
+              <p className="mt-1.5 text-xs leading-relaxed text-white/55">
                 {photo.caption}
               </p>
             </div>
@@ -162,7 +163,7 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
               >
                 ←
               </button>
-              <span className="label-mono min-w-16 text-center text-white/30">
+              <span className="eyebrow min-w-16 text-center text-white/30">
                 {lightboxIndex + 1} / {visible.length}
               </span>
               <button

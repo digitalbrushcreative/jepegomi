@@ -26,11 +26,11 @@ export default async function ContactPage() {
       />
 
       <section className="px-6 py-24">
-        <div className="mx-auto grid max-w-5xl gap-12 md:grid-cols-2">
+        <div className="shell grid gap-12 md:grid-cols-2">
           <div>
             <dl className="divide-y divide-sand">
               <div className="pb-5">
-                <dt className="label-mono text-plum">Email</dt>
+                <dt className="eyebrow text-plum">Email</dt>
                 <dd className="mt-2">
                   <a
                     href={`mailto:${details.email}`}
@@ -41,7 +41,7 @@ export default async function ContactPage() {
                 </dd>
               </div>
               <div className="py-5">
-                <dt className="label-mono text-plum">Web</dt>
+                <dt className="eyebrow text-plum">Web</dt>
                 <dd className="mt-2">
                   {/* The domain is where the site lives, not something written
                       about it — so it stays in code, not in a text box. */}
@@ -54,7 +54,7 @@ export default async function ContactPage() {
                 </dd>
               </div>
               <div className="py-5">
-                <dt className="label-mono text-plum">Location</dt>
+                <dt className="eyebrow text-plum">Location</dt>
                 <dd className="mt-2 text-lg font-medium">{details.location}</dd>
               </div>
             </dl>

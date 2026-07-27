@@ -11,6 +11,8 @@ export const metadata: Metadata = {
 
 const tabs = [
   { href: "/app", label: "Pages" },
+  { href: "/app/needs", label: "Needs" },
+  { href: "/app/partners", label: "Partners" },
   { href: "/app/photos", label: "Photos" },
   { href: "/app/people", label: "People" },
 ];

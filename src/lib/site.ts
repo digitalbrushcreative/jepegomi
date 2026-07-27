@@ -10,17 +10,17 @@ export const site = {
     "A church and academy in Nairobi, feeding children and building futures.",
 } as const;
 
-/**
- * Bank details as given by Simon & Joyce.
- * OPEN ITEM: routing / SWIFT still needed before this is usable from outside the US.
- */
+/*
+  Account numbers are deliberately not here, and not anywhere else in this
+  repository. The site tells people how to ask for them; Simon & Joyce send the
+  details themselves, to the person giving. A published account number is a
+  standing invitation to whoever wants to impersonate the ministry — and a
+  number on a page can be quietly edited by anyone who gets into the CMS, with
+  nothing on the page to say it changed.
+*/
 export const giving = {
-  bank: "Fulton Bank",
-  accountName: "Simon and Joyce Nderitu",
-  accountNumber: "0100-33852",
-  reference: 'Please include "Food at School / Kitchen" as your giving reference.',
-  routingNumber: null,
-  swift: null,
+  /** Prefills the subject so the reply is easy to find among everything else. */
+  subject: "Giving to Jepegomi",
 } as const;
 
 export type NavLink = {
@@ -29,10 +29,37 @@ export type NavLink = {
   children?: { label: string; href: string; blurb: string }[];
 };
 
+/*
+  All four arms of the ministry are reachable from the top level, but they are
+  not four separate items: the school and the college are both the ministry
+  teaching, so they sit together under Education. That keeps the nav to seven
+  and — more to the point — says something true. The academy teaches children
+  and the college teaches adults; they are one arm with two ends, not rivals for
+  a slot in the bar.
+
+  Both keep their own short URLs. /academy is what a parent would type, and a
+  school's address should not be three words long just because the nav groups it.
+*/
 export const navLinks: NavLink[] = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  { label: "Academy", href: "/academy" },
+  { label: "Church", href: "/church" },
+  {
+    label: "Education",
+    href: "/education",
+    children: [
+      {
+        label: "Jepegomi Academy",
+        href: "/academy",
+        blurb: "Quality education with values — the school in Kahawa.",
+      },
+      {
+        label: "Bible College",
+        href: "/college",
+        blurb: "The Contextual Bible Training College — the ministry's training arm.",
+      },
+    ],
+  },
   {
     label: "Programs",
     href: "/programs",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
+import { ClothEdge } from "@/components/pattern";
 import { ButtonLink } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,15 +28,13 @@ export default async function AboutPage() {
         so it bleeds rather than stands. Everything else matches PageHero's
         plum-deep treatment so the page still reads as part of the set.
       */}
-      <section className="relative overflow-hidden bg-plum-deep px-6 pt-20">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-24 -right-24 h-[480px] w-[480px] rounded-full bg-plum/35"
-        />
-        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-10 sm:flex-row sm:items-end sm:gap-12">
+      <section className="relative overflow-hidden bg-plum-deep">
+        <div className="grain-layer" />
+
+        <div className="shell relative flex flex-col items-center gap-10 px-6 pt-28 sm:flex-row sm:items-end sm:gap-12">
           <div className="flex-1 pb-20">
-            <p className="label-mono text-white/45">{about.eyebrow}</p>
-            <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+            <p className="eyebrow text-marigold">{about.eyebrow}</p>
+            <h1 className="font-display mt-4 text-4xl leading-[1.1] font-semibold text-balance text-white sm:text-[3.25rem]">
               {about.heading}
             </h1>
             {paragraphs(about.intro).map((text) => (
@@ -60,11 +59,18 @@ export default async function AboutPage() {
             />
           )}
         </div>
+
+        {/*
+          The cream page rises over the foot of the portrait, so Simon & Joyce
+          stand *in* the page rather than being cropped by a ruled line across
+          their knees.
+        */}
+        <ClothEdge anchor="inside-bottom" className="text-cream" />
       </section>
 
       <section className="px-6 py-24">
-        <div className="mx-auto max-w-3xl">
-          <div className="space-y-6 text-lg leading-relaxed text-smoke">
+        <div className="shell">
+          <div className="max-w-3xl space-y-6 text-lg leading-relaxed text-smoke">
             {paragraphs(about.body).map((text) => (
               <p key={text}>{text}</p>
             ))}
@@ -74,7 +80,7 @@ export default async function AboutPage() {
             <dl className="mt-16 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {about.facts.map((fact) => (
                 <div key={fact.label} className="bg-white p-6">
-                  <dt className="label-mono text-plum">{fact.label}</dt>
+                  <dt className="eyebrow text-plum">{fact.label}</dt>
                   <dd className="mt-2 font-medium">{fact.value}</dd>
                 </div>
               ))}

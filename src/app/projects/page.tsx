@@ -28,7 +28,7 @@ export default function ProjectsPage() {
       />
 
       <section className="px-6 py-24">
-        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="shell grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <HubCard key={project.href} {...project} />
           ))}

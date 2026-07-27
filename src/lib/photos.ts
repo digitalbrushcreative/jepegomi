@@ -107,7 +107,9 @@ async function clearSlot(slot: SlotId) {
   const files = await readPhotoFiles();
   const existing = files.get(String(slot));
   if (!existing) return;
-  await getPhotoWriter(PHOTO_DIR, REPO_DIR).remove(path.basename(existing));
+  await getPhotoWriter(PHOTO_DIR, REPO_DIR, "kitchen photo").remove(
+    path.basename(existing),
+  );
 }
 
 function slotFilename(slot: SlotId, mime: string) {
@@ -130,7 +132,7 @@ export async function savePhoto(slot: SlotId, file: File) {
   await clearSlot(slot);
 
   const filename = slotFilename(slot, file.type);
-  const writer = getPhotoWriter(PHOTO_DIR, REPO_DIR);
+  const writer = getPhotoWriter(PHOTO_DIR, REPO_DIR, "kitchen photo");
   await writer.write(filename, Buffer.from(await file.arrayBuffer()));
 
   return {
@@ -143,5 +145,5 @@ export async function savePhoto(slot: SlotId, file: File) {
 
 export async function deletePhoto(slot: SlotId) {
   await clearSlot(slot);
-  return { immediate: getPhotoWriter(PHOTO_DIR, REPO_DIR).kind === "fs" };
+  return { immediate: getPhotoWriter(PHOTO_DIR, REPO_DIR, "kitchen photo").kind === "fs" };
 }

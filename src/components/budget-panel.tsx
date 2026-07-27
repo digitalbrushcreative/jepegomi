@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ClothEdge } from "@/components/pattern";
 import {
   budget,
   budgetNote,
@@ -26,17 +27,19 @@ function Row({
 }) {
   return (
     <tr>
-      <td className="border-b border-sand py-3.5 pr-4 align-top">
-        <p className={`text-sm ${muted ? "text-smoke" : "text-charcoal"}`}>
+      <td className="border-b border-sand-deep py-3.5 pr-4 align-top">
+        <p
+          className={`text-sm font-medium ${muted ? "text-smoke" : "text-charcoal"}`}
+        >
           {item}
         </p>
         <p className="mt-0.5 text-xs leading-snug text-smoke">{note}</p>
       </td>
-      <td className="font-mono border-b border-sand py-3.5 text-right align-top text-sm text-smoke">
+      <td className="tabular border-b border-sand-deep py-3.5 text-right align-top text-sm text-smoke">
         {usd(estimated)}
       </td>
       <td
-        className={`font-mono border-b border-sand py-3.5 pl-4 text-right align-top text-sm ${
+        className={`tabular border-b border-sand-deep py-3.5 pl-4 text-right align-top text-sm font-medium ${
           muted ? "text-smoke" : "text-plum"
         }`}
       >
@@ -68,17 +71,26 @@ export function BudgetPanel() {
 
   return (
     <>
-      <div className="bg-sand px-6 py-20 text-center">
-        <p className="text-smoke">
-          Every shilling of the {usd(budgetTotals.given)} is accounted for.
-        </p>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="label-mono mt-6 cursor-pointer rounded-sm bg-green px-10 py-4 text-white transition-colors hover:bg-green-light"
-        >
-          See where it went
-        </button>
+      {/*
+        Almost no charity shows its donors the receipts. Jepegomi can, so the
+        invitation to check the books is given its own quiet section rather than
+        being buried as a link.
+      */}
+      <div className="relative bg-sand px-6 py-20 text-center">
+        <ClothEdge className="text-sand" />
+
+        <div className="shell">
+          <p className="font-display mx-auto max-w-lg text-2xl leading-snug font-semibold text-balance">
+            Every shilling of the {usd(budgetTotals.given)} is accounted for.
+          </p>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="mt-7 cursor-pointer rounded-full bg-green px-9 py-4 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:-translate-y-0.5 hover:bg-green-light"
+          >
+            See where it went
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -91,11 +103,11 @@ export function BudgetPanel() {
           }}
           className="fixed inset-0 z-100 flex items-center justify-center bg-plum-deep/80 p-5 backdrop-blur-sm"
         >
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded bg-white">
-            <div className="flex items-center justify-between bg-green px-8 py-7">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-warm-lg">
+            <div className="sticky top-0 flex items-center justify-between bg-green px-8 py-7">
               <h2
                 id="budget-heading"
-                className="font-display text-2xl font-bold text-white"
+                className="font-display text-2xl font-semibold text-white"
               >
                 Where the {usd(budgetTotals.given)} went
               </h2>
@@ -103,7 +115,7 @@ export function BudgetPanel() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/30"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/35"
               >
                 ✕
               </button>
@@ -123,13 +135,13 @@ export function BudgetPanel() {
               <table className="mt-8 w-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="label-mono border-b border-sand pb-3 text-left text-smoke">
+                    <th className="eyebrow border-b-2 border-sand-deep pb-3 text-left text-smoke">
                       Item
                     </th>
-                    <th className="label-mono border-b border-sand pb-3 text-right text-smoke">
+                    <th className="eyebrow border-b-2 border-sand-deep pb-3 text-right text-smoke">
                       Estimated
                     </th>
-                    <th className="label-mono border-b border-sand pb-3 pl-4 text-right text-smoke">
+                    <th className="eyebrow border-b-2 border-sand-deep pb-3 pl-4 text-right text-smoke">
                       Actual
                     </th>
                   </tr>
@@ -145,18 +157,18 @@ export function BudgetPanel() {
                     />
                   ))}
                   <tr>
-                    <td className="py-4 text-sm font-semibold">Total</td>
-                    <td className="font-mono py-4 text-right text-sm font-semibold">
+                    <td className="py-4 text-sm font-bold">Total</td>
+                    <td className="tabular py-4 text-right text-sm font-bold">
                       {usd(budgetTotals.given)}
                     </td>
-                    <td className="font-mono py-4 pl-4 text-right text-sm font-semibold text-green">
+                    <td className="tabular py-4 pl-4 text-right text-sm font-bold text-green">
                       {usd(budgetTotals.spent)}
                     </td>
                   </tr>
                 </tbody>
               </table>
 
-              <div className="mt-6 rounded-sm bg-[#f3eef1] px-5 py-4">
+              <div className="mt-6 rounded-xl border-l-4 border-marigold bg-marigold/10 px-6 py-5">
                 <p className="text-sm leading-relaxed text-charcoal">
                   Costs ran over on almost every line — cement, sand, drainage
                   and ballast all cost more than planned, and the drainage work
@@ -167,19 +179,19 @@ export function BudgetPanel() {
                 </p>
               </div>
 
-              <h3 className="font-display mt-10 text-xl font-bold">
+              <h3 className="font-display mt-10 text-xl font-semibold">
                 Never reached — {usd(budgetTotals.stillNeeded)} still needed
               </h3>
               <table className="mt-4 w-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="label-mono border-b border-sand pb-3 text-left text-smoke">
+                    <th className="eyebrow border-b-2 border-sand-deep pb-3 text-left text-smoke">
                       Item
                     </th>
-                    <th className="label-mono border-b border-sand pb-3 text-right text-smoke">
+                    <th className="eyebrow border-b-2 border-sand-deep pb-3 text-right text-smoke">
                       Estimated
                     </th>
-                    <th className="label-mono border-b border-sand pb-3 pl-4 text-right text-smoke">
+                    <th className="eyebrow border-b-2 border-sand-deep pb-3 pl-4 text-right text-smoke">
                       Actual
                     </th>
                   </tr>
@@ -196,10 +208,10 @@ export function BudgetPanel() {
                     />
                   ))}
                   <tr>
-                    <td className="py-4 text-sm font-semibold">
+                    <td className="py-4 text-sm font-bold">
                       Still needed to finish
                     </td>
-                    <td className="font-mono py-4 text-right text-sm font-semibold text-plum">
+                    <td className="tabular py-4 text-right text-sm font-bold text-plum">
                       {usd(budgetTotals.stillNeeded)}
                     </td>
                     <td className="py-4" />

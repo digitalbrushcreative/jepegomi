@@ -2,20 +2,67 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { JepegomiLogo } from "@/components/logos";
-import { navLinks } from "@/lib/site";
+import { type NavLink, navLinks } from "@/lib/site";
 
-export function SiteHeader() {
-  const pathname = usePathname();
+/**
+ * The header has no colour of its own.
+ *
+ * It is transparent and sits *on* the hero, so whatever the hero is wearing is
+ * what the header wears — and on the homepage that means it turns over with the
+ * slider: plum for the church, green for the Academy, charcoal for the college,
+ * brown for Food at School. Every page on this site opens on a dark hero, which
+ * is what makes white nav type safe to lay straight over it.
+ *
+ * Once you scroll off the hero there is nothing dark left underneath, so it
+ * takes on a solid plum of its own rather than leaving white links floating
+ * over cream paper.
+ *
+ * The links go wide at `lg`, not `md`. Naming all four arms of the ministry grew
+ * the nav, and grouping the school and the college under Education pulled it back
+ * to seven — but seven plus the logo and the Give button still will not sit in
+ * 768px. Below that it is the mobile menu, which does not care how many there are.
+ *
+ * The path arrives as a prop rather than out of usePathname(), so that the bar
+ * can be drawn without one. On a route whose address is not known until a
+ * request arrives — /needs/[slug], /app/needs/[id] — the pathname is runtime
+ * data, and a header that insisted on it would keep the entire page out of the
+ * static shell to decide which nav link to underline. See SiteHeaderBar below.
+ */
+export function SiteHeader({ pathname }: { pathname: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /*
+    A link is lit when you are on it — or on anything hanging off it. The second
+    half matters because a child need not live beneath its parent's path: the
+    Academy is filed under Education in the nav but answers at /academy, and
+    without this it would leave the whole menu dark while you stood on it.
+  */
+  const isActive = (link: NavLink) => {
+    if (link.href === "/") return pathname === "/";
+    if (pathname.startsWith(link.href)) return true;
+    return link.children?.some((child) => pathname.startsWith(child.href)) ?? false;
+  };
+
+  // An open mobile menu needs something solid behind it whatever the scroll is.
+  const solid = scrolled || mobileOpen;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-charcoal">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        solid ? "bg-plum-deep/95 shadow-warm backdrop-blur-sm" : "bg-transparent"
+      }`}
+    >
+      <div className="shell flex h-16 items-center justify-between gap-4 px-6">
         <Link href="/" className="flex shrink-0 items-center gap-3">
           <JepegomiLogo
             variant="mono"
@@ -24,7 +71,7 @@ export function SiteHeader() {
           />
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {navLinks.map((link) =>
             link.children ? (
               // Hover opens it for mice; focus-within keeps it reachable by keyboard.
@@ -32,7 +79,7 @@ export function SiteHeader() {
                 <Link
                   href={link.href}
                   className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm transition-colors ${
-                    isActive(link.href)
+                    isActive(link)
                       ? "text-white"
                       : "text-white/60 hover:text-white"
                   }`}
@@ -49,7 +96,7 @@ export function SiteHeader() {
                   </svg>
                 </Link>
                 <div className="invisible absolute left-0 top-full w-72 pt-2 opacity-0 transition-[opacity,visibility] group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                  <div className="overflow-hidden rounded border border-black/5 bg-white shadow-xl">
+                  <div className="overflow-hidden rounded-xl bg-white shadow-warm-lg">
                     {link.children.map((child) => (
                       <Link
                         key={child.href}
@@ -72,7 +119,7 @@ export function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 className={`rounded px-3 py-2 text-sm transition-colors ${
-                  isActive(link.href) ? "text-white" : "text-white/60 hover:text-white"
+                  isActive(link) ? "text-white" : "text-white/60 hover:text-white"
                 }`}
               >
                 {link.label}
@@ -81,16 +128,16 @@ export function SiteHeader() {
           )}
           <Link
             href="/give"
-            className="ml-2 rounded bg-green px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-green-light"
+            className="ml-2 rounded-full bg-green px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-green-light"
           >
             Give
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex items-center gap-3 lg:hidden">
           <Link
             href="/give"
-            className="rounded bg-green px-4 py-2 text-sm font-medium text-white"
+            className="rounded-full bg-green px-4 py-2 text-sm font-bold text-white"
           >
             Give
           </Link>
@@ -127,7 +174,7 @@ export function SiteHeader() {
         <nav
           id="mobile-nav"
           aria-label="Main"
-          className="border-t border-white/10 bg-charcoal px-6 pt-2 pb-6 md:hidden"
+          className="border-t border-white/10 bg-plum-deep px-6 pt-2 pb-6 lg:hidden"
           onClick={() => setMobileOpen(false)}
         >
           {navLinks.map((link) => (
@@ -150,4 +197,19 @@ export function SiteHeader() {
       )}
     </header>
   );
+}
+
+/**
+ * The header as the site actually mounts it.
+ *
+ * Two components rather than one because of what happens on a route with a
+ * dynamic segment. usePathname() there is runtime data: nothing can know the
+ * address until somebody asks for it. The layout puts this behind a Suspense
+ * boundary whose fallback is the same bar with no path — so pages whose address
+ * *is* known keep a fully prerendered header, and pages whose address is not
+ * ship the bar immediately and light the right link a moment later, instead of
+ * holding the whole page back for it.
+ */
+export function LiveSiteHeader() {
+  return <SiteHeader pathname={usePathname()} />;
 }

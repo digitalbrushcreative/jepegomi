@@ -1,26 +1,26 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Space_Mono } from "next/font/google";
-import { SiteHeader } from "@/components/site-header";
+import { Fraunces, Karla } from "next/font/google";
+import { Suspense } from "react";
+import { LiveSiteHeader, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { site } from "@/lib/site";
 import "./globals.css";
 
-const inter = Inter({
+/*
+  Fraunces is a variable font, so no `weight` is passed — asking for fixed
+  weights here would drop the variable file and take the SOFT and WONK axes
+  down with it. Those two axes are the whole reason it is this face and not
+  Playfair: they are what make the headings feel cut by a person.
+*/
+const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-inter",
+  axes: ["SOFT", "WONK", "opsz"],
+  variable: "--font-fraunces",
 });
 
-const playfair = Playfair_Display({
+const karla = Karla({
   subsets: ["latin"],
-  weight: ["700", "900"],
-  variable: "--font-playfair",
-});
-
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-space-mono",
+  variable: "--font-karla",
 });
 
 export const metadata: Metadata = {
@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} ${spaceMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${karla.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <a
@@ -57,7 +57,15 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <SiteHeader />
+        {/*
+          The bar is drawn either way; only the lit nav link waits on the URL.
+          The fallback is the same header with no path, so a route with a
+          dynamic segment gets its header in the static shell like every other
+          page instead of holding the page back to underline something.
+        */}
+        <Suspense fallback={<SiteHeader pathname="" />}>
+          <LiveSiteHeader />
+        </Suspense>
         <main id="main" className="flex-1">
           {children}
         </main>

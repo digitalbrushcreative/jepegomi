@@ -16,18 +16,18 @@ export function InviteForm() {
     <form action={formAction} className="mt-6">
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="block">
-          <span className="label-mono text-smoke">Name</span>
+          <span className="eyebrow text-smoke">Name</span>
           <input name="name" required className={inputClass} />
         </label>
 
         <label className="block">
-          <span className="label-mono text-smoke">Email</span>
+          <span className="eyebrow text-smoke">Email</span>
           <input name="email" type="email" required className={inputClass} />
         </label>
       </div>
 
       <label className="mt-5 block">
-        <span className="label-mono text-smoke">Password</span>
+        <span className="eyebrow text-smoke">Password</span>
         <input
           name="password"
           type="text"

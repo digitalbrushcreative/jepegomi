@@ -5,6 +5,8 @@
  * report without touching the page component.
  */
 
+import type { IconName } from "@/components/icons";
+
 export const PHOTO_CATEGORIES = [
   { id: "site", label: "Site & Foundation" },
   { id: "walls", label: "Walls & Structure" },
@@ -96,21 +98,21 @@ export const stats = [
  */
 export const remainingNeeds = [
   {
-    icon: "🚰",
+    icon: "water",
     text: "A water tank to harvest rainwater, and the pipes to run it",
     costUsd: 850,
   },
   {
-    icon: "🔲",
+    icon: "paving",
     text: "Cabro stones to floor the area where the children eat",
     costUsd: 1000,
   },
   {
-    icon: "💡",
+    icon: "light",
     text: "Plastering and electricity for the dining hall",
     costUsd: 1138,
   },
-] as const;
+] satisfies { icon: IconName; text: string; costUsd: number }[];
 
 export type BudgetLine = {
   item: string;

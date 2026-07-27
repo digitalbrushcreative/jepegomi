@@ -142,19 +142,19 @@ function SlotCard({ slot }: { slot: Slot }) {
             <p className="font-display text-3xl font-bold text-black/15">
               {slot.label}
             </p>
-            <p className="label-mono mt-1 text-smoke/60">Drop photo</p>
+            <p className="eyebrow mt-1 text-smoke/60">Drop photo</p>
           </div>
         )}
 
         {pending && (
           <div className="absolute inset-0 flex items-center justify-center bg-charcoal/60">
-            <p className="label-mono text-white">Working…</p>
+            <p className="eyebrow text-white">Working…</p>
           </div>
         )}
       </label>
 
       <div className="mt-2 flex items-baseline justify-between gap-2">
-        <p className="label-mono text-plum">
+        <p className="eyebrow text-plum">
           {slot.category
             ? PHOTO_CATEGORIES.find((c) => c.id === slot.category)?.label
             : "Before / After"}
@@ -163,7 +163,7 @@ function SlotCard({ slot }: { slot: Slot }) {
           <button
             type="button"
             onClick={remove}
-            className="label-mono cursor-pointer text-smoke/70 underline underline-offset-2 hover:text-plum"
+            className="eyebrow cursor-pointer text-smoke/70 underline underline-offset-2 hover:text-plum"
           >
             Remove
           </button>
@@ -230,7 +230,7 @@ export function Editor({
             type="button"
             onClick={() => setFilter(tab.id)}
             aria-pressed={filter === tab.id}
-            className={`label-mono cursor-pointer rounded-full border px-5 py-2 transition-colors ${
+            className={`eyebrow cursor-pointer rounded-full border px-5 py-2 transition-colors ${
               filter === tab.id
                 ? "border-plum bg-plum text-white"
                 : "border-plum/30 text-smoke hover:border-plum hover:text-plum"
@@ -239,7 +239,7 @@ export function Editor({
             {tab.label}
           </button>
         ))}
-        <p className="label-mono ml-auto text-smoke">
+        <p className="eyebrow ml-auto text-smoke">
           {filled} of {total} filled
         </p>
       </div>

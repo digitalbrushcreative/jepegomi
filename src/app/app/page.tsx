@@ -15,7 +15,7 @@ function Shell({
 }) {
   return (
     <div className="mx-auto max-w-md">
-      <p className="label-mono text-plum">Family only</p>
+      <p className="eyebrow text-plum">Family only</p>
       <h1 className="font-display mt-3 text-3xl font-bold">{title}</h1>
       <p className="mt-3 leading-relaxed text-smoke">{intro}</p>
       {children}
@@ -26,7 +26,7 @@ function Shell({
 function Missing({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-8 rounded border border-dashed border-smoke/40 bg-sand p-6">
-      <p className="label-mono text-plum">Needs configuration</p>
+      <p className="eyebrow text-plum">Needs configuration</p>
       <div className="mt-3 space-y-3 text-sm leading-relaxed text-smoke">
         {children}
       </div>
@@ -124,7 +124,7 @@ export default async function AppPage() {
 
   return (
     <div>
-      <p className="label-mono text-plum">Family only</p>
+      <p className="eyebrow text-plum">Family only</p>
       <h1 className="font-display mt-3 text-3xl font-bold">Pages</h1>
       <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
         Change any words or photos on the site. Saving puts the change live

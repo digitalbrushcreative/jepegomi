@@ -1,10 +1,14 @@
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { randomUUID } from "node:crypto";
 import { ensureSchema, isDatabaseConfigured, sql } from "./db";
 import { hashPassword, verifyPassword } from "./password";
+import { hasSessionSecret, session } from "./session";
 
-const COOKIE = "jepegomi_app";
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+/**
+ * Simon & Joyce, and whoever else they let in. This is the /app side of the
+ * house — the people who can change the site. Partner churches sign in
+ * somewhere else entirely and are kept in their own table; see lib/partners.ts.
+ */
+const admin = session("admin", "jepegomi_app");
 
 export type SessionUser = { id: string; name: string; email: string };
 
@@ -14,39 +18,7 @@ export type SessionUser = { id: string; name: string; email: string };
  * missing instead of pretending to work.
  */
 export function isConfigured() {
-  return Boolean(process.env.APP_SESSION_SECRET) && isDatabaseConfigured();
-}
-
-function signingKey() {
-  const key = process.env.APP_SESSION_SECRET;
-  if (!key) throw new Error("APP_SESSION_SECRET is not set.");
-  return key;
-}
-
-function sign(payload: string) {
-  return createHmac("sha256", signingKey()).update(payload).digest("hex");
-}
-
-/** Constant-time compare that tolerates length mismatch without throwing. */
-function safeEqual(a: string, b: string) {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
-}
-
-async function startSession(userId: string) {
-  const expiresAt = Date.now() + MAX_AGE_SECONDS * 1000;
-  const payload = `${userId}.${expiresAt}`;
-
-  const store = await cookies();
-  store.set(COOKIE, `${payload}.${sign(payload)}`, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: MAX_AGE_SECONDS,
-  });
+  return hasSessionSecret() && isDatabaseConfigured();
 }
 
 /**
@@ -93,7 +65,7 @@ export async function createFirstUser(input: {
   }
 
   const user = await createUser(input);
-  await startSession(user.id);
+  await admin.start(user.id);
   return user;
 }
 
@@ -113,29 +85,23 @@ export async function signIn(email: string, password: string) {
   if (!row) return false;
   if (!(await verifyPassword(password, row.password_hash))) return false;
 
-  await startSession(row.id);
+  await admin.start(row.id);
   return true;
 }
 
 export async function signOut() {
-  const store = await cookies();
-  store.delete(COOKIE);
+  await admin.clear();
 }
 
 /**
- * The signed-in person, or null. Verifies the cookie's signature and expiry
- * before it will touch the database, so a forged cookie costs us nothing.
+ * The signed-in person, or null. The cookie's signature and expiry are checked
+ * before the database is touched, so a forged cookie costs us nothing.
  */
 export async function currentUser(): Promise<SessionUser | null> {
   if (!isConfigured()) return null;
 
-  const raw = (await cookies()).get(COOKIE)?.value;
-  if (!raw) return null;
-
-  const [userId, expiresAt, signature] = raw.split(".");
-  if (!userId || !expiresAt || !signature) return null;
-  if (Number(expiresAt) < Date.now()) return null;
-  if (!safeEqual(signature, sign(`${userId}.${expiresAt}`))) return null;
+  const userId = await admin.read();
+  if (!userId) return null;
 
   try {
     const rows = await sql()`

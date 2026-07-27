@@ -27,7 +27,7 @@ function Leaf({
 
   return (
     <label className="block">
-      <span className="label-mono text-smoke">{field.label}</span>
+      <span className="eyebrow text-smoke">{field.label}</span>
 
       {field.type === "prose" ? (
         <textarea
@@ -80,7 +80,7 @@ function ListEditor({
 
   return (
     <fieldset>
-      <legend className="label-mono text-smoke">{field.label}</legend>
+      <legend className="eyebrow text-smoke">{field.label}</legend>
       <Help text={field.help} />
 
       <div className="mt-3 space-y-3">

@@ -1,4 +1,4 @@
-import { unlink, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 /**
@@ -31,11 +31,15 @@ class FsWriter implements PhotoWriter {
   constructor(private dir: string) {}
 
   async write(filename: string, bytes: Buffer) {
+    // The kitchen folder is committed and always there; a folder for a kind of
+    // photo nobody has uploaded yet is not, so make it rather than fail.
+    await mkdir(this.dir, { recursive: true });
     await writeFile(path.join(this.dir, filename), bytes);
   }
 
   async remove(filename: string) {
-    await unlink(path.join(this.dir, filename));
+    // A slot whose file is already gone is the outcome we wanted either way.
+    await unlink(path.join(this.dir, filename)).catch(() => {});
   }
 }
 
@@ -46,6 +50,8 @@ type GitHubConfig = {
   branch: string;
   /** Path within the repo, e.g. "public/photos/kitchen". */
   dir: string;
+  /** What these photos are, for the commit message. */
+  label: string;
 };
 
 class GitHubWriter implements PhotoWriter {
@@ -89,7 +95,7 @@ class GitHubWriter implements PhotoWriter {
       method: "PUT",
       headers: { ...this.headers(), "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: `Add kitchen photo ${filename}`,
+        message: `Add ${this.config.label} ${filename}`,
         content: bytes.toString("base64"),
         branch: this.config.branch,
         ...(sha ? { sha } : {}),
@@ -111,7 +117,7 @@ class GitHubWriter implements PhotoWriter {
       method: "DELETE",
       headers: { ...this.headers(), "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: `Remove kitchen photo ${filename}`,
+        message: `Remove ${this.config.label} ${filename}`,
         sha,
         branch: this.config.branch,
       }),
@@ -125,7 +131,11 @@ class GitHubWriter implements PhotoWriter {
   }
 }
 
-export function getPhotoWriter(localDir: string, repoDir: string): PhotoWriter {
+export function getPhotoWriter(
+  localDir: string,
+  repoDir: string,
+  label = "photo",
+): PhotoWriter {
   const token = process.env.GITHUB_TOKEN;
   const slug = process.env.GITHUB_REPO;
 
@@ -140,6 +150,7 @@ export function getPhotoWriter(localDir: string, repoDir: string): PhotoWriter {
       repo,
       branch: process.env.GITHUB_BRANCH ?? "main",
       dir: repoDir,
+      label,
     });
   }
 

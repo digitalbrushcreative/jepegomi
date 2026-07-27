@@ -53,6 +53,75 @@ touched — or one added to the schema after the last save — still renders its
 default. Clearing the `content` table reverts the site to its original wording;
 it does not empty it.
 
+## The giving ledger
+
+`/needs` lists costed items and lets a church claim all or part of one. It runs
+on ordinary relational tables rather than the JSONB content store, because a
+ledger has to be summed and a blob cannot be. `ensureSchema()` in
+[`src/lib/db.ts`](src/lib/db.ts) creates them on the first visit to `/app`, the
+same as the content tables.
+
+| Table          | What it holds                                                       |
+| -------------- | ------------------------------------------------------------------- |
+| `needs`        | One thing needed, with one cost. Published/closed flags and a running order. |
+| `partners`     | The churches and people who give. Verified, and optionally given a login. |
+| `pledges`      | One partner claiming one amount against one need.                   |
+| `need_updates` | Progress posted back, with an optional photo.                       |
+
+Money is stored as **whole cents** in `INTEGER` columns, never as dollars in a
+float — see the note at the top of [`src/lib/money.ts`](src/lib/money.ts) for
+why an $1,138 item split three ways makes that non-negotiable.
+
+### What "claimed" means
+
+Everything except a withdrawn claim counts against a need's cost — **including a
+claim nobody has confirmed yet**. That is deliberate. If a claim only counted
+once Simon had seen it, two churches could both be told on the same Sunday that
+$450 was open and both send it. Holding the balance from the moment somebody
+claims it answers the question the page is really being asked: *is this still
+there for me?* A claim that turns out to be nonsense is withdrawn in `/app` and
+the balance comes straight back.
+
+The definition lives in one place — the `need_ledger` view — so the public page,
+the partner dashboard and `/app` cannot drift apart on it.
+
+### The workflow
+
+1. Somebody claims an amount at `/needs/[slug]`. No login needed; nothing is
+   behind a door.
+2. It appears at the top of `/app` → **Needs** as waiting on you.
+3. You email them the account details. (Nothing is sent from this site — the
+   claim screen tells them to expect a reply from you.)
+4. **Money received** in `/app` when it actually lands. Only then does it move
+   from promised to received on the public page.
+5. Post updates with photos as the work happens. They appear on the item's page
+   and on the dashboard of every partner who put money towards it.
+
+### Partner logins
+
+Verifying a partner and giving one a login are **two separate buttons**, and
+most partners will only ever want the first. Verifying is you saying you know
+who this church is. A login is a convenience on top of it, for a church that
+wants to watch its own record — set the password in `/app` → **Partners** and
+read it to them, since nothing is emailed from this site.
+
+Un-verifying a partner clears their password as well as their status: a partner
+you no longer vouch for should not keep a working key, and a hash left in place
+so that re-verifying silently restores the old password is a door nobody
+remembers is there.
+
+### Seeding it
+
+The first visit to `/app` → **Needs** offers to add the three items the $8,000
+never reached — the water tank, the cabro floor and the dining hall. Their costs
+are read from [`src/content/kitchen.ts`](src/content/kitchen.ts) rather than
+retyped, so the ledger and the Kitchen page cannot disagree about what a water
+tank costs.
+
+> Writing to the database **by hand** will not show on the site: the public
+> pages are cached and expired by tag, and only the actions in `/app` and the
+> claim form expire them. Go through the UI, or restart the server.
+
 ## Photos
 
 Photos live in [`public/photos/kitchen/`](public/photos/kitchen/). **The filename
@@ -68,6 +137,12 @@ There are two ways to add one, and they are the same thing:
 
 Captions and categories for each slot live in
 [`src/content/kitchen.ts`](src/content/kitchen.ts).
+
+Photos attached to a **progress update** work differently: there is no fixed set
+of slots, so the file is named after the update it belongs to and lives in
+`public/photos/updates/`. The `need_updates` row holds the path, so nothing has
+to scan a directory to find out what exists. Both kinds go through the same
+writer, and so make the same production trade below.
 
 ## The `/app` photo tool
 
@@ -136,9 +211,32 @@ Every pull request then gets its own preview URL automatically.
 
 Marked in the UI as placeholders so they cannot be mistaken for real figures:
 
-- **Academy details** — ages/grades, pupils enrolled, teachers, year founded.
-- **Bank routing number and SWIFT/BIC**, without which nobody outside the US can
-  actually send money.
+- **Service times** — `/church` cannot invite anyone to a service until it knows
+  when they are. This is the most costly blank on the site: a service time is the
+  one thing a stranger comes to a church website for, and a guess sends somebody
+  to a locked gate. The page says the times are unconfirmed rather than imply a
+  Sunday morning nobody has confirmed. The address is blank for the same reason.
+- **The Bible college** — what is taught, students enrolled, when it meets, how
+  to enrol. `/college` is the thinnest page on the site; it says so itself.
+- **Academy details** — the year the school was founded. Grades (Kindergarten to
+  Grade 6), pupils (131), teachers (9) and admin staff (3) are all confirmed and
+  on the page.
+- **What academy transport costs.** It is the second need in the front page's
+  needs slider, and the only one with no figure beside it: its card says "Still
+  being costed" rather than borrowing the kitchen's numbers. A costing — a
+  vehicle bought, or a term of hired transport — turns that panel into a real
+  ask. The words are editable under Home → Current needs in `/app`.
+- **A giving reply ready to send.** `/give` asks people to email rather than
+  publishing account numbers, so somebody has to be watching that inbox with the
+  bank and M-Pesa details — including the routing number and SWIFT/BIC — ready to
+  send back. An unanswered email is a gift that never arrives. This matters more
+  now than it did: a claim on `/needs` promises the giver a reply with the
+  details, and holds the balance against the item while they wait for it. **A
+  claim nobody answers is worse than no claim at all** — it takes an amount off
+  the page that nobody is going to send.
+- **Nothing on this site sends email.** A claim lands in `/app` and waits to be
+  noticed. Somebody has to be looking, or a mail forward has to be set up, or
+  the ledger will quietly fill with promises nobody chased.
 - **The photos** — all 23 gallery slots and the before/after pair are empty.
 - **Logo source files.** The three logos were recovered from base64 inside the
   original report, but the Academy one is a bad crop: its leading "J" is clipped

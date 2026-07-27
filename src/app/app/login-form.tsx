@@ -24,7 +24,7 @@ export function LoginForm() {
   return (
     <form action={formAction} className="mt-8">
       <label className="block">
-        <span className="label-mono text-smoke">Email</span>
+        <span className="eyebrow text-smoke">Email</span>
         <input
           name="email"
           type="email"
@@ -36,7 +36,7 @@ export function LoginForm() {
       </label>
 
       <label className="mt-5 block">
-        <span className="label-mono text-smoke">Password</span>
+        <span className="eyebrow text-smoke">Password</span>
         <input
           name="password"
           type="password"
@@ -69,12 +69,12 @@ export function FirstUserForm() {
   return (
     <form action={formAction} className="mt-8">
       <label className="block">
-        <span className="label-mono text-smoke">Your name</span>
+        <span className="eyebrow text-smoke">Your name</span>
         <input name="name" autoFocus required className={inputClass} />
       </label>
 
       <label className="mt-5 block">
-        <span className="label-mono text-smoke">Email</span>
+        <span className="eyebrow text-smoke">Email</span>
         <input
           name="email"
           type="email"
@@ -85,7 +85,7 @@ export function FirstUserForm() {
       </label>
 
       <label className="mt-5 block">
-        <span className="label-mono text-smoke">Password</span>
+        <span className="eyebrow text-smoke">Password</span>
         <input
           name="password"
           type="password"

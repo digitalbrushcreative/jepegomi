@@ -1,24 +1,50 @@
 @import "tailwindcss";
 
 /*
-  Design tokens — carried over from the original kitchen progress report so
-  /projects/kitchen sits inside the wider site without looking like a guest.
+  Jepegomi's design language: warm, hand-made, community-led.
+
+  The plum and green are not decisions we get to make — they come off the logo
+  marks Simon already prints on uniforms and signage. What we control is how
+  they are *used*. Earlier this site filled whole screens with them, which read
+  as corporate and cold. Here plum is ink and green is the giving action, and
+  the warmth is carried by paper, marigold and soft cloth edges instead.
 */
 @theme {
-  --color-plum: #721a56;
-  --color-plum-light: #8c2068;
+  /* Brand — fixed by the logo marks. */
+  --color-plum: #7a1b5c;
+  --color-plum-light: #992a74;
   --color-plum-deep: #4a1038;
   --color-green: #4a7c2a;
-  --color-green-light: #5a9030;
-  --color-brown: #3d2010;
-  --color-cream: #faf8f5;
-  --color-sand: #f0ebe3;
-  --color-smoke: #6b5e65;
-  --color-charcoal: #2a1c24;
+  --color-green-light: #5f9a37;
+  --color-green-deep: #2f5119;
 
-  --font-display: var(--font-playfair), Georgia, serif;
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+  /* Warmth — and the only colours allowed to shout. */
+  --color-marigold: #e9a53c;
+  --color-marigold-light: #f6c877;
+  --color-clay: #c05f3c;
+
+  /* Paper. The site sits on cloth and paper, never on flat white. */
+  --color-cream: #fdfaf3;
+  --color-sand: #f5ecdd;
+  --color-sand-deep: #e7d9c2;
+  --color-charcoal: #2a1c24;
+  --color-smoke: #6f6068;
+  --color-brown: #3d2010;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-karla), system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Nothing on this site has a sharp corner. */
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+
+  /* Shadows are warm — a grey shadow on cream paper looks like dirt. */
+  --shadow-warm: 0 2px 4px -2px rgb(74 32 16 / 0.06), 0 12px 28px -12px rgb(74 32 16 / 0.14);
+  --shadow-warm-lg: 0 4px 8px -4px rgb(74 32 16 / 0.08), 0 24px 48px -16px rgb(74 32 16 / 0.2);
 }
 
 html {
@@ -33,15 +59,69 @@ body {
 }
 
 /*
-  The report leans on a monospace, wide-tracked label style in ~15 places
-  (eyebrows, tabs, table headers, stat captions). Naming it once keeps the
-  tracking and casing from drifting as pages get added.
+  Fraunces ships a `SOFT` axis that rounds off the terminals and a `WONK` axis
+  that swaps in the wonky, slightly hand-cut letterforms. Both are what keep the
+  headings from feeling like a bank's. They are set here rather than per-heading
+  so a heading can never accidentally be set "straight".
 */
-@utility label-mono {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.2em;
+.font-display {
+  font-variation-settings: "SOFT" 60, "WONK" 1;
+}
+
+/*
+  Eyebrows. Previously 9px Space Mono, which gave every page a clinical,
+  machine-printed tick. Now it is the body face, larger and actually legible,
+  with the tracking doing the work.
+*/
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+/* Figures in the ledger must line up in their columns. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+  One content width, shared by every section — the hero slider and the footer
+  aside, which are meant to run the full page. Before this, section containers
+  ranged from max-w-2xl to max-w-6xl, so the content column stepped in and out
+  as you scrolled, both down a page and between pages. `shell` fixes the outer
+  frame at a single width; a paragraph or a bank card inside it can still take a
+  narrower reading measure, but the edge it hangs from is now the same everywhere.
+
+  72rem is max-w-6xl — the width the hubs, the home grids and the page heros
+  already used, so the many sections at that width do not move; the narrower ones
+  come out to meet them.
+*/
+@utility shell {
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+/*
+  A paper grain, laid over the warm backgrounds. It is nearly invisible on its
+  own — you notice it only if you remove it, when everything suddenly looks
+  like a screen again.
+*/
+@utility grain-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+/* Focus that is visible on plum, on cream and on a photo alike. */
+:where(a, button, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-marigold);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {
