@@ -157,13 +157,10 @@ export async function addPartnerAction(_prev: FormState, formData: FormData) {
  * purpose (see the note in src/content/kitchen.ts), and none of these rows is
  * published.
  */
-export async function seedEncounterChurchAction(
-  _prev: FormState,
-  formData: FormData,
-) {
+export async function seedEncounterChurchAction(rawEmail: string) {
   await requireUser();
 
-  const email = String(formData.get("email") ?? "").trim();
+  const email = rawEmail.trim();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return { error: "Enter Encounter Church's email address first." };
   }
@@ -264,8 +261,6 @@ export async function seedEncounterChurchAction(
     The two screens that *do* change are the two /app screens the new rows
     appear on.
   */
-  revalidatePath("/app/needs");
-
   /*
     A redirect rather than a `{ saved: true }`, and not for tidiness.
 
@@ -408,11 +403,24 @@ export async function setVerifiedAction(partnerId: string, verified: boolean) {
   refresh();
 }
 
-export async function issueLoginAction(_prev: FormState, formData: FormData) {
+/**
+ * Called with its arguments rather than a FormData, and driven by
+ * `useTransition` rather than `useActionState`.
+ *
+ * Issuing a login puts a "Has a login" badge on the partner's card, and a
+ * `useActionState` form that revalidates the page it is standing on while that
+ * page's card grows a badge never settles — the password is set, the mail goes,
+ * and the button reads "Saving…" until somebody reloads. The same shape is why
+ * the two seed buttons on this page are plain transitions.
+ */
+export async function issueLoginAction(input: {
+  partnerId: string;
+  password: string;
+  notify: boolean;
+}) {
   await requireUser();
 
-  const partnerId = String(formData.get("partnerId") ?? "");
-  const password = String(formData.get("password") ?? "");
+  const { partnerId, password } = input;
 
   if (password.length < 10) {
     return { error: "Use a password of at least 10 characters." };
@@ -433,8 +441,7 @@ export async function issueLoginAction(_prev: FormState, formData: FormData) {
     arrived in the same POST. Otherwise a crafted request could have this send a
     working password for somebody else's account to an address of its choosing.
   */
-  const notify = formData.get("notify") !== null;
-  const partner = notify ? await getPartner(partnerId) : null;
+  const partner = input.notify ? await getPartner(partnerId) : null;
 
   if (partner) {
     queue(

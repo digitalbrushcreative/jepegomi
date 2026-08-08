@@ -41,19 +41,29 @@ export type GiftTarget = {
  * read out of the reconciliation in src/content/kitchen.ts.
  */
 export function SeedEncounterForm() {
-  const [state, formAction, pending] = useActionState(
-    seedEncounterChurchAction,
-    undefined,
-  );
+  /*
+    `useTransition` and a plain call, not `useActionState` and a form — which is
+    how SeedKitchenButton does the same job, and it turns out to be the only
+    shape that works here.
+
+    A `useActionState` form whose action redirects, on a page whose list this
+    action restructures, never settles: the row is written, the redirect is
+    issued, and the button sits on "Adding…" until somebody reloads. Simon then
+    presses it again, which is the one thing a seed button must not invite.
+  */
+  const [pending, start] = useTransition();
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   return (
-    <form action={formAction} className="mt-6 border-t border-black/8 pt-6">
+    <div className="mt-6 border-t border-black/8 pt-6">
       <label className="block max-w-sm">
         <span className="eyebrow text-smoke">Encounter Church&apos;s email</span>
         <input
-          name="email"
           type="email"
           required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
           className={inputClass}
           placeholder="office@encounterchurch.org"
         />
@@ -63,20 +73,30 @@ export function SeedEncounterForm() {
       </label>
 
       {/*
-        Only an error can appear here. Success redirects — see the note on
-        `seedEncounterChurchAction` — and this whole panel is gone by the time
-        the page comes back, replaced by their card.
+        Only an error lands here. Success redirects, and this whole panel is
+        gone by the time the page comes back — replaced by their card.
       */}
-      {state?.error && (
+      {error && (
         <p role="alert" className="mt-4 text-sm text-plum">
-          {state.error}
+          {error}
         </p>
       )}
 
-      <button type="submit" disabled={pending} className={`${primaryButton} mt-5`}>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          setError(null);
+          start(async () => {
+            const result = await seedEncounterChurchAction(email);
+            if (result?.error) setError(result.error);
+          });
+        }}
+        className={`${primaryButton} mt-5`}
+      >
         {pending ? "Adding…" : "Add Encounter Church and their giving"}
       </button>
-    </form>
+    </div>
   );
 }
 
@@ -366,8 +386,12 @@ export function RevokeLoginButton({ partnerId, name }: { partnerId: string; name
  * password nobody can read is a password nobody can use.
  */
 export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
-  const [state, formAction, pending] = useActionState(issueLoginAction, undefined);
+  const [pending, start] = useTransition();
   const [password, setPassword] = useState("");
+  const [notify, setNotify] = useState(true);
+  const [state, setState] = useState<
+    { error?: string; saved?: boolean; message?: string } | undefined
+  >(undefined);
 
   const suggest = () => {
     /*
@@ -392,9 +416,7 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
   }
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="partnerId" value={partner.id} />
-
+    <div>
       <label className="block">
         <span className="eyebrow text-smoke">
           {partner.hasLogin ? "Set a new password" : "Give them a password"}
@@ -420,7 +442,8 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
         <input
           type="checkbox"
           name="notify"
-          defaultChecked
+          checked={notify}
+          onChange={(event) => setNotify(event.target.checked)}
           className="mt-0.5 h-4 w-4 accent-green"
         />
         <span>
@@ -434,8 +457,20 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
           Suggest one
         </button>
         <button
-          type="submit"
-          disabled={pending}
+          type="button"
+          disabled={pending || password.length < 10}
+          onClick={() => {
+            setState(undefined);
+            start(async () => {
+              setState(
+                await issueLoginAction({
+                  partnerId: partner.id,
+                  password,
+                  notify,
+                }),
+              );
+            });
+          }}
           className="cursor-pointer rounded bg-green px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60"
         >
           {pending ? "Saving…" : partner.hasLogin ? "Change it" : "Give them a login"}
@@ -457,7 +492,7 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
           {state.message}
         </p>
       )}
-    </form>
+    </div>
   );
 }
 

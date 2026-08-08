@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { getContent } from "@/cms/content";
 import { NeedBar } from "@/components/need-meter";
 import { NeedUpdates } from "@/components/need-updates";
+import { PhotoStrip, type SitePhoto } from "@/components/photos";
 import { ButtonLink, SectionTitle } from "@/components/ui";
 import { formatDay } from "@/lib/dates";
 import {
@@ -14,6 +15,7 @@ import {
   pledgeTowards,
 } from "@/lib/giving";
 import { usd } from "@/lib/money";
+import { getGalleryPhotos } from "@/lib/photos";
 import {
   listAreaGiftsForPartner,
   listNeedsForPartner,
@@ -58,6 +60,27 @@ export async function PartnerDashboard({
   ]);
 
   const projects = groupByProject(needs, areaGifts);
+
+  /*
+    Photographs to stand in for progress notes nobody has written yet — see the
+    Updates section below. Read only when they are wanted: a partner with
+    updates, or with no kitchen giving, never pays for the directory listing.
+  */
+  const showsKitchen =
+    updates.length === 0 &&
+    projects.some((project) => project.area.id === "kitchen");
+
+  const kitchenPhotos: SitePhoto[] = showsKitchen
+    ? (await getGalleryPhotos())
+        .filter((photo) => photo.src)
+        .slice(0, 6)
+        .map((photo) => ({
+          src: photo.src,
+          // The gallery keeps one line per photograph and uses it for both.
+          alt: photo.caption,
+          caption: photo.caption,
+        }))
+    : [];
 
   const active = pledges.filter((pledge) => pledge.status !== "declined");
   const totalClaimed = active.reduce((sum, pledge) => sum + pledge.amountCents, 0);
@@ -148,11 +171,41 @@ export async function PartnerDashboard({
                 The work you have paid for
               </SectionTitle>
               <div className="mt-10">
-                <NeedUpdates
-                  updates={updates}
-                  showNeed
-                  emptyNote="Nothing has been posted on your items yet. When work starts, progress and photographs appear here."
-                />
+                {/*
+                  With nothing posted, a church that paid for the kitchen should
+                  not be shown an empty box — the kitchen is built, and there are
+                  photographs of it. They are offered as what they are: the work
+                  as it stands today, not dated progress notes somebody wrote.
+                  Saying which is the difference between showing them their
+                  kitchen and inventing a history for it.
+
+                  Only for the kitchen, and only when they gave towards it. A
+                  church whose money went to school fees has no business being
+                  shown somebody else's building as though it were theirs.
+                */}
+                {updates.length === 0 && kitchenPhotos.length > 0 ? (
+                  <>
+                    <p className="mb-8 max-w-xl leading-relaxed text-smoke">
+                      No progress notes have been posted yet. This is the kitchen
+                      as it stands — the building your giving paid for.
+                    </p>
+                    <PhotoStrip photos={kitchenPhotos} />
+                    <p className="mt-6 text-sm text-smoke">
+                      <Link
+                        href="/projects/kitchen"
+                        className="font-medium text-plum underline underline-offset-4"
+                      >
+                        See the whole kitchen project
+                      </Link>
+                    </p>
+                  </>
+                ) : (
+                  <NeedUpdates
+                    updates={updates}
+                    showNeed
+                    emptyNote="Nothing has been posted on your items yet. When work starts, progress and photographs appear here."
+                  />
+                )}
               </div>
             </div>
 
