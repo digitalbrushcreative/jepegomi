@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { PageHeader } from "../ui";
 import { InviteForm, RemoveButton } from "./people-forms";
 
 type Person = { id: string; name: string; email: string; created_at: string };
@@ -14,15 +15,13 @@ export default async function PeoplePage() {
   `) as Person[];
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-3xl font-bold">People</h1>
-      <p className="mt-3 leading-relaxed text-smoke">
-        Everyone who can sign in and edit the site. Each person gets their own
-        password, so an edit is always attributable and one person can be removed
-        without disturbing anybody else.
-      </p>
+    <div className="max-w-2xl">
+      <PageHeader
+        title="People"
+        intro="Everyone who can sign in and edit the site. Each person gets their own password, so an edit is always attributable and one person can be removed without disturbing anybody else."
+      />
 
-      <ul className="mt-10 divide-y divide-black/8 rounded border border-black/8 bg-white">
+      <ul className="divide-y divide-black/8 rounded border border-black/8 bg-white">
         {people.map((person) => (
           <li
             key={person.id}

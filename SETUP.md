@@ -17,6 +17,34 @@ renders the wording that ships in the code and the site behaves exactly as it
 did before the CMS existed. A database that is missing, asleep or broken takes
 `/app` down with it and leaves the public site untouched.
 
+## Tests
+
+```bash
+npm test                       # Chromium, against a dev server
+npm run test:ui                # the same, in Playwright's watch UI
+npm run test:report            # the HTML report from the last run
+```
+
+Two suites. **public** walks every page a visitor can reach and checks it
+renders, plus that `/app` gives a signed-out visitor nothing but a sign-in box.
+**cms** signs in and drives the editor: the sidebar, the filing, the breadcrumb,
+the phone drawer. Its document list is read from `src/cms/schema.ts`, so a page
+added there is tested without anybody adding a test.
+
+The CMS suite needs a login, and **nothing in it creates an account** — the
+tests run against whatever `DATABASE_URL` is set, which is usually the real
+database. Put an existing account in `.env.local`:
+
+```bash
+E2E_EMAIL=you@example.com
+E2E_PASSWORD=…
+```
+
+Without those the CMS tests skip with a note and the public ones still run.
+
+Next allows only one `next dev` per project directory, so the tests attach to
+the server you already have on :3000 and start one only if nothing answers.
+
 ## The CMS
 
 `/app` edits the words and photos on the site. It is deliberately not a page
@@ -96,6 +124,19 @@ the partner dashboard and `/app` cannot drift apart on it.
    from promised to received on the public page.
 5. Post updates with photos as the work happens. They appear on the item's page
    and on the dashboard of every partner who put money towards it.
+
+### What Payments shows
+
+`/app/payments` is every gift paid **on the site**, straight from Pesapal:
+when, who, what it was towards, the dollars it added to the ledger, what the
+merchant account was actually charged in KES, the M-Pesa or card reference, and
+whether it succeeded. Failed and abandoned attempts are listed too — "I tried to
+give and it didn't work" is a message that arrives, and that row is the answer.
+
+It is read-only on purpose. Pesapal's word is what reconciles against a merchant
+statement, and a button here that let somebody edit it would produce a ledger
+that argues with the bank. Gifts sent by **bank transfer never appear here** —
+those are promises the ministry confirms by hand, under Needs.
 
 ### Partner logins
 
@@ -216,11 +257,11 @@ Marked in the UI as placeholders so they cannot be mistaken for real figures:
   one thing a stranger comes to a church website for, and a guess sends somebody
   to a locked gate. The page says the times are unconfirmed rather than imply a
   Sunday morning nobody has confirmed. The address is blank for the same reason.
-- **The Bible college** — what is taught, students enrolled, when it meets, how
-  to enrol. `/college` is the thinnest page on the site; it says so itself.
-- **Academy details** — the year the school was founded. Grades (Kindergarten to
-  Grade 6), pupils (131), teachers (9) and admin staff (3) are all confirmed and
-  on the page.
+- **The Bible college** — students enrolled, when it meets, how to enrol, and the
+  date of the next intake. The five programmes, their monthly fees and their
+  lengths are confirmed and on the page, along with the KCB account and the
+  paybill fees are paid to — the one place on the site that publishes an account
+  number, because a fee is a price a student has to be able to read.
 - **What academy transport costs.** It is the second need in the front page's
   needs slider, and the only one with no figure beside it: its card says "Still
   being costed" rather than borrowing the kitchen's numbers. A costing — a

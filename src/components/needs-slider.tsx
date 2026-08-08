@@ -35,7 +35,8 @@ export type NeedPanels = Record<string, ReactNode>;
 */
 const needIcons: Record<string, IconName> = {
   "/projects/kitchen": "trowel",
-  "/academy": "bus",
+  "/programs/transport": "bus",
+  "/academy": "child",
   "/programs/food-at-school": "pot",
   "/church": "church",
   "/college": "book",
@@ -176,7 +177,13 @@ export function NeedsSlider({
                   {/* Figures are read from the budget, so a need that has no
                       settled costing yet shows none rather than a guess. */}
                   {needFigures.length > 0 && (
-                    <dl className="mt-10 grid gap-px overflow-hidden rounded-2xl bg-white/15 sm:grid-cols-3">
+                    <dl
+                      className={`mt-10 grid gap-px overflow-hidden rounded-2xl bg-white/15 ${
+                        needFigures.length > 2
+                          ? "sm:grid-cols-3"
+                          : "sm:grid-cols-2"
+                      }`}
+                    >
                       {needFigures.map((figure) => (
                         <div key={figure.label} className="bg-plum-deep px-6 py-5">
                           <dt className="eyebrow text-white/50">{figure.label}</dt>
@@ -203,25 +210,32 @@ export function NeedsSlider({
                 </div>
 
                 {/*
-                  The card answers the one question a donor actually has — how
-                  far along is this — with the kitchen's pot, or with where a
-                  need stands when it has no pot to show.
+                  A panel draws itself, and gets no card to do it in.
+
+                  The white box used to be the frame for everything on this
+                  side, which was right when the contents were a single diagram
+                  needing something to sit on. What goes here now is a collage
+                  of photographs, and a white box around those is a frame around
+                  a set of frames — it shrinks the pictures to make room for
+                  nothing.
+
+                  The card survives for the fallback below, where there is a
+                  lone icon and a line of status that would look abandoned on
+                  the plum with nothing holding it.
                 */}
-                <div className="overflow-hidden rounded-2xl bg-white shadow-warm-lg">
-                  <div className="flex flex-col items-center px-8 py-10 text-center">
-                    {panels[need.href] ?? (
-                      <>
-                        {icon && <Icon name={icon} className="h-20 w-20 text-plum" />}
-                        <p className="eyebrow mt-6 text-plum">{need.label}</p>
-                        {need.status && (
-                          <p className="mt-3 max-w-[16rem] text-sm leading-relaxed text-smoke">
-                            {need.status}
-                          </p>
-                        )}
-                      </>
-                    )}
+                {panels[need.href] ?? (
+                  <div className="overflow-hidden rounded-2xl bg-white shadow-warm-lg">
+                    <div className="flex flex-col items-center px-8 py-10 text-center">
+                      {icon && <Icon name={icon} className="h-20 w-20 text-plum" />}
+                      <p className="eyebrow mt-6 text-plum">{need.label}</p>
+                      {need.status && (
+                        <p className="mt-3 max-w-[16rem] text-sm leading-relaxed text-smoke">
+                          {need.status}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}

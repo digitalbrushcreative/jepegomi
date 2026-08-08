@@ -10,9 +10,9 @@ drag-and-drop in the browser, or just copying files in here.
 the report.
 
 ```
-01.jpg      → slot 1   (Site & Foundation — "Site cleared and prepared for foundation")
-07.jpg      → slot 7   (Walls & Structure — "Window openings formed")
-23.jpg      → slot 23  (People — "Where we stand today")
+01.jpg      → slot 1   (Walls & Structure — "Laying the first courses of the kitchen wall")
+14.jpg      → slot 14  (Roof & Finish — "Inside — the jiko in place on a tiled floor")
+23.jpg      → slot 23  (Cooking & Eating — "Plates in hand, on the way back to class")
 before.jpg  → the "Before — Cooking Outdoors" photo
 after.jpg   → the "Now — The New Kitchen" photo
 ```
@@ -28,12 +28,14 @@ The caption and category for every slot live in
 [`src/content/kitchen.ts`](../../../src/content/kitchen.ts). Change the wording
 there; the numbering here follows it.
 
-| Slots   | Category          |
-| ------- | ----------------- |
-| 1–4     | Site & Foundation |
-| 5–12    | Walls & Structure |
-| 13–18   | Roof & Finish     |
-| 19–23   | People            |
+| Slots | Category          | When          |
+| ----- | ----------------- | ------------- |
+| 1–10  | Walls & Structure | February 2026 |
+| 11–15 | Roof & Finish     | May 2026      |
+| 16–23 | Cooking & Eating  | June 2026     |
+
+All 23 slots are filled, plus `before` and `after`. Replacing one is a matter
+of dropping a new file over the old — same number, any accepted extension.
 
 ## Notes
 

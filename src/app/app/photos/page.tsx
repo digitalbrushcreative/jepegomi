@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { beforeAfter } from "@/content/kitchen";
 import { currentUser } from "@/lib/auth";
 import { getBeforeAfterSources, getGalleryPhotos } from "@/lib/photos";
+import { PageHeader } from "../ui";
 import { Editor, type Slot } from "./editor";
 
 /*
@@ -39,15 +40,19 @@ export default async function PhotosPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold">Kitchen Build photos</h1>
-      <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
-        Drop a photo onto a slot to fill it. Slot 7 here is photo 7 on the
-        Kitchen Build page. Photos save into{" "}
-        <code className="font-mono text-xs">public/photos/kitchen/</code>, so you
-        can also just copy files into that folder by hand.
-      </p>
+      <PageHeader
+        title="Photos"
+        intro={
+          <>
+            The Kitchen Build gallery. Drop a photo onto a slot to fill it —
+            slot 7 here is photo 7 on the Kitchen Build page. Photos save into{" "}
+            <code className="font-mono text-xs">public/photos/kitchen/</code>,
+            so you can also just copy files into that folder by hand.
+          </>
+        }
+      />
 
-      <div className="mt-10">
+      <div>
         <Editor gallery={gallery} beforeAfter={beforeAfterSlots} />
       </div>
     </div>

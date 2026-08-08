@@ -1,14 +1,22 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { donation } from "@/content/kitchen";
 import { currentUser } from "@/lib/auth";
 import { formatDay } from "@/lib/dates";
 import { ensureSchema } from "@/lib/db";
 import { usd } from "@/lib/money";
-import { PARTNER_KINDS } from "@/lib/giving";
+import { PARTNER_KINDS, areaOf } from "@/lib/giving";
+import { listNeeds } from "@/lib/needs";
 import { listPartners } from "@/lib/partners";
+import { PageHeader } from "../ui";
 import {
+  AddPartnerForm,
+  type GiftTarget,
   IssueLoginForm,
   PartnerDetailsForm,
+  RecordGiftForm,
   RevokeLoginButton,
+  SeedEncounterForm,
   VerifyButton,
 } from "./partner-forms";
 
@@ -28,22 +36,90 @@ export default async function AdminPartnersPage() {
   if (!user) redirect("/app");
 
   await ensureSchema();
-  const partners = await listPartners();
+  const [partners, needs] = await Promise.all([listPartners(), listNeeds()]);
 
   const unverified = partners.filter((partner) => !partner.verified);
 
+  const hasEncounter = partners.some(
+    (partner) => partner.name.trim().toLowerCase() === "encounter church",
+  );
+
+  /*
+    What a recorded gift can be put against: anything with room left in it.
+
+    Fully-claimed items are the only ones left out, because offering them could
+    only produce an error on submit. Closed and unpublished ones stay — money
+    towards finished work is exactly what arrives late, and a church may well
+    have promised something before Simon put it on the site. Each is labelled
+    with which it is, so the list cannot be mistaken for what /needs is showing
+    the public.
+  */
+  const targets: GiftTarget[] = needs
+    .filter((need) => need.ledger.openCents > 0)
+    .map((need) => ({
+      id: need.id,
+      title: need.title,
+      areaLabel: areaOf(need.area).label,
+      openCents: need.ledger.openCents,
+      state: need.closed ? "finished" : need.published ? "open" : "draft",
+    }));
+
   return (
     <div className="max-w-3xl">
-      <h1 className="font-display text-3xl font-bold">Partners</h1>
-      <p className="mt-3 leading-relaxed text-smoke">
-        The churches and people who have given. A partner appears here the
-        moment they claim something at{" "}
-        <span className="font-mono text-sm">/needs</span> — nothing about them is
-        confirmed until you say so.
-      </p>
+      <PageHeader
+        title="Partners"
+        intro={
+          <>
+            The churches and people who have given. A partner appears here the
+            moment they claim something at{" "}
+            <span className="font-mono text-sm">/needs</span> — nothing about
+            them is confirmed until you say so. Gifts that arrived by transfer or
+            M-Pesa never touched that form, so add those partners yourself and
+            record what they sent.
+          </>
+        }
+      />
+
+      {/*
+        The kitchen's own donor, offered once and then gone. Their $8,000
+        predates this ledger entirely, and typing six budget lines and six gifts
+        in by hand — from figures that are already in the repository — is the
+        kind of job a button should do. It disappears the moment they are here.
+      */}
+      {!hasEncounter && (
+        <div className="mt-8 rounded border border-green/30 bg-green/6 p-6">
+          <h2 className="font-display text-lg font-bold">
+            Encounter Church is not on this page yet
+          </h2>
+          <p className="mt-3 max-w-prose text-sm leading-relaxed text-smoke">
+            They gave the {usd(donation.amountUsd * 100)}{" "}
+            that built the kitchen, years before this ledger existed. This adds
+            them, enters the six
+            budget lines from Pastor Simon&apos;s reconciliation letter as
+            finished items, and records their giving against each one — so they
+            can sign in and see what it built. Nothing is added to the public
+            site: the kitchen page still names no donor.
+          </p>
+          <SeedEncounterForm />
+        </div>
+      )}
+
+      <details className="mt-8 rounded border border-black/8 bg-white p-6">
+        <summary className="cursor-pointer font-medium hover:text-plum">
+          Add a partner by hand
+        </summary>
+        <p className="mt-4 max-w-prose text-sm leading-relaxed text-smoke">
+          For a church or person who gave without using the form on the site — a
+          bank transfer after an exchange of emails, or a gift from before this
+          page existed. Record what they sent afterwards, against their name.
+        </p>
+        <div className="mt-6 border-t border-black/8 pt-6">
+          <AddPartnerForm />
+        </div>
+      </details>
 
       {unverified.length > 0 && (
-        <p className="mt-6 rounded border border-marigold/40 bg-marigold/8 px-5 py-4 text-sm leading-relaxed">
+        <p className="rounded border border-marigold/40 bg-marigold/8 px-5 py-4 text-sm leading-relaxed">
           <strong className="font-medium">
             {unverified.length} still to verify.
           </strong>{" "}
@@ -135,9 +211,34 @@ export default async function AdminPartnersPage() {
                 {partner.hasLogin && (
                   <RevokeLoginButton partnerId={partner.id} name={partner.name} />
                 )}
+                {/*
+                  Opens the real page on the real site, so what is on screen is
+                  what they get. It leaves /app, which is why it says so.
+                */}
+                <Link
+                  href={`/partners/preview/${partner.id}`}
+                  className="rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum"
+                >
+                  See what they see
+                </Link>
               </div>
 
               <details className="mt-5">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
+                  Record a gift
+                </summary>
+                <div className="mt-5 border-t border-black/8 pt-5">
+                  <p className="mb-6 max-w-prose text-sm leading-relaxed text-smoke">
+                    Money that came in outside the site. It counts towards the
+                    item&apos;s balance the same way a claim on{" "}
+                    <span className="font-mono text-xs">/needs</span> does, and
+                    appears on {partner.name}&apos;s own page straight away.
+                  </p>
+                  <RecordGiftForm partner={partner} targets={targets} />
+                </div>
+              </details>
+
+              <details className="mt-3">
                 <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
                   Details &amp; login
                 </summary>

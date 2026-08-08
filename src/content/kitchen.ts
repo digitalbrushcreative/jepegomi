@@ -7,11 +7,17 @@
 
 import type { IconName } from "@/components/icons";
 
+/**
+ * The three runs of photographs Simon has sent, in the order they arrived:
+ * the walls going up in February, the roofed kitchen in May, and the first
+ * meals cooked in it in June. There is no "Site & Foundation" tab because
+ * there are no photographs of that — the first ones we have already show
+ * block walls at knee height.
+ */
 export const PHOTO_CATEGORIES = [
-  { id: "site", label: "Site & Foundation" },
   { id: "walls", label: "Walls & Structure" },
   { id: "roof", label: "Roof & Finish" },
-  { id: "people", label: "People" },
+  { id: "people", label: "Cooking & Eating" },
 ] as const;
 
 export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number]["id"];
@@ -25,36 +31,39 @@ export type Photo = {
 };
 
 export const photos: Photo[] = [
-  { id: 1, category: "site", caption: "Site cleared and prepared for foundation", src: "" },
-  { id: 2, category: "site", caption: "Excavation for footings begins", src: "" },
-  { id: 3, category: "site", caption: "Foundation trenches complete", src: "" },
-  { id: 4, category: "site", caption: "Concrete poured for footings", src: "" },
-  { id: 5, category: "walls", caption: "First courses of brickwork — kitchen", src: "" },
-  { id: 6, category: "walls", caption: "Walls rising on the main kitchen", src: "" },
-  { id: 7, category: "walls", caption: "Window openings formed", src: "" },
-  { id: 8, category: "walls", caption: "Kitchen walls at full height", src: "" },
-  { id: 9, category: "walls", caption: "Lintels and door frames set", src: "" },
-  { id: 10, category: "walls", caption: "Store room walls going up", src: "" },
-  { id: 11, category: "walls", caption: "Dining area walls in progress", src: "" },
-  { id: 12, category: "walls", caption: "Overview — all three spaces taking shape", src: "" },
-  { id: 13, category: "roof", caption: "Roof structure frames installed", src: "" },
-  { id: 14, category: "roof", caption: "Iron sheets on the kitchen roof", src: "" },
-  { id: 15, category: "roof", caption: "Kitchen interior — looking up at the roof", src: "" },
-  { id: 16, category: "roof", caption: "Exterior plastering begins", src: "" },
-  { id: 17, category: "roof", caption: "Store room — door fitted", src: "" },
-  { id: 18, category: "roof", caption: "Brickwork detail", src: "" },
-  { id: 19, category: "people", caption: "Children visiting the new kitchen site", src: "" },
-  { id: 20, category: "people", caption: "The building team at work", src: "" },
-  { id: 21, category: "people", caption: "Inspecting progress on site", src: "" },
-  { id: 22, category: "people", caption: "Community gathered to see the work", src: "" },
-  { id: 23, category: "people", caption: "Where we stand today", src: "" },
+  // February 2026 — the walls.
+  { id: 1, category: "walls", caption: "Laying the first courses of the kitchen wall", src: "" },
+  { id: 2, category: "walls", caption: "Blocks stacked and waiting, walls at knee height", src: "" },
+  { id: 3, category: "walls", caption: "The kitchen going up beside the school", src: "" },
+  { id: 4, category: "walls", caption: "Walls rising, timber props and ladder in place", src: "" },
+  { id: 5, category: "walls", caption: "Doorway and window openings formed", src: "" },
+  { id: 6, category: "walls", caption: "The passage between the kitchen and the store room", src: "" },
+  { id: 7, category: "walls", caption: "Concrete lintels cast over the openings", src: "" },
+  { id: 8, category: "walls", caption: "Inside — the cooking platforms take shape", src: "" },
+  { id: 9, category: "walls", caption: "The serving counter, plastered", src: "" },
+  { id: 10, category: "walls", caption: "Ring beam poured — walls at their full height", src: "" },
+  // May 2026 — roofed, plastered and fitted out.
+  { id: 11, category: "roof", caption: "Roofed, plastered and standing", src: "" },
+  { id: 12, category: "roof", caption: "The kitchen from the yard", src: "" },
+  { id: 13, category: "roof", caption: "In the doorway, with cooking underway inside", src: "" },
+  { id: 14, category: "roof", caption: "Inside — the jiko in place on a tiled floor", src: "" },
+  { id: 15, category: "roof", caption: "The two-pot wood-burning jiko, close up", src: "" },
+  // June 2026 — the kitchen doing the job it was built for.
+  { id: 16, category: "people", caption: "The fire lit under the new jiko", src: "" },
+  { id: 17, category: "people", caption: "Rice and beans, plated for the children", src: "" },
+  { id: 18, category: "people", caption: "The meal laid out beneath the kitchen vents", src: "" },
+  { id: 19, category: "people", caption: "Food carried out to the children", src: "" },
+  { id: 20, category: "people", caption: "The queue at the kitchen door", src: "" },
+  { id: 21, category: "people", caption: "Lunch in the classroom", src: "" },
+  { id: 22, category: "people", caption: "Every child eating the same meal", src: "" },
+  { id: 23, category: "people", caption: "Plates in hand, on the way back to class", src: "" },
 ];
 
 export const beforeAfter = {
   before: {
     heading: "Before — Cooking Outdoors",
     src: "",
-    alt: "Meals being cooked outdoors over an open fire",
+    alt: "A cooking pot balanced on stones over an open wood fire on bare ground",
     bullets: [
       "Open fire cooking outdoors",
       "No shelter, storage or dining space",
@@ -79,17 +88,42 @@ export const progress = {
   caption: "Structure done · finishing touches underway",
 } as const;
 
+/**
+ * Who gave, deliberately unnamed.
+ *
+ * The giving congregation is not named anywhere on the public site. Another
+ * church reading this page should see an invitation, not somebody else's
+ * project — a named partner reads as a claim already staked. The gift and the
+ * reconciliation below are reported exactly as they were given; only the name
+ * is withheld.
+ */
 export const donation = {
-  donor: "Encounter Church",
-  donorLocation: "Palmyra, Pennsylvania",
+  /** Lower case: it lands mid-sentence far more often than it opens one. */
+  donor: "a partner church",
+  /** The same words, for the one heading that starts with them. */
+  donorTitled: "A partner church",
+  donorLocation: "the United States",
   amountUsd: 8000,
 } as const;
 
-export const stats = [
-  { value: "50+", label: "Children Fed Daily" },
-  { value: "$8,000", label: "Donated by Encounter Church" },
-  { value: "1", label: "Kitchen Rising in Nairobi" },
-] as const;
+/**
+ * The three headline numbers.
+ *
+ * The first one is not written here. The children fed are the children
+ * enrolled — the school feeds everyone it teaches — so it is passed in from the
+ * academy's CMS field (see `getChildrenFed`) and cannot sit here going stale
+ * while the school grows. Null when that field is blank, which is why the
+ * fallback is a word rather than a number.
+ */
+export const statsFor = (childrenFed: number | null) =>
+  [
+    {
+      value: childrenFed ? String(childrenFed) : "All",
+      label: "Children Fed Daily",
+    },
+    { value: "$8,000", label: `Donated by ${donation.donor}` },
+    { value: "1", label: "Kitchen Rising in Nairobi" },
+  ] as const;
 
 /**
  * The three things the $8,000 could not reach. Costs are Simon's own estimates
@@ -124,7 +158,7 @@ export type BudgetLine = {
 };
 
 /**
- * The estimated-vs-actual reconciliation from Simon's letter to Encounter Church.
+ * The estimated-vs-actual reconciliation from Simon's letter to the donor.
  *
  * Both columns balance to the $8,000 gift exactly: the estimates sum to $8,000,
  * and the six actual figures sum to $8,000. Transport is the one line the letter
@@ -218,7 +252,7 @@ export const budgetTotals = {
 };
 
 export const budgetNote =
-  "Figures in USD, as reported by Pastor Simon to Encounter Church. The $8,000 gift is fully spent. The three items above were never reached.";
+  "Figures in USD, as reported by Pastor Simon to the donor. The $8,000 gift is fully spent. The three items above were never reached.";
 
 /**
  * The first-pass itemised estimate, before it was consolidated into the

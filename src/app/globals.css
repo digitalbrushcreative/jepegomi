@@ -35,12 +35,21 @@
   --font-sans: var(--font-karla), system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* Nothing on this site has a sharp corner. */
-  --radius-sm: 0.625rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.125rem;
-  --radius-xl: 1.5rem;
-  --radius-2xl: 2rem;
+  /*
+    A 4px corner — just enough to take the sharp edge off. The cards once ran to
+    32px, which read as soft-toy rather than hand-made; this is the other end of
+    that, near-square but not brutalist. The whole scale is flat at one value, so
+    a card, a photo and an input all agree, and it is set here rather than on 49
+    call sites so the softness can be dialled up again from one place.
+
+    `rounded-full` is not part of this scale (Tailwind emits a fixed pill radius
+    for it), so avatars and pills stay circular.
+  */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.25rem;
+  --radius-2xl: 0.25rem;
 
   /* Shadows are warm — a grey shadow on cream paper looks like dirt. */
   --shadow-warm: 0 2px 4px -2px rgb(74 32 16 / 0.06), 0 12px 28px -12px rgb(74 32 16 / 0.14);

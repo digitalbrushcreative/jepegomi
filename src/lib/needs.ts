@@ -5,8 +5,11 @@ import { isDatabaseConfigured, sql } from "@/lib/db";
 import type {
   Ledger,
   Need,
+  NeedArea,
   NeedUpdate,
   NeedWithLedger,
+  PartnerAreaGift,
+  PartnerNeed,
   Pledge,
   PledgeStatus,
 } from "@/lib/giving";
@@ -105,9 +108,12 @@ function toUpdate(row: Row): NeedUpdate {
 function toPledge(row: Row): Pledge {
   return {
     id: str(row.id),
-    needId: str(row.need_id),
-    needSlug: str(row.need_slug),
-    needTitle: str(row.need_title),
+    needId: row.need_id ? str(row.need_id) : null,
+    needSlug: row.need_slug ? str(row.need_slug) : null,
+    needTitle: row.need_title ? str(row.need_title) : null,
+    needPublished: Boolean(row.need_published),
+    designation: str(row.designation),
+    area: row.area ? (str(row.area) as NeedArea) : null,
     partnerId: row.partner_id ? str(row.partner_id) : null,
     partnerName: row.partner_name ? str(row.partner_name) : null,
     partnerEmail: row.partner_email ? str(row.partner_email) : null,
@@ -267,6 +273,23 @@ export async function listOpenPledges(): Promise<Pledge[]> {
   return rows.map(toPledge);
 }
 
+/**
+ * Gifts given towards something other than a listed item.
+ *
+ * These have no need page to live on, so /app is the only place they are ever
+ * seen — all of them, in every status, rather than only the ones still waiting.
+ * A general gift that has been banked and forgotten about is exactly the kind of
+ * money a ledger is supposed to stop losing.
+ */
+export async function listGeneralPledges(): Promise<Pledge[]> {
+  const rows = await sql()`
+    SELECT * FROM pledge_detail
+    WHERE need_id IS NULL
+    ORDER BY created_at DESC
+  `;
+  return rows.map(toPledge);
+}
+
 export async function listUpdatesForNeed(needId: string): Promise<NeedUpdate[]> {
   const rows = await sql()`
     SELECT u.*, users.name AS author_name
@@ -297,7 +320,7 @@ export async function listPledgesForPartner(partnerId: string): Promise<Pledge[]
  */
 export async function listNeedsForPartner(
   partnerId: string,
-): Promise<(NeedWithLedger & { yoursCents: number; yoursReceivedCents: number })[]> {
+): Promise<PartnerNeed[]> {
   /*
     `mine` is joined on the partner id, so every row summed here is already
     theirs — the FILTERs narrow by status only. The public totals come from the
@@ -324,7 +347,56 @@ export async function listNeedsForPartner(
   }));
 }
 
-/** Progress on the needs this partner backed — the reason to come back. */
+/**
+ * Designated giving that has no listed item behind it, summed per area.
+ *
+ * A gift the giver described in their own words used to be a dead end on their
+ * dashboard: a line of text and an amount, with no project to look at and no
+ * photographs to see. Where the words named an arm of the ministry, this is what
+ * puts it back under that project — the ledger keeps the row exactly as it was
+ * written, and the dashboard files it where the money went.
+ *
+ * Rows whose area is null are deliberately absent. They still appear in "every
+ * claim" below, in the giver's own words, because that list is the record and
+ * the record is complete; what they cannot do is claim a project heading nobody
+ * has established they gave to.
+ */
+export async function listAreaGiftsForPartner(
+  partnerId: string,
+): Promise<PartnerAreaGift[]> {
+  const rows = await sql()`
+    SELECT area,
+      COALESCE(SUM(amount_cents) FILTER (WHERE status <> 'declined'), 0)::int
+        AS yours_cents,
+      COALESCE(SUM(amount_cents) FILTER (WHERE status = 'received'), 0)::int
+        AS yours_received_cents,
+      COUNT(*) FILTER (WHERE status <> 'declined')::int AS gift_count
+    FROM pledges
+    WHERE partner_id = ${partnerId}
+      AND need_id IS NULL
+      AND area IS NOT NULL
+      AND status <> 'declined'
+    GROUP BY area
+  `;
+
+  return rows.map((row) => ({
+    area: str(row.area) as NeedArea,
+    yoursCents: int(row.yours_cents),
+    yoursReceivedCents: int(row.yours_received_cents),
+    giftCount: int(row.gift_count),
+  }));
+}
+
+/**
+ * Progress on the work this partner paid for — the reason to come back.
+ *
+ * Two ways in, and the second one matters more than it looks. A church that
+ * claimed the water tank sees updates on the water tank; that is the first
+ * branch and it is the obvious one. A church that gave $8,000 towards "the
+ * kitchen build" claimed no single item, and under the first branch alone would
+ * sign in to an empty page — having paid for the building in the photographs.
+ * The area is what connects them to it.
+ */
 export async function listUpdatesForPartner(
   partnerId: string,
   limit = 30,
@@ -337,9 +409,9 @@ export async function listUpdatesForPartner(
     LEFT JOIN users ON users.id = u.created_by
     WHERE EXISTS (
       SELECT 1 FROM pledges p
-      WHERE p.need_id = n.id
-        AND p.partner_id = ${partnerId}
+      WHERE p.partner_id = ${partnerId}
         AND p.status <> 'declined'
+        AND (p.need_id = n.id OR (p.need_id IS NULL AND p.area = n.area))
     )
     ORDER BY u.created_at DESC
     LIMIT ${limit}
@@ -515,6 +587,91 @@ export async function claimNeed(input: {
   return { ok: true, pledgeId };
 }
 
+/**
+ * The same claim, written by Simon in /app rather than by a giver on the site.
+ *
+ * It keeps the balance check and drops the two gates around it, and the
+ * difference is worth being explicit about, because dropping a check that
+ * protects a public endpoint is not a thing to do quietly.
+ *
+ *   the balance   kept. Recording $900 against an $850 water tank produces a
+ *                 page reading "$900 of $850" whoever typed it, and a partner
+ *                 credited with money the item could not hold. Nobody should be
+ *                 able to do that, including Simon, including by accident.
+ *   published     dropped. That gate is there so a draft need — one Simon is
+ *                 halfway through writing, with a placeholder cost — cannot be
+ *                 claimed by a stranger who guessed its address. He is not a
+ *                 stranger, and a church may well have promised money towards
+ *                 something before it went up on the site.
+ *   closed        dropped, and this is the one that matters. A closed need is
+ *                 finished work; money for finished work is exactly what
+ *                 arrives late, and what arrived years before this ledger
+ *                 existed. Refusing it would leave the ministry's largest gifts
+ *                 as the only ones it could not write down.
+ *
+ * Callers are already behind `requireUser`. This function is not, and cannot
+ * be — it is a query, not an endpoint — so it must never be reached from
+ * anything a visitor can post to.
+ */
+export async function recordNeedPledge(input: {
+  needId: string;
+  partnerId: string;
+  amountCents: number;
+  message: string;
+}): Promise<ClaimResult> {
+  const pledgeId = randomUUID();
+
+  const rows = await sql()`
+    INSERT INTO pledges (id, need_id, partner_id, amount_cents, message, status)
+    SELECT ${pledgeId}::text, n.id, ${input.partnerId}::text,
+           ${input.amountCents}::int, ${input.message}::text, 'pending'
+    FROM needs n
+    WHERE n.id = ${input.needId}
+      AND ${input.amountCents}::int <= n.cost_cents - COALESCE((
+            SELECT SUM(p.amount_cents)
+            FROM pledges p
+            WHERE p.need_id = n.id AND p.status <> 'declined'
+          ), 0)
+    RETURNING id
+  `;
+
+  if (rows.length === 0) {
+    const need = await sql()`SELECT 1 FROM needs WHERE id = ${input.needId}`;
+    return { ok: false, reason: need.length > 0 ? "too-much" : "gone" };
+  }
+
+  return { ok: true, pledgeId };
+}
+
+/**
+ * A gift towards something the giver described themselves.
+ *
+ * No balance to check, because there is no cost to check it against: nothing
+ * here can be over-claimed, so this is a plain insert where claimNeed has to be
+ * a conditional one. It lands in 'pending' like every other claim and is
+ * reconciled the same way — the only difference between the two rows in the end
+ * is which column carries what the money was for.
+ */
+export async function recordGeneralPledge(input: {
+  partnerId: string;
+  amountCents: number;
+  designation: string;
+  /** Where it can be told from the words — see `areaForDesignation`. */
+  area?: NeedArea | null;
+  message: string;
+}) {
+  const pledgeId = randomUUID();
+
+  await sql()`
+    INSERT INTO pledges (id, need_id, partner_id, amount_cents, designation, area, message, status)
+    VALUES (${pledgeId}, NULL, ${input.partnerId}, ${input.amountCents},
+            ${input.designation}, ${input.area ?? null}, ${input.message}, 'pending')
+  `;
+
+  return pledgeId;
+}
+
+/** Returns the slug of the need this claim was against, or "" if it was not against one. */
 export async function setPledgeStatus(pledgeId: string, status: PledgeStatus) {
   const rows = await sql()`
     UPDATE pledges SET
@@ -526,6 +683,7 @@ export async function setPledgeStatus(pledgeId: string, status: PledgeStatus) {
   `;
 
   if (rows.length === 0) throw new Error("That claim no longer exists.");
+  if (!rows[0].need_id) return "";
 
   const slug = await sql()`SELECT slug FROM needs WHERE id = ${rows[0].need_id}`;
   return str(slug[0]?.slug);

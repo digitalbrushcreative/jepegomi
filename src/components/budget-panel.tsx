@@ -123,7 +123,7 @@ export function BudgetPanel() {
 
             <div className="p-8">
               <p className="leading-relaxed text-smoke">
-                {donation.donor} of {donation.donorLocation} gave{" "}
+                {donation.donorTitled} in {donation.donorLocation} gave{" "}
                 <strong className="text-charcoal">
                   {usd(donation.amountUsd)}
                 </strong>{" "}

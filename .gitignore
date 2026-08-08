@@ -12,6 +12,15 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+# The signed-in session the CMS tests reuse. A real cookie for a real account.
+/tests/.auth/
+
+# Scratch Playwright specs written to check one page's rendering and thrown away.
+/.tmp-render/
 
 # next.js
 /.next/
@@ -40,3 +49,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Phone originals of the church/school property shoot — ~200 MB of 4096px
+# JPEGs. The compressed versions the site actually serves are committed under
+# public/photos/. See photos-source/README.md.
+/photos-source/property-originals/

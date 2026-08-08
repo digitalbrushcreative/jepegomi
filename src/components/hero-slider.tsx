@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import {
-  type ReactNode,
   useCallback,
   useEffect,
   useId,
@@ -27,15 +26,17 @@ export type Slide = {
 };
 
 /**
- * The panel each slide carries on its right — the Kitchen's progress pot, the
- * Academy's details, the college's card.
+ * The photograph a slide is built around, filling it edge to edge.
  *
- * They are built on the server and handed in, rather than assembled here,
- * because the Academy's panel needs its own CMS document and this component
- * runs on the client. Keyed by the slide's link, the same way its logo and
- * colour are.
+ * Passed as a path rather than a rendered node, because it has to sit under the
+ * colour block, under the grain and beneath the text; a caller handed that job
+ * would have to know the stacking order to get it right.
+ *
+ * Decorative by definition: whatever it shows is said again in the slide's own
+ * words a few pixels to the left, so it is rendered with an empty alt rather
+ * than making a screen reader listen to the same thing twice.
  */
-export type SlidePanels = Record<string, ReactNode>;
+export type SlideBackdrops = Record<string, string>;
 
 /*
   Which mark and which colour a slide wears follows the arm of the ministry it
@@ -49,6 +50,17 @@ const brands: Record<
     Mark: typeof FoodAtSchoolLogo;
     label: string;
     background: string;
+    /**
+     * The gradient laid over the backdrop photograph, in the slide's own
+     * colour. It runs left to right: near-solid under the words, thinning
+     * across the picture.
+     *
+     * This is the one thing on the slide that is not negotiable. White type on
+     * a photograph is unreadable wherever the photograph happens to be pale,
+     * and "happens to be" is not a contrast strategy — every one of these keeps
+     * the text half of the slide at or near the flat colour it used to be.
+     */
+    scrim: string;
     /**
      * Green is the giving colour everywhere on this site — but a green button on
      * the academy's green slide is a button nobody can see. There it inverts to
@@ -69,22 +81,26 @@ const brands: Record<
     Mark: JepegomiLogo,
     label: "Jesus People Gospel Ministries",
     background: "bg-plum-deep",
+    scrim: "from-plum-deep via-plum-deep/92 to-plum-deep/40",
   },
   "/academy": {
     Mark: AcademyLogo,
     label: "Jepegomi Academy",
     background: "bg-green-deep",
+    scrim: "from-green-deep via-green-deep/92 to-green-deep/40",
     give: "!bg-white !text-green hover:!bg-cream",
   },
   "/college": {
     Mark: BibleCollegeLogo,
     label: "Contextual Bible Training College",
     background: "bg-charcoal",
+    scrim: "from-charcoal via-charcoal/92 to-charcoal/40",
   },
   "/programs/food-at-school": {
     Mark: FoodAtSchoolLogo,
     label: "Food at School",
     background: "bg-brown",
+    scrim: "from-brown via-brown/92 to-brown/40",
   },
 };
 
@@ -92,10 +108,10 @@ const INTERVAL_MS = 7000;
 
 export function HeroSlider({
   slides,
-  panels = {},
+  backdrops = {},
 }: {
   slides: Slide[];
-  panels?: SlidePanels;
+  backdrops?: SlideBackdrops;
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -147,6 +163,24 @@ export function HeroSlider({
       className="relative overflow-hidden"
     >
       {/*
+        The torn edge the colour hands over to the photograph on, declared once
+        for all four slides. `objectBoundingBox` units mean the same path fits
+        whatever the slide is sized to, and one definition avoids four elements
+        fighting over a single id.
+
+        It leans out to about 62% and back to 59% down the height. The words end
+        near 49% of the viewport at every width the split is on, so the wobble
+        never reaches them.
+      */}
+      <svg aria-hidden="true" className="absolute h-0 w-0" focusable="false">
+        <defs>
+          <clipPath id="hero-split" clipPathUnits="objectBoundingBox">
+            <path d="M0,0 L0.605,0 C0.578,0.17 0.628,0.34 0.596,0.5 C0.564,0.66 0.614,0.83 0.588,1 L0,1 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+
+      {/*
         Every slide is rendered into the same grid cell, so the hero is as tall
         as its tallest slide and never jolts the page as it turns over.
       */}
@@ -154,6 +188,7 @@ export function HeroSlider({
         {slides.map((slide, slideIndex) => {
           const brand = brands[slide.href];
           const active = slideIndex === index;
+          const backdrop = backdrops[slide.href];
 
           return (
             <div
@@ -166,10 +201,54 @@ export function HeroSlider({
               // Everything on a hidden slide leaves the tab order with it, so a
               // keyboard never lands on a button it cannot see.
               inert={!active}
-              className={`col-start-1 row-start-1 transition-opacity duration-700 ${
+              className={`relative col-start-1 row-start-1 overflow-hidden transition-opacity duration-700 ${
                 brand?.background ?? "bg-plum-deep"
               } ${active ? "opacity-100" : "pointer-events-none opacity-0"}`}
             >
+              {/*
+                The photograph, at full strength and filling the slide. Only the
+                first is `priority` — it is the largest thing above the fold on
+                the front page, and the other three are behind an opacity
+                transition nobody is waiting on.
+              */}
+              {backdrop && (
+                <div aria-hidden="true" className="absolute inset-0">
+                  <Image
+                    src={backdrop}
+                    alt=""
+                    fill
+                    sizes="100vw"
+                    priority={slideIndex === 0}
+                    className="object-cover"
+                  />
+
+                  {/*
+                    Narrow screens have no room to put words beside a picture,
+                    so there the colour goes over the whole photograph and the
+                    slide reads as it did before — type on a tinted image.
+                  */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-r ${brand?.scrim ?? "from-plum-deep via-plum-deep/92 to-plum-deep/40"} lg:hidden`}
+                  />
+
+                  {/*
+                    Wide screens get the split: the colour holds the left of the
+                    slide at full opacity and hands over to the photograph along
+                    a torn edge, the same motif as the cloth edges between
+                    sections. The words never touch the picture, which is what
+                    lets the picture be shown at full strength instead of dimmed
+                    to a backdrop.
+                  */}
+                  <div
+                    className={`absolute inset-0 hidden lg:block ${brand?.background ?? "bg-plum-deep"}`}
+                    style={{ clipPath: "url(#hero-split)" }}
+                  />
+
+                  {/* Keeps the controls off whatever the photo does at the foot. */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15" />
+                </div>
+              )}
+
               <div className="grain-layer" />
 
               {/*
@@ -177,7 +256,14 @@ export function HeroSlider({
                 padding has to clear it. The deep bottom padding leaves the
                 controls and the cloth edge somewhere to sit.
               */}
-              <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pt-28 pb-36 sm:pt-32 sm:pb-40 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-16">
+              {/*
+                Taller than it was, and the picture column is now the wider of
+                the two. The old split gave the words 1.15 against the panel's
+                1, which was right when the panel held a small diagram and
+                wrong now that it holds photographs of the people the slide is
+                about.
+              */}
+              <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pt-28 pb-40 sm:pt-32 sm:pb-44 lg:min-h-[41rem] lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-14">
                 <div
                   className={`transition-transform duration-700 ${
                     active ? "translate-y-0" : "translate-y-3"
@@ -219,16 +305,31 @@ export function HeroSlider({
                   </div>
                 </div>
 
-                {/* Each arm of the ministry brings its own thing to show. */}
-                {panels[slide.href] && (
+                {/*
+                  On a slide with a photograph this column is deliberately
+                  empty. The picture is already filling it, behind everything,
+                  and anything placed on top would cover the thing the split
+                  exists to show. The column still claims its width, which is
+                  what holds the words clear of the torn edge.
+
+                  A slide without one — today, only the college — fills it with
+                  its own mark at the opacity of a watermark, so that the
+                  absence reads as a decision rather than as something that
+                  failed to load. It is still the honest answer: the mark is the
+                  college's own and is not pretending to be a photograph.
+                */}
+                {!backdrop && brand && (
                   <div
-                    className={`hidden transition-all duration-700 lg:block ${
-                      active
-                        ? "translate-y-0 opacity-100"
-                        : "translate-y-4 opacity-0"
+                    aria-hidden="true"
+                    className={`hidden items-center justify-center transition-opacity duration-700 lg:flex ${
+                      active ? "opacity-100" : "opacity-0"
                     }`}
                   >
-                    {panels[slide.href]}
+                    <brand.Mark
+                      variant="mono"
+                      title={brand.label}
+                      className="h-64 w-auto text-white/[0.06]"
+                    />
                   </div>
                 )}
               </div>

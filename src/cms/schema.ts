@@ -30,10 +30,50 @@ export type Field =
       fields: Record<string, LeafField>;
     };
 
+/**
+ * The filing cabinet the editor is organised by.
+ *
+ * A dozen pages in one flat list is a list you have to read; the same dozen in
+ * five drawers is a list you can point at. The order here is the order of the
+ * sidebar and of the Pages screen — the ministry first, then what it runs, then
+ * the money, then the settings nobody touches twice a year.
+ */
+export const documentGroups = [
+  {
+    id: "main",
+    label: "Main pages",
+    description: "The front door, the story, and how to reach you.",
+  },
+  {
+    id: "ministry",
+    label: "The ministry",
+    description: "The church, the school, and the college.",
+  },
+  {
+    id: "programs",
+    label: "Programs",
+    description: "The work that runs alongside — food, media, transport.",
+  },
+  {
+    id: "giving",
+    label: "Giving",
+    description: "How to give, and what is being asked for.",
+  },
+  {
+    id: "settings",
+    label: "Site-wide",
+    description: "Details that appear on every page.",
+  },
+] as const;
+
+export type DocumentGroup = (typeof documentGroups)[number]["id"];
+
 export type CmsDocument = {
   title: string;
   /** The page this content appears on, for the "View page" link. Null for site-wide settings. */
   path: string | null;
+  /** Which drawer of the editor this document is filed in. */
+  group: DocumentGroup;
   description: string;
   fields: Record<string, Field>;
   defaults: Record<string, unknown>;
@@ -46,9 +86,24 @@ export type CmsDocument = {
   paragraphs cannot.
 */
 
+/*
+  The enrolment figure, and — because the school feeds every child it teaches —
+  the number fed each day as well. Several pages say it in prose, so one
+  constant seeds all of those defaults and the academy's own field, and they
+  cannot start disagreeing with each other here.
+
+  Numbers the *page* prints are read back from the saved academy field instead
+  (see `getChildrenFed`), so they follow an editor's change. Prose is different:
+  once a paragraph has been edited it belongs to whoever edited it, and updating
+  this constant will not — must not — rewrite their words. Sentences with the
+  figure in them are worth re-reading after the enrolment changes.
+*/
+const pupilsEnrolled = "131";
+
 const site = {
   title: "Site details",
   path: null,
+  group: "settings",
   description:
     "Used across every page — in the header, the footer, and page descriptions.",
   fields: {
@@ -78,6 +133,7 @@ const site = {
 const giving = {
   title: "Give",
   path: "/give",
+  group: "giving",
   description:
     "The giving page. Account details are deliberately not on the site — they are sent by email when somebody asks.",
   fields: {
@@ -122,16 +178,16 @@ const giving = {
       },
       {
         title: "Food at School",
-        body: "Morning porridge and a hot lunch for 50+ children, every school day. For many of them it is the meal they can count on.",
+        body: `Morning porridge and a hot lunch for all ${pupilsEnrolled} children, every school day. For many of them it is the meal they can count on.`,
       },
       {
         title: "Building work",
         body: "The kitchen build, and what comes after it. Gifts here buy materials and pay the trades doing the work.",
       },
     ],
-    howEyebrow: "How to give",
-    howHeading: "Write to us and we will send the details",
-    howBody: `We do not publish bank or M-Pesa details on the site. Send us an email and ${siteDefaults.leaders} will reply with everything you need, along with the right account for wherever you are giving from.\n\nIt also means we can thank you properly, and tell you what your gift did.`,
+    howEyebrow: "The other way to give",
+    howHeading: "Or write to us and we will send the details",
+    howBody: `If you would rather not pay on the site — and a bank transfer from overseas is usually better sent that way — we will send you the account details instead. We do not publish bank or M-Pesa details here, so ${siteDefaults.leaders} reply with the right account for wherever you are giving from.\n\nIt also means we can thank you properly, and tell you what your gift did.`,
     designationNote:
       "Tell us if you would like your gift to go to something in particular. If you don't, it goes wherever the need is greatest that month.",
   },
@@ -150,6 +206,7 @@ const giving = {
 const needs = {
   title: "What's needed",
   path: "/needs",
+  group: "giving",
   description:
     "The wording around the giving list. The items and their costs are managed under Needs, not here.",
   fields: {
@@ -196,12 +253,12 @@ const needs = {
         body: "Take the whole thing or part of it. The moment you claim an amount it shows as promised on the page, so nobody else is asked for it — and the rest stays open.",
       },
       {
-        title: "We send you the details",
-        body: "No account numbers are published on this site and no card details are asked for here. Pastor Simon replies himself with the right account for wherever you are giving from.",
+        title: "Pay it, or ask for the details",
+        body: "Pay by M-Pesa or card and it is done in a minute — card details are entered on Pesapal's own page, never on this site. Or ask for the account details instead, and Pastor Simon replies himself with the right account for wherever you are giving from.",
       },
       {
         title: "The gift is marked received",
-        body: "When it lands it is recorded against the item, and the page updates. Every figure you see is one that has been reconciled by hand.",
+        body: "A payment on the site records itself the moment it clears. A gift sent another way is marked received by hand when it lands. Either way the page updates, and every figure on it is one somebody stands behind.",
       },
       {
         title: "You see what it did",
@@ -216,6 +273,7 @@ const needs = {
 const about = {
   title: "About",
   path: "/about",
+  group: "main",
   description: "The church & the Nderitus.",
   fields: {
     eyebrow: { type: "text", label: "Eyebrow", help: "The small label above the heading." },
@@ -275,6 +333,7 @@ const about = {
 const church = {
   title: "Church",
   path: "/church",
+  group: "ministry",
   description:
     "Sunday services. Add the service times at the bottom and they stop showing as “to be confirmed”.",
   fields: {
@@ -321,11 +380,21 @@ const church = {
   },
 } satisfies CmsDocument;
 
+/*
+  The college is the one page on the site that publishes an account number.
+
+  Everywhere else — the giving page, the needs ledger — details are deliberately
+  withheld and sent by reply, because a donor who mistypes a gift has lost it.
+  Fees are the opposite case: they are a price list a student has to be able to
+  read before enrolling, and the college already circulates these figures itself.
+  So they are published here, and here only.
+*/
 const college = {
   title: "Bible College",
   path: "/college",
+  group: "ministry",
   description:
-    "The Contextual Bible Training College. Almost everything here is still to be confirmed with Simon.",
+    "The Contextual Bible Training College — the programmes, the fees, and where fees are paid.",
   fields: {
     eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
@@ -333,14 +402,45 @@ const college = {
     sectionEyebrow: { type: "text", label: "Section eyebrow" },
     sectionTitle: { type: "text", label: "Section title" },
     body: { type: "prose", label: "Body" },
-    courses: {
-      type: "text",
-      label: "What is taught",
-      help: "Leave blank while it is still unknown — the page will say so rather than guess.",
-    },
     students: { type: "text", label: "Students enrolled" },
     schedule: { type: "text", label: "When it meets" },
     enrolment: { type: "text", label: "How to enrol" },
+    intake: {
+      type: "text",
+      label: "Next intake",
+      help: "When the next class starts. Leave blank until the date is fixed — the page will say it is still to be confirmed rather than guess at one.",
+    },
+    feesEyebrow: { type: "text", label: "Fees — eyebrow" },
+    feesTitle: { type: "text", label: "Fees — heading" },
+    feesBody: { type: "prose", label: "Fees — text" },
+    programs: {
+      type: "list",
+      label: "Programmes & fees",
+      itemLabel: "programme",
+      help: "One row per class, in the order a student would progress through them. The page works out the total from the monthly fee and the length, so those two need to be numbers.",
+      fields: {
+        name: { type: "text", label: "Programme" },
+        fee: {
+          type: "text",
+          label: "Monthly fee",
+          help: "The number only — the page adds “Ksh” and “a month”.",
+        },
+        months: {
+          type: "text",
+          label: "Length",
+          help: "The number of months only.",
+        },
+      },
+    },
+    paymentsTitle: { type: "text", label: "Payments — heading" },
+    bank: { type: "text", label: "Bank" },
+    account: { type: "text", label: "Account number" },
+    paybill: { type: "text", label: "M-Pesa paybill" },
+    paymentsNote: {
+      type: "prose",
+      label: "Payments — note",
+      help: "Why fees go through the bank rather than in cash.",
+    },
   },
   defaults: {
     eyebrow: "The College",
@@ -350,19 +450,37 @@ const college = {
     sectionTitle: "The college today",
     body: [
       `The Contextual Bible Training College is run by ${siteDefaults.leaders} as part of the ministry in ${siteDefaults.location}, teaching the Scriptures in and for the community that the church and the academy already serve.`,
-      "It is the arm of the ministry the site can say least about. The details below are the ones Simon still needs to fill in, and until he does, this page will keep saying so.",
+      "It teaches from certificate to doctorate, and a student pays month by month rather than in a lump at the start of a term.",
     ].join("\n\n"),
-    // Every one of these is a genuine unknown. See SETUP.md.
-    courses: "",
+    // Still genuine unknowns. See SETUP.md.
     students: "",
     schedule: "",
     enrolment: "",
+    intake: "",
+    feesEyebrow: "Programmes & fees",
+    feesTitle: "What each class costs, and how long it runs",
+    feesBody:
+      "Fees are paid monthly for the length of the programme. The total beside each one is what the whole course comes to if it runs its full length.",
+    programs: [
+      { name: "Certificate", fee: "3,000", months: "12" },
+      { name: "Associate", fee: "3,500", months: "24" },
+      { name: "Bachelor", fee: "4,000", months: "24" },
+      { name: "Masters", fee: "4,500", months: "24" },
+      { name: "Doctorate", fee: "5,000", months: "30" },
+    ],
+    paymentsTitle: "Where fees are paid",
+    bank: "Kenya Commercial Bank",
+    account: "1324889675",
+    paybill: "522522",
+    paymentsNote:
+      "No cash payments are accepted. Paying through the bank means every shilling paid to the college is accounted for, and the confirmation that comes to your phone is your own record of it — you can follow your account yourself without having to ask anybody.",
   },
 } satisfies CmsDocument;
 
 const home = {
   title: "Home",
   path: "/",
+  group: "main",
   description:
     "The front page — the rotating hero slides, and the four cards below them.",
   fields: {
@@ -503,29 +621,32 @@ const home = {
     ],
     needsEyebrow: "Current needs",
     /*
-      The kitchen leads because it is the need with a costing, a donor and a
-      figure still missing — the one a gift can finish. Transport comes second
-      and says plainly that it has not been costed yet, rather than borrowing
-      the kitchen's numbers or inventing its own.
+      Both needs now have a costing, a donor and a figure still missing — the
+      kitchen leads only because it is nearer to done.
+
+      Neither body repeats the figures. They are rendered beside the words from
+      content/kitchen.ts and content/transport.ts, and a number typed here as
+      well would be a second copy free to drift away from the first the day
+      anybody edits this page.
     */
     needs: [
       {
         label: "The kitchen",
         heading: "Help us finish the kitchen",
-        body: "Every one of those meals is still cooked outdoors, over an open fire. Encounter Church of Palmyra, Pennsylvania gave $8,000 to replace the fires with a proper kitchen — the structure is up, and the finishing work is what's left.",
+        body: "Every one of those meals is still cooked outdoors, over an open fire. A partner church in the United States gave $8,000 to replace the fires with a proper kitchen — the structure is up, and the finishing work is what's left.",
         status: "",
         giveCta: "Give to the kitchen",
         cta: "Follow the build",
         href: "/projects/kitchen",
       },
       {
-        label: "Academy transport",
+        label: "The school bus",
         heading: "Get the children to school",
-        body: "Children come to Jepegomi Academy on foot, from across Kahawa. Transport of its own would bring them in and carry them home again — and reach the children who live too far to walk at all.\n\nWhat it costs is still being worked out. This panel will say so until it is, rather than put a figure in front of you that nobody has checked.",
-        status: "Still being costed",
-        giveCta: "Give to the academy",
-        cta: "See the Academy",
-        href: "/academy",
+        body: "The academy's van is off the road. The same partner church that built the kitchen has given a further $1,000 to repair it and bring it back.\n\nBeyond that, the school has outgrown a van. A 26-seater bus carries it as it is now and leaves room for the children still to come, and the whole cost of it is still to raise.",
+        status: "",
+        giveCta: "Give to the bus",
+        cta: "See the appeal",
+        href: "/programs/transport",
       },
     ],
     closingEyebrow: "Partner With Us",
@@ -538,6 +659,7 @@ const home = {
 const academy = {
   title: "Academy",
   path: "/academy",
+  group: "ministry",
   description:
     "Jepegomi Academy. Fill in the school details at the bottom and they stop showing as “to be confirmed”.",
   fields: {
@@ -561,26 +683,26 @@ const academy = {
     eyebrow: "The School",
     heading: "Quality education with values",
     intro:
-      "Jepegomi Academy educates children in the Kahawa community and anchors the Food at School program — the reason a hot meal reaches 50+ children every school day.",
+      `Jepegomi Academy educates children in the Kahawa community and anchors the Food at School program — the reason a hot meal reaches all ${pupilsEnrolled} of them every school day.`,
     sectionEyebrow: "What we know",
     sectionTitle: "The school today",
     body: [
       `The Academy sits in ${siteDefaults.location}, run by the same hands as the church — ${siteDefaults.leaders}. Children come from families across the neighbourhood, many of whom cannot reliably provide meals at home.`,
+      "It did not start where it stands. The first classrooms were a row of iron-sheet rooms on the roadside, with the school's name painted on by hand. Lessons happen in semi-permanent blocks now — stone to the window sill, iron sheet above, a proper roof over both — and the bigger classrooms the government requires are going up behind them.",
       "Because the school feeds the children it teaches, the two are hard to separate: attendance, attention, and learning all move together with the meal.",
     ].join("\n\n"),
     ages: "Kindergarten to Grade 6",
-    pupils: "131",
+    pupils: pupilsEnrolled,
     teachers: "9",
     staff: "3",
-    // Still blank: the one open question left from SETUP.md. The page flags an
-    // empty field instead of inventing a figure.
-    founded: "",
+    founded: "2016",
   },
 } satisfies CmsDocument;
 
 const foodAtSchool = {
   title: "Food at School",
   path: "/programs/food-at-school",
+  group: "programs",
   description: "The feeding program.",
   fields: {
     eyebrow: { type: "text", label: "Eyebrow" },
@@ -609,7 +731,7 @@ const foodAtSchool = {
       {
         eyebrow: "What it is",
         title: "Morning porridge. A hot lunch. Every school day.",
-        body: "Children at Jepegomi Academy are fed twice a day — porridge when they arrive, and a cooked lunch in the middle of the day. More than 50 children eat this way, every day the school is open.",
+        body: `Children at Jepegomi Academy are fed twice a day — porridge when they arrive, and a cooked lunch in the middle of the day. All ${pupilsEnrolled} of them eat this way, every day the school is open.`,
       },
       {
         eyebrow: "Why it matters",
@@ -625,13 +747,197 @@ const foodAtSchool = {
     closingEyebrow: "What's changing",
     closingHeading: "A proper kitchen is being built",
     closingBody:
-      "With Encounter Church of Palmyra, Pennsylvania, we are building a real kitchen — with a store room and a dining area — to replace the open fires. The walls are up and the roof is on.",
+      "With a partner church in the United States, we are building a real kitchen — with a store room and a dining area — to replace the open fires. The walls are up and the roof is on.",
+  },
+} satisfies CmsDocument;
+
+const digital = {
+  title: "Jepegomi Digital",
+  path: "/programs/digital",
+  group: "programs",
+  description:
+    "The streaming ministry — the YouTube and Facebook channels, and what it takes to keep them running.",
+  fields: {
+    eyebrow: { type: "text", label: "Eyebrow" },
+    heading: { type: "text", label: "Heading" },
+    intro: { type: "prose", label: "Intro" },
+    sections: {
+      type: "list",
+      label: "Sections",
+      itemLabel: "section",
+      fields: {
+        eyebrow: { type: "text", label: "Eyebrow" },
+        title: { type: "text", label: "Title" },
+        body: { type: "prose", label: "Body" },
+      },
+    },
+    /*
+      The channel's name is known — it is written across the screenshots in the
+      deck. Its address is not, and a guessed YouTube handle is worse than none:
+      it either 404s or lands somebody on a stranger's channel while wearing
+      this ministry's name. Blank until Simon pastes the real one, and the page
+      says so rather than linking into the dark.
+    */
+    youtubeName: { type: "text", label: "YouTube channel name" },
+    youtubeUrl: {
+      type: "text",
+      label: "YouTube channel address",
+      help: "The full link, e.g. https://youtube.com/@…. Leave blank and the page will say the link is still to be confirmed rather than guess it.",
+    },
+    facebookUrl: {
+      type: "text",
+      label: "Facebook page address",
+      help: "The full link. Same rule as YouTube — blank is better than wrong.",
+    },
+    supportEyebrow: { type: "text", label: "Support eyebrow" },
+    supportHeading: { type: "text", label: "Support heading" },
+    supportIntro: { type: "prose", label: "Support intro" },
+    support: {
+      type: "list",
+      label: "Ways to support",
+      itemLabel: "way",
+      fields: {
+        title: { type: "text", label: "Title" },
+        body: { type: "prose", label: "Body" },
+      },
+    },
+  },
+  defaults: {
+    eyebrow: "Preaching the gospel in Kenya and beyond",
+    heading: "The pulpit, online",
+    intro:
+      "When the lockdowns closed the doors, the sermons went out over the internet instead — and never stopped. Sunday services and weekday fellowships are streamed from the sanctuary in Kahawa to whoever will watch, wherever they are.",
+    sections: [
+      {
+        eyebrow: "Where it started",
+        title: "A closed church, and a camera.",
+        body: "The streaming began during the COVID lockdown, for the plainest of reasons: the congregation could not come. What began as a way to reach the people who already belonged to the church has carried on reaching people who never could have — the messages now travel far past Kahawa.",
+      },
+      {
+        eyebrow: "What goes out",
+        title: "Sunday services and weekday fellowships, on two channels.",
+        body: "Services are streamed on Sunday and again through the week, on both YouTube and Facebook. The teaching is given by Simon and Joyce under the GOFAMI banner — God for the Family Ministries — and the archive of past messages stays up for anyone who wants to go back to one.",
+      },
+      {
+        eyebrow: "What makes it hard",
+        title: "It is filmed on phones, and the lighting fights back.",
+        body: "Everything is recorded on mobile phones, which sets a ceiling on how good the picture and the sound can be. The lighting is inconsistent, editing and uploading are slow, and nobody in the church has been trained to run any of it — so the whole thing rests on whoever has time that week.",
+      },
+    ],
+    youtubeName: "Jepegomi Africa",
+    // Neither of these is known. See SETUP.md.
+    youtubeUrl: "",
+    facebookUrl: "",
+    supportEyebrow: "Pray. Give. Watch.",
+    supportHeading: "How you can partner with us",
+    supportIntro:
+      "The cheapest way to help is free: watch a stream and share it. Everything after that is equipment and connection — the two things standing between a message worth hearing and a recording worth watching.",
+    support: [
+      {
+        title: "Watch, and share what you watch",
+        body: "Every view and every share carries a message further than the ministry can carry it alone, and it costs nothing but the time.",
+      },
+      {
+        title: "Give toward internet costs",
+        body: "Consistent streaming needs consistent connection. This is the running cost that decides whether a service goes out at all.",
+      },
+      {
+        title: "Give toward equipment",
+        body: "A laptop able to edit video, a DSLR camera, wireless microphones and a ring light would lift every recording out of what a phone can manage.",
+      },
+      {
+        title: "Help train somebody to run it",
+        body: "The most useful gift is not a thing. Somebody in the church who knows how to record, edit and upload would make the channel steady rather than occasional.",
+      },
+    ],
+  },
+} satisfies CmsDocument;
+
+const transport = {
+  title: "School Transport",
+  path: "/programs/transport",
+  group: "programs",
+  description:
+    "The school run, and the appeal for a bigger bus. The cost itself lives in src/content/transport.ts, not here.",
+  fields: {
+    eyebrow: { type: "text", label: "Eyebrow" },
+    heading: { type: "text", label: "Heading" },
+    intro: { type: "prose", label: "Intro" },
+    sections: {
+      type: "list",
+      label: "Sections",
+      itemLabel: "section",
+      fields: {
+        eyebrow: { type: "text", label: "Eyebrow" },
+        title: { type: "text", label: "Title" },
+        body: { type: "prose", label: "Body" },
+      },
+    },
+    supportEyebrow: { type: "text", label: "Support eyebrow" },
+    supportHeading: { type: "text", label: "Support heading" },
+    supportIntro: { type: "prose", label: "Support intro" },
+    support: {
+      type: "list",
+      label: "Ways to support",
+      itemLabel: "way",
+      fields: {
+        title: { type: "text", label: "Title" },
+        body: { type: "prose", label: "Body" },
+      },
+    },
+  },
+  defaults: {
+    eyebrow: "Getting the children to school",
+    heading: "The school run",
+    intro:
+      "Children come to Jepegomi Academy from across Kahawa, and how they get there decides whether some of them get there at all. The van the school bought is off the road, and the ministry is raising for a bus of its own.",
+    sections: [
+      {
+        eyebrow: "Where we are",
+        title: "One van, off the road.",
+        body: "The academy has a van — a yellow Toyota, lettered for the school and the church. It was bought with $5,000 given toward a school vehicle, and it did that work for as long as it could. It is not running now. It broke down and has been standing since, which means the school run it used to do is not being done.\n\nThe same partner church that built the kitchen has given a further $1,000 to repair it and get it back on the road.",
+      },
+      {
+        eyebrow: "Where that money went",
+        title: "The $5,000 is the van.",
+        body: "Giving toward a school vehicle reached $5,000, and that is what bought the van standing at the school. It is a vehicle, not a balance — none of it is sitting in a bank account waiting, and none of it is left over to put toward a bus.\n\nSo the bus fund starts at nothing. The figures below are the whole cost of it, not a gap left over after a balance.",
+      },
+      {
+        eyebrow: "Where we are going",
+        title: "A van would be full the day it arrived.",
+        body: "The school has grown and it keeps growing. Another small van would be at capacity on its first morning and too small by the following term. A 26-seater bus carries the school as it is now and leaves room for the children still to come — and it is a vehicle the church can use too, for services, rallies and outings.",
+      },
+      {
+        eyebrow: "What it changes",
+        title: "A safe ride, and a wider gate.",
+        body: "Children who live too far to walk safely can enrol. Parents who cannot leave work to make the trip twice a day can send their child anyway. And the ministry stops paying to hire transport every time it needs to move anybody anywhere.",
+      },
+    ],
+    supportEyebrow: "Pray. Give. Sponsor.",
+    supportHeading: "How you can partner with us",
+    supportIntro:
+      "The whole cost is the ask, because nothing is banked against it yet. Every gift toward it is held for the bus and nothing else — the way the $5,000 given for a school vehicle went to the van and nowhere else.",
+    support: [
+      {
+        title: "Give toward the bus",
+        body: "Any amount goes into the same fund, held for the vehicle. The figures above move as it fills.",
+      },
+      {
+        title: "Give a vehicle",
+        body: "If you are in a position to give a bus rather than money toward one, that is the fastest version of this and we would like to hear from you.",
+      },
+      {
+        title: "Cover the running of it",
+        body: "A bus is fuel, insurance, servicing and a driver. Giving toward the running costs keeps it on the road once it is bought.",
+      },
+    ],
   },
 } satisfies CmsDocument;
 
 const contact = {
   title: "Contact",
   path: "/contact",
+  group: "main",
   description:
     "The contact page. The email and location themselves live in Site details.",
   fields: {
@@ -655,6 +961,8 @@ export const documents = {
   academy,
   college,
   foodAtSchool,
+  digital,
+  transport,
   giving,
   needs,
   contact,
@@ -668,6 +976,19 @@ export type ContentOf<K extends DocumentKey> = (typeof documents)[K]["defaults"]
 
 export function documentKeys() {
   return Object.keys(documents) as DocumentKey[];
+}
+
+/**
+ * Every document, in its drawer, in `documentGroups` order. A group with
+ * nothing in it is dropped rather than drawn empty.
+ */
+export function groupedDocuments() {
+  return documentGroups
+    .map((group) => ({
+      ...group,
+      keys: documentKeys().filter((key) => documents[key].group === group.id),
+    }))
+    .filter((group) => group.keys.length > 0);
 }
 
 export function isDocumentKey(value: string): value is DocumentKey {

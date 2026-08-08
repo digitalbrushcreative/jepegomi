@@ -209,7 +209,7 @@ export async function seedKitchenNeedsAction() {
       title: line.item,
       summary: remainingNeeds[index]?.text ?? "",
       detail: [
-        "This is one of the three items the $8,000 gift from Encounter Church could not reach — the money was fully spent before it got this far.",
+        "This is one of the three items the $8,000 kitchen gift could not reach — the money was fully spent before it got this far.",
         line.note,
       ].join("\n\n"),
       area: "kitchen",

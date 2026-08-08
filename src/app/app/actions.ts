@@ -14,6 +14,7 @@ import {
   signOut,
 } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { cmsAccountCreated, queue } from "@/lib/mail";
 import { PHOTOS_TAG, deletePhoto, parseSlotId, savePhoto } from "@/lib/photos";
 
 type FormState = { error?: string; saved?: boolean } | undefined;
@@ -61,7 +62,7 @@ export async function createFirstUserAction(
 }
 
 export async function inviteUserAction(_prev: FormState, formData: FormData) {
-  await requireUser();
+  const inviter = await requireUser();
 
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
@@ -77,6 +78,14 @@ export async function inviteUserAction(_prev: FormState, formData: FormData) {
   } catch {
     return { error: "Could not add that person. Is the email already used?" };
   }
+
+  /*
+    A note that the account exists and where to sign in — and pointedly not the
+    password, which the person setting it up is standing next to them to give.
+    Emailing a key to the site's own editor, who can rewrite every page on it,
+    is a different proposition from emailing a partner church a read-only login.
+  */
+  queue(cmsAccountCreated({ name, email, invitedBy: inviter.name }));
 
   revalidatePath("/app/people");
   return { saved: true };

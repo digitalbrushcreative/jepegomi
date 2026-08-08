@@ -92,6 +92,65 @@ export async function findOrCreatePartner(input: {
   return str(rows[0].id);
 }
 
+/**
+ * A partner Simon enters himself, in /app.
+ *
+ * The public form is not the only door, and treating it as the only one was a
+ * real gap: nearly every gift this ministry receives arrives by bank transfer or
+ * M-Pesa after an exchange of emails, which is exactly the arrangement /give
+ * asks for — it publishes no account numbers and invites people to write. A
+ * church that gave $8,000 two years before this site existed cannot go back and
+ * fill in a form, and a ledger that can only record the gifts that came through
+ * its own form is a ledger missing the largest gifts it has.
+ *
+ * Distinct from `findOrCreatePartner` in one way that matters: this refuses a
+ * duplicate rather than quietly merging into it. On the public side a second
+ * claim from the same address is the same church coming back and joining them is
+ * right. Here, somebody is typing a name in, and silently attaching it to an
+ * existing row — under that row's name, which may read quite differently — is
+ * how a gift ends up filed against the wrong church.
+ */
+export async function createPartner(input: {
+  name: string;
+  email: string;
+  kind: string;
+  location: string;
+  contactName: string;
+  note: string;
+  verified: boolean;
+}): Promise<{ ok: true; id: string } | { ok: false; existing: Partner }> {
+  const email = input.email.trim().toLowerCase();
+  const id = randomUUID();
+
+  const rows = await sql()`
+    INSERT INTO partners (id, name, kind, location, email, contact_name, note, verified_at)
+    VALUES (${id}, ${input.name.trim()}, ${input.kind}, ${input.location.trim()},
+            ${email}, ${input.contactName.trim()}, ${input.note.trim()},
+            CASE WHEN ${input.verified}::boolean THEN now() END)
+    ON CONFLICT (email) DO NOTHING
+    RETURNING id
+  `;
+
+  if (rows[0]) return { ok: true, id: str(rows[0].id) };
+
+  const existing = await getPartnerByEmail(email);
+  if (!existing) {
+    // The row that blocked the insert has gone in the moment since. Vanishingly
+    // unlikely, and not worth a retry loop — saying so beats a null crash.
+    throw new Error("Could not add that partner. Try again.");
+  }
+  return { ok: false, existing };
+}
+
+export async function getPartnerByEmail(email: string): Promise<Partner | null> {
+  const rows = await sql()`
+    SELECT id, name, kind, location, email, contact_name, verified_at, note,
+           created_at, (password_hash IS NOT NULL) AS has_login
+    FROM partners WHERE email = ${email.trim().toLowerCase()}
+  `;
+  return rows[0] ? toPartner(rows[0]) : null;
+}
+
 export async function signInPartner(email: string, password: string) {
   const rows = await sql()`
     SELECT id, password_hash

@@ -35,10 +35,34 @@ export const NEED_AREAS = [
 }[];
 
 export type NeedArea = (typeof NEED_AREAS)[number]["id"];
+export type Area = (typeof NEED_AREAS)[number];
 
 /** Falls back to "across the ministry" rather than throwing on an unknown area. */
 export function areaOf(id: string) {
   return NEED_AREAS.find((area) => area.id === id) ?? NEED_AREAS[NEED_AREAS.length - 1];
+}
+
+/**
+ * Which arm of the ministry a gift given in the giver's own words was for — or
+ * null, which is the ordinary answer.
+ *
+ * The designation box on /give is free text and stays free text: somebody who
+ * writes "school fees for one child" has said something a dropdown could not
+ * have held, and the ledger records it in their words. But most people click one
+ * of the suggestion buttons above it, and those buttons *are* the arms of the
+ * ministry — so a gift labelled exactly "The kitchen build" can be filed against
+ * the kitchen without anybody being asked a second question.
+ *
+ * Matching is on the whole string, not a substring. "Not the kitchen build"
+ * contains the label and means the opposite of it, and a ledger that guesses is
+ * worse than one that leaves the field null and lets Simon set it in /app.
+ */
+export function areaForDesignation(designation: string): NeedArea | null {
+  const written = designation.trim().toLowerCase();
+  if (!written) return null;
+
+  const match = NEED_AREAS.find((area) => area.label.toLowerCase() === written);
+  return match ? match.id : null;
 }
 
 export const PARTNER_KINDS = [
@@ -117,11 +141,41 @@ export const PLEDGE_LABELS: Record<PledgeStatus, string> = {
   declined: "Withdrawn",
 };
 
+/*
+  The one-click answers to "what would you like it to go towards?" on the give
+  form, for a giver who is not picking a costed item off the list. They fill the
+  same free-text box rather than replacing it — the box is the field that is
+  actually submitted, so a suggestion can be edited into something else and
+  somebody with a different idea is never boxed out.
+
+  "Wherever the need is greatest" leads because it is the honest default and the
+  one most people mean. The rest are the arms of the ministry, in the order they
+  are listed everywhere else.
+*/
+export const GIVING_SUGGESTIONS = [
+  "Wherever the need is greatest",
+  ...NEED_AREAS.filter((area) => area.id !== "other").map((area) => area.label),
+];
+
 export type Pledge = {
   id: string;
-  needId: string;
-  needSlug: string;
-  needTitle: string;
+  /**
+   * Null when the gift is not against a listed item — a giver who came to /give
+   * and wrote what they wanted to support. `designation` holds their words.
+   */
+  needId: string | null;
+  needSlug: string | null;
+  needTitle: string | null;
+  /** Whether that item has a public page. False for a draft or a closed-off record. */
+  needPublished: boolean;
+  /** The giver's own words. Empty whenever `needId` is set. */
+  designation: string;
+  /**
+   * The arm of the ministry a designated gift was for, where it could be told —
+   * see `areaForDesignation`. Null on most of them, and always null when
+   * `needId` is set, because then the need carries the area itself.
+   */
+  area: NeedArea | null;
   partnerId: string | null;
   partnerName: string | null;
   partnerEmail: string | null;
@@ -131,6 +185,17 @@ export type Pledge = {
   createdAt: string;
   receivedAt: string | null;
 };
+
+/**
+ * What a pledge is towards, in one line — the item's title if it has one, and
+ * otherwise what the giver wrote. Every screen that lists pledges goes through
+ * here so none of them has to remember that the title can be null.
+ */
+export function pledgeTowards(
+  pledge: Pick<Pledge, "needTitle" | "designation">,
+): string {
+  return pledge.needTitle ?? (pledge.designation || "the ministry");
+}
 
 export type Partner = {
   id: string;
@@ -150,3 +215,83 @@ export type PartnerWithTotals = Partner & {
   receivedCents: number;
   pledgeCount: number;
 };
+
+/* ------------------------------------------ what one partner's giving built */
+
+/** One listed item, with this partner's own share of it alongside the totals. */
+export type PartnerNeed = NeedWithLedger & {
+  yoursCents: number;
+  yoursReceivedCents: number;
+};
+
+/** Designated giving that never had a listed item behind it, summed per area. */
+export type PartnerAreaGift = {
+  area: NeedArea;
+  yoursCents: number;
+  yoursReceivedCents: number;
+  giftCount: number;
+};
+
+/**
+ * A partner's giving, gathered under the thing it paid for.
+ *
+ * A church does not think of its giving as eleven rows in a ledger. It thinks
+ * "we built the kitchen" — and the kitchen, in the ledger, is six budget lines
+ * and possibly an undesignated gift on top of them. The area is what ties those
+ * together, and it is already on every need and now on every designated gift, so
+ * the grouping needs no new column and no second source of truth.
+ *
+ * `href` on the area is the project page. That link is the point of the whole
+ * exercise: a church that paid for cement and sand and roofing gets shown the
+ * kitchen, not a list of materials.
+ */
+export type PartnerProject = {
+  area: Area;
+  needs: PartnerNeed[];
+  gift: PartnerAreaGift | null;
+  yoursCents: number;
+  yoursReceivedCents: number;
+};
+
+export function groupByProject(
+  needs: PartnerNeed[],
+  gifts: PartnerAreaGift[],
+): PartnerProject[] {
+  const projects = new Map<string, PartnerProject>();
+
+  /*
+    Keyed off NEED_AREAS rather than the rows, so the order is the ministry's
+    running order and not whatever the database handed back. An area nobody gave
+    to is dropped at the end — this builds the list for one partner, and every
+    heading on it has to be something they actually paid for.
+  */
+  for (const area of NEED_AREAS) {
+    projects.set(area.id, {
+      area,
+      needs: [],
+      gift: null,
+      yoursCents: 0,
+      yoursReceivedCents: 0,
+    });
+  }
+
+  const projectFor = (id: string) => projects.get(areaOf(id).id)!;
+
+  for (const need of needs) {
+    const project = projectFor(need.area);
+    project.needs.push(need);
+    project.yoursCents += need.yoursCents;
+    project.yoursReceivedCents += need.yoursReceivedCents;
+  }
+
+  for (const gift of gifts) {
+    const project = projectFor(gift.area);
+    project.gift = gift;
+    project.yoursCents += gift.yoursCents;
+    project.yoursReceivedCents += gift.yoursReceivedCents;
+  }
+
+  return [...projects.values()].filter(
+    (project) => project.needs.length > 0 || project.gift !== null,
+  );
+}

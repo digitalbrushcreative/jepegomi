@@ -3,7 +3,16 @@ export const site = {
   longName: "Jesus People Gospel Ministries",
   domain: "jepegomi.org",
   url: "https://jepegomi.org",
-  email: "jepegomi@gmail.com",
+  /*
+    The address printed on the site, and the one every form tells people to
+    reply to. It is at the ministry's own domain rather than at gmail.com for
+    two reasons: a personal Gmail address on a fundraising site invites the
+    obvious impersonation, and an address at the domain outlives whoever happens
+    to be answering it this year. Mail to it is delivered to the ministry's
+    mailbox *and* forwarded to jepegomi@gmail.com, so nothing waits to be read —
+    see lib/mail/inboxes.ts, and MAIL.md for the DNS behind it.
+  */
+  email: "support@jepegomi.org",
   location: "Kahawa, Nairobi, Kenya",
   leaders: "Pastor Simon & Joyce Nderitu",
   tagline:
@@ -68,6 +77,16 @@ export const navLinks: NavLink[] = [
         label: "Food at School",
         href: "/programs/food-at-school",
         blurb: "Morning porridge and a hot lunch, every school day.",
+      },
+      {
+        label: "Jepegomi Digital",
+        href: "/programs/digital",
+        blurb: "Services streamed from Kahawa on YouTube and Facebook.",
+      },
+      {
+        label: "School Transport",
+        href: "/programs/transport",
+        blurb: "The school van, and the bus the academy is raising for.",
       },
     ],
   },
