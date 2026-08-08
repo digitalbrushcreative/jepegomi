@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { NeedMeter } from "@/components/need-meter";
 import { currentUser } from "@/lib/auth";
 import { formatDay } from "@/lib/dates";
@@ -24,6 +25,22 @@ export default async function AdminNeedPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  /*
+    Prerendering stops here, and it has to.
+
+    The reads below are the admin ones — `listNeeds`, `getNeedById` and the rest
+    of them go straight to `sql()` with no `isDatabaseConfigured()` guard, on
+    purpose: /app is live, never cached, and a database that is missing at that
+    point is a real fault worth throwing over.
+
+    But a build is not a request. Cache Components renders this page's shell at
+    build time, and `sql()` throws "DATABASE_URL is not set." when it does — so
+    a build with no database in the environment, which is exactly what Vercel
+    does, died on this one route. `connection()` says the work waits for a real
+    request. The static shell above it still prerenders.
+  */
+  await connection();
+
   const user = await currentUser();
   if (!user) redirect("/app");
 
