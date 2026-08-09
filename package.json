@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "detect": "impeccable detect src/",
+    "detect:live": "impeccable detect http://localhost:3000/ http://localhost:3000/about http://localhost:3000/give http://localhost:3000/needs http://localhost:3000/programs http://localhost:3000/education http://localhost:3000/projects http://localhost:3000/projects/kitchen http://localhost:3000/projects/playground http://localhost:3000/academy http://localhost:3000/college http://localhost:3000/church http://localhost:3000/contact http://localhost:3000/partners",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report"
@@ -27,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
+    "impeccable": "^3.5.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
