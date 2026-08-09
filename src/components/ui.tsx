@@ -182,7 +182,10 @@ export function PageHero({
 
 /**
  * Flags content that Simon & Joyce still need to confirm, so a placeholder can
- * never be mistaken for a real figure once this is in front of donors.
+ * never be mistaken for a real figure.
+ *
+ * Only ever rendered inside an `EditorOnly` — a donor should not be reading the
+ * ministry's own to-do list. See components/editor-only.tsx.
  */
 export function Placeholder({ children }: { children: ReactNode }) {
   return (

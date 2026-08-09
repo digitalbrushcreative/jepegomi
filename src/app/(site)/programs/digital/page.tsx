@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
+import { EditorOnly } from "@/components/editor-only";
 import { Icon } from "@/components/icons";
 import { JepegomiLogo } from "@/components/logos";
 import { PhotoStrip } from "@/components/photos";
@@ -177,35 +178,38 @@ export default async function DigitalPage() {
           )}
 
           {/*
-            The same bargain the Academy and the college pages strike: an
-            unconfirmed fact is shown as unconfirmed rather than guessed at. A
-            wrong link here does not merely fail — it sends somebody to a
-            stranger's channel with this ministry's name attached.
+            The same bargain the Academy and the college pages strike: a link
+            nobody has confirmed is left off rather than guessed at, because a
+            wrong one here does not merely fail — it sends somebody to a
+            stranger's channel with this ministry's name attached. The reminder
+            to go and get it is for the editor who can, and nobody else. See
+            components/editor-only.tsx.
           */}
           {missing.length > 0 && (
-            <div className="mt-8 rounded border border-dashed border-smoke/30 bg-white p-8">
-              <Eyebrow>Still to confirm</Eyebrow>
-              {/*
-                Written for whichever is still missing rather than for both,
-                because the YouTube channel is now confirmed and on the page
-                above — telling a reader to go and search for something they can
-                already see would read as a page that has not been looked at.
-              */}
-              <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
-                {missing.length === 1
-                  ? "The address below still needs to come from Simon"
-                  : "The addresses below still need to come from Simon"}
-                , and this page would rather say so than send you somewhere
-                wrong.
-              </p>
-              <ul className="mt-5 flex flex-wrap gap-3">
-                {missing.map((channel) => (
-                  <li key={channel.label}>
-                    <Placeholder>{channel.label} link</Placeholder>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <EditorOnly>
+              <div className="mt-8 rounded border border-dashed border-smoke/30 bg-white p-8">
+                <Eyebrow>Still to confirm</Eyebrow>
+                {/*
+                  Written for whichever is still missing rather than for both,
+                  because the YouTube channel is now confirmed and on the page
+                  above.
+                */}
+                <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
+                  {missing.length === 1
+                    ? "The address below is still missing, so the page offers no way to watch there."
+                    : "The addresses below are still missing, so the page offers no way to watch there."}{" "}
+                  Add the real one and the button appears. Only you see this
+                  note.
+                </p>
+                <ul className="mt-5 flex flex-wrap gap-3">
+                  {missing.map((channel) => (
+                    <li key={channel.label}>
+                      <Placeholder>{channel.label} link</Placeholder>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </EditorOnly>
           )}
         </div>
       </section>

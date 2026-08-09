@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
+import { EditorOnly } from "@/components/editor-only";
 import { JepegomiLogo } from "@/components/logos";
 import { PhotoBand, PhotoStrip } from "@/components/photos";
 import {
@@ -113,9 +114,14 @@ export default async function ChurchPage() {
 
           {/*
             A service time is the one thing a stranger comes to a church website
-            for. So it is either real or it is visibly absent — there is no
-            middle setting where the page quietly implies a Sunday morning that
-            nobody has confirmed, and somebody drives to a locked gate.
+            for. So it is either real or it is absent — there is no middle
+            setting where the page quietly implies a Sunday morning that nobody
+            has confirmed, and somebody drives to a locked gate.
+
+            Absent, and not visibly absent. Saying "we have not worked out when
+            our services are" to the open web is worse than saying nothing at
+            all, so the note asking for the times is addressed to the two people
+            who can supply them. See components/editor-only.tsx.
           */}
           {church.services.length > 0 ? (
             <dl className="mt-12 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
@@ -132,18 +138,21 @@ export default async function ChurchPage() {
               ))}
             </dl>
           ) : (
-            <div className="mt-12 rounded border border-dashed border-smoke/30 bg-sand p-8">
-              <Eyebrow>Still to confirm</Eyebrow>
-              <p className="mt-3 leading-relaxed text-smoke">
-                Simon and Joyce still need to confirm when the services run
-                before this page can invite anybody to one.
-              </p>
-              <ul className="mt-5 flex flex-wrap gap-3">
-                <li>
-                  <Placeholder>Service times</Placeholder>
-                </li>
-              </ul>
-            </div>
+            <EditorOnly>
+              <div className="mt-12 rounded border border-dashed border-smoke/30 bg-sand p-8">
+                <Eyebrow>Still to confirm</Eyebrow>
+                <p className="mt-3 leading-relaxed text-smoke">
+                  Confirm when the services run and they appear here, and this
+                  page can start inviting people to one. Until then a visitor
+                  sees nothing at all in this space — only you see this note.
+                </p>
+                <ul className="mt-5 flex flex-wrap gap-3">
+                  <li>
+                    <Placeholder>Service times</Placeholder>
+                  </li>
+                </ul>
+              </div>
+            </EditorOnly>
           )}
 
           {church.address ? (
@@ -154,12 +163,12 @@ export default async function ChurchPage() {
           ) : null}
 
           {/*
-            The property, and the one thing on it that is visibly asking for
-            help. The sign is the first thing anybody sees and the cheapest
-            thing on this site to put right — but there is no costing for it
-            yet, so it is named without a figure. A guessed number here would
-            be the only unaudited money on a site whose whole argument is that
-            its figures are real.
+            The property. The sign is the first thing anybody sees and the
+            cheapest thing on this site to put right — but there is no costing
+            for it yet, and a guessed number would be the only unaudited money
+            on a site whose whole argument is that its figures are real. So it
+            is not an ask yet, and the reminder that it could be is addressed to
+            the person who can get the quote.
           */}
           <div className="mt-20">
             <Eyebrow>The property</Eyebrow>
@@ -169,20 +178,22 @@ export default async function ChurchPage() {
 
             <PhotoStrip photos={property} className="mt-10" />
 
-            <div className="mt-8 rounded border border-dashed border-smoke/30 bg-sand p-8">
-              <Eyebrow>Still to cost</Eyebrow>
-              <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
-                The sign at the gate has been out in the weather for years and
-                needs repainting — the first impression the ministry makes on
-                anybody walking past. Simon still needs to get a price for the
-                work before it can be put in front of anybody as an ask.
-              </p>
-              <ul className="mt-5 flex flex-wrap gap-3">
-                <li>
-                  <Placeholder>Cost of the signage facelift</Placeholder>
-                </li>
-              </ul>
-            </div>
+            <EditorOnly>
+              <div className="mt-8 rounded border border-dashed border-smoke/30 bg-sand p-8">
+                <Eyebrow>Still to cost</Eyebrow>
+                <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
+                  The sign at the gate has been out in the weather for years and
+                  needs repainting — the first impression the ministry makes on
+                  anybody walking past. Get a price for the work and it can go
+                  in front of givers as an ask. Only you see this note.
+                </p>
+                <ul className="mt-5 flex flex-wrap gap-3">
+                  <li>
+                    <Placeholder>Cost of the signage facelift</Placeholder>
+                  </li>
+                </ul>
+              </div>
+            </EditorOnly>
           </div>
 
           <div className="mt-12 flex flex-wrap gap-4">

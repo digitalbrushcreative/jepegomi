@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
+import { EditorOnly } from "@/components/editor-only";
 import { BibleCollegeLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
 import { PhotoBand } from "@/components/photos";
@@ -38,8 +39,9 @@ export default async function CollegePage() {
 
   /*
     The same shape as the Academy's four details: a filled field becomes a fact,
-    a blank one stays flagged, and the "still to confirm" box takes itself down
-    once the last one is filled in.
+    a blank one is simply not there for a reader, and the "still to confirm" box
+    — which only a signed-in editor sees, see components/editor-only.tsx — takes
+    itself down once the last one is filled in.
 
     "What is taught" used to be one of these. The programmes below answer it
     better than a one-line summary could, so it went — everything left here is
@@ -107,20 +109,23 @@ export default async function CollegePage() {
           )}
 
           {unconfirmed.length > 0 && (
-            <div className="mt-12 rounded border border-dashed border-smoke/30 bg-sand p-8">
-              <Eyebrow>Still to confirm</Eyebrow>
-              <p className="mt-3 leading-relaxed text-smoke">
-                Simon still needs to confirm the details below before this page
-                goes in front of anybody hoping to study here.
-              </p>
-              <ul className="mt-5 flex flex-wrap gap-3">
-                {unconfirmed.map((detail) => (
-                  <li key={detail.label}>
-                    <Placeholder>{detail.label}</Placeholder>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <EditorOnly>
+              <div className="mt-12 rounded border border-dashed border-smoke/30 bg-sand p-8">
+                <Eyebrow>Still to confirm</Eyebrow>
+                <p className="mt-3 leading-relaxed text-smoke">
+                  The details below are still blank, so somebody hoping to study
+                  here cannot see them. Fill them in and they join the table
+                  above. Only you see this note.
+                </p>
+                <ul className="mt-5 flex flex-wrap gap-3">
+                  {unconfirmed.map((detail) => (
+                    <li key={detail.label}>
+                      <Placeholder>{detail.label}</Placeholder>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </EditorOnly>
           )}
 
         </div>

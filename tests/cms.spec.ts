@@ -249,6 +249,80 @@ test.describe("pages", () => {
   });
 });
 
+/**
+ * The notes the site keeps to itself, on the public pages they belong to.
+ *
+ * A "still to confirm" box is written into the hole it describes — the service
+ * times box sits where the service times would be — so that an editor meets it
+ * while looking at the page rather than in a list somewhere else. Which means
+ * these live on public routes and are gated by the session instead of by the
+ * URL, the one thing on this site that is. See components/editor-only.tsx; the
+ * other half of this, that a visitor sees none of it, is in public.spec.ts.
+ */
+test.describe("the ministry's own notes", () => {
+  const NOTED_PAGES = ["/church", "/college", "/academy", "/programs/digital"];
+  const editorNote = /Still to (confirm|cost)|Only you see this/i;
+
+  test("are on the public page for an editor and nobody else", async ({
+    page,
+    browser,
+  }) => {
+    /*
+      A second context with no storage state — the same URL, fetched as a
+      stranger, in the same run. Comparing the two is the whole test: an
+      assertion that the signed-in page has a note would depend on which fields
+      happen to be blank in the database this suite is pointed at, and an
+      assertion that the signed-out page has none is already made in
+      public.spec.ts. What cannot be data-dependent is that they differ in one
+      direction only.
+    */
+    /*
+      The empty state is spelled out rather than left off. A bare
+      `newContext()` in this project comes up carrying the admin cookie the
+      setup step saved — which would make the stranger a second editor, and the
+      assertion below would pass on a page that had failed.
+    */
+    const visitor = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    });
+    const strangersPage = await visitor.newPage();
+
+    let seen = 0;
+
+    try {
+      for (const path of NOTED_PAGES) {
+        await page.goto(path);
+        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        const forEditor = await page.getByText(editorNote).count();
+
+        await strangersPage.goto(path);
+        await expect(
+          strangersPage.getByRole("heading", { level: 1 }),
+        ).toBeVisible();
+
+        await expect(
+          strangersPage.getByText(editorNote),
+          `${path} should keep its notes from a visitor`,
+        ).toHaveCount(0);
+
+        seen += forEditor;
+      }
+    } finally {
+      await visitor.close();
+    }
+
+    /*
+      Not a failure — it means Simon and Joyce have answered everything, which
+      is the point of the boxes. It is worth saying out loud, because a suite
+      that silently proved nothing would read exactly the same as one that did.
+    */
+    test.skip(
+      seen === 0,
+      "Every field on those pages is filled in, so there is no note to gate.",
+    );
+  });
+});
+
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 780 } });
 

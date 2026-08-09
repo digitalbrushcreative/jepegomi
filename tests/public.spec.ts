@@ -53,6 +53,33 @@ test.describe("the public site", () => {
     const response = await page.goto("/no-such-page");
     expect(response?.status()).toBe(404);
   });
+
+  /*
+    The ministry's to-do list is not part of the ministry's case.
+
+    Four pages carry a dashed box naming what nobody has confirmed yet — service
+    times, a signage quote, a Facebook address. They are written where the gap is
+    so an editor cannot lose them, and they are for the editor alone: a visitor
+    reading "Simon still needs to confirm this" learns only that the site is
+    unfinished. They now render inside EditorOnly (components/editor-only.tsx),
+    and this is the assertion that keeps them there.
+
+    Every page, not just the four, because the next one of these will be written
+    on some page nobody thought to add to a list.
+  */
+  const editorNote = /Still to (confirm|cost)|Only you see this/i;
+
+  for (const { path, name } of pages) {
+    test(`${name} keeps the ministry's own notes off the page`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+
+      // The heading first: proof the body arrived, so absence means absence.
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(page.getByText(editorNote)).toHaveCount(0);
+    });
+  }
 });
 
 /**

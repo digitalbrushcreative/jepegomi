@@ -142,3 +142,22 @@ export async function requireUser() {
   if (!user) throw new Error("Not signed in.");
   return user;
 }
+
+/**
+ * Whether the person reading a public page is signed in to /app.
+ *
+ * The cookie and nothing else — no database, no `users` row. That is the whole
+ * reason this exists beside `currentUser()`: it is asked on pages a stranger
+ * loads, and it must not put a query between a visitor and the paragraph they
+ * came to read. The signature still has to verify, so it cannot be forged; the
+ * worst a stale-but-unexpired cookie buys is a sight of an editorial note by
+ * somebody who was an editor last week.
+ *
+ * Use it for what an editor is *shown*, never for what an editor may *do*.
+ * Anything that writes goes through `requireUser()`, which proves the account
+ * still exists. See components/editor-only.tsx for the one thing this is for.
+ */
+export async function isEditor() {
+  if (!hasSessionSecret()) return false;
+  return (await admin.read()) !== null;
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { EnrolmentEnquiryForm } from "@/app/(site)/academy/enquiry-form";
+import { EditorOnly } from "@/components/editor-only";
 import { AcademyLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
 import { PhotoBand, PhotoStrip } from "@/components/photos";
@@ -186,20 +187,23 @@ export default async function AcademyPage() {
           )}
 
           {unconfirmed.length > 0 && (
-            <div className="mt-12 rounded border border-dashed border-smoke/30 bg-sand p-8">
-              <Eyebrow>Still to confirm</Eyebrow>
-              <p className="mt-3 leading-relaxed text-smoke">
-                Simon and Joyce still need to confirm the details below before
-                this page goes in front of donors.
-              </p>
-              <ul className="mt-5 flex flex-wrap gap-3">
-                {unconfirmed.map((detail) => (
-                  <li key={detail.label}>
-                    <Placeholder>{detail.label}</Placeholder>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <EditorOnly>
+              <div className="mt-12 rounded border border-dashed border-smoke/30 bg-sand p-8">
+                <Eyebrow>Still to confirm</Eyebrow>
+                <p className="mt-3 leading-relaxed text-smoke">
+                  The details below are still blank, so a donor reading this
+                  page cannot see them. Fill them in and they join the table
+                  above. Only you see this note.
+                </p>
+                <ul className="mt-5 flex flex-wrap gap-3">
+                  {unconfirmed.map((detail) => (
+                    <li key={detail.label}>
+                      <Placeholder>{detail.label}</Placeholder>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </EditorOnly>
           )}
 
           <div className="mt-20">
