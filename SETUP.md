@@ -250,13 +250,17 @@ Every pull request then gets its own preview URL automatically.
 
 ## Still to confirm with Simon & Joyce
 
-Marked in the UI as placeholders so they cannot be mistaken for real figures:
+Marked in the UI as placeholders so they cannot be mistaken for real figures —
+and shown **only when you are signed in to `/app`**. Visit the page while signed
+in and the dashed "still to confirm" box is there in the gap it describes; a
+visitor sees the page with the gap simply absent, not a ministry publishing its
+own to-do list. See `src/components/editor-only.tsx`.
 
 - **Service times** — `/church` cannot invite anyone to a service until it knows
   when they are. This is the most costly blank on the site: a service time is the
   one thing a stranger comes to a church website for, and a guess sends somebody
-  to a locked gate. The page says the times are unconfirmed rather than imply a
-  Sunday morning nobody has confirmed. The address is blank for the same reason.
+  to a locked gate. So the page says nothing at all about Sunday until the times
+  are in. The address is blank for the same reason.
 - **The Bible college** — students enrolled, when it meets, how to enrol, and the
   date of the next intake. The five programmes, their monthly fees and their
   lengths are confirmed and on the page, along with the KCB account and the
