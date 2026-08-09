@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { NEED_AREAS, PARTNER_KINDS, type PartnerWithTotals } from "@/lib/giving";
 import { usd } from "@/lib/money";
 import {
@@ -42,14 +42,20 @@ export type GiftTarget = {
  */
 export function SeedEncounterForm() {
   /*
-    `useTransition` and a plain call, not `useActionState` and a form — which is
-    how SeedKitchenButton does the same job, and it turns out to be the only
-    shape that works here.
+    A full page load on success, rather than a redirect or a revalidate.
+    Deliberate, and the only thing that works here.
 
-    A `useActionState` form whose action redirects, on a page whose list this
-    action restructures, never settles: the row is written, the redirect is
-    issued, and the button sits on "Adding…" until somebody reloads. Simon then
-    presses it again, which is the one thing a seed button must not invite.
+    Succeeding removes this panel — it is rendered only while Encounter Church
+    is absent, which is right for a button with one job. But every in-React way
+    of refreshing the page afterwards re-renders it *without this component*,
+    and a transition cannot commit a tree that deletes the thing waiting on it.
+    The rows land, the button stays on "Adding…", and the obvious next move is
+    to press it again — which is the one thing a seed button must never invite.
+    Probes put the server side of it at 17ms; the screen never moved.
+
+    So: hand the browser the URL and let it fetch the page from scratch. It is
+    a one-off administrative action, the reload is imperceptible, and their card
+    with $8,000 against it is the confirmation.
   */
   const [pending, start] = useTransition();
   const [email, setEmail] = useState("");
@@ -89,7 +95,14 @@ export function SeedEncounterForm() {
           setError(null);
           start(async () => {
             const result = await seedEncounterChurchAction(email);
-            if (result?.error) setError(result.error);
+            if (result?.error) {
+              setError(result.error);
+              return;
+            }
+            // Not router.refresh() — see above. `pending` stays true through
+            // the navigation, so the button reads "Adding…" until the new page
+            // arrives, which is exactly what it should say.
+            window.location.assign("/app/partners");
           });
         }}
         className={`${primaryButton} mt-5`}
@@ -109,16 +122,37 @@ export function SeedEncounterForm() {
  * for.
  */
 export function AddPartnerForm() {
-  const [state, formAction, pending] = useActionState(addPartnerAction, undefined);
+  /*
+    A transition and a page load, like the seed button beside it. Adding a
+    partner puts a new card in the list this form sits in, and refreshing that
+    list from inside the form is the arrangement that leaves the button on
+    "Adding…" with the row already written.
+  */
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [fields, setFields] = useState({
+    name: "",
+    email: "",
+    kind: "church",
+    location: "",
+    contactName: "",
+    note: "",
+    verified: true,
+  });
+
+  const set = <K extends keyof typeof fields>(key: K, value: (typeof fields)[K]) =>
+    setFields((current) => ({ ...current, [key]: value }));
 
   return (
-    <form action={formAction}>
+    <div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="eyebrow text-smoke">Their name</span>
           <input
             name="name"
             required
+            value={fields.name}
+            onChange={(event) => set("name", event.target.value)}
             placeholder="Encounter Church"
             className={inputClass}
           />
@@ -130,6 +164,8 @@ export function AddPartnerForm() {
             name="email"
             type="email"
             required
+            value={fields.email}
+            onChange={(event) => set("email", event.target.value)}
             className={inputClass}
             placeholder="office@example.org"
           />
@@ -140,7 +176,12 @@ export function AddPartnerForm() {
 
         <label className="block">
           <span className="eyebrow text-smoke">Kind</span>
-          <select name="kind" defaultValue="church" className={inputClass}>
+          <select
+            name="kind"
+            value={fields.kind}
+            onChange={(event) => set("kind", event.target.value)}
+            className={inputClass}
+          >
             {PARTNER_KINDS.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
@@ -151,18 +192,35 @@ export function AddPartnerForm() {
 
         <label className="block">
           <span className="eyebrow text-smoke">Where they are</span>
-          <input name="location" className={inputClass} placeholder="United States" />
+          <input
+            name="location"
+            value={fields.location}
+            onChange={(event) => set("location", event.target.value)}
+            className={inputClass}
+            placeholder="United States"
+          />
         </label>
 
         <label className="block">
           <span className="eyebrow text-smoke">Who to write to</span>
-          <input name="contactName" className={inputClass} />
+          <input
+            name="contactName"
+            value={fields.contactName}
+            onChange={(event) => set("contactName", event.target.value)}
+            className={inputClass}
+          />
         </label>
       </div>
 
       <label className="mt-4 block">
         <span className="eyebrow text-smoke">Your note</span>
-        <textarea name="note" rows={2} className={inputClass} />
+        <textarea
+          name="note"
+          rows={2}
+          value={fields.note}
+          onChange={(event) => set("note", event.target.value)}
+          className={inputClass}
+        />
         <span className="mt-2 block text-xs text-smoke">
           For you only. Never shown to them or to anybody else.
         </span>
@@ -171,8 +229,8 @@ export function AddPartnerForm() {
       <label className="mt-4 flex items-start gap-3 text-sm leading-relaxed text-smoke">
         <input
           type="checkbox"
-          name="verified"
-          defaultChecked
+          checked={fields.verified}
+          onChange={(event) => set("verified", event.target.checked)}
           className="mt-0.5 h-4 w-4 accent-green"
         />
         <span>
@@ -182,19 +240,34 @@ export function AddPartnerForm() {
       </label>
 
       {/*
-        Only an error lands back here — success redirects, and the page comes
-        back with their card on it. See the note on `addPartnerAction`.
+        Only an error lands back here. On success the page reloads and their
+        card is on it, which says more than a sentence would.
       */}
-      {state?.error && (
+      {error && (
         <p role="alert" className="mt-4 text-sm text-plum">
-          {state.error}
+          {error}
         </p>
       )}
 
-      <button type="submit" disabled={pending} className={`${primaryButton} mt-5`}>
+      <button
+        type="button"
+        disabled={pending || !fields.name.trim() || !fields.email.trim()}
+        onClick={() => {
+          setError(null);
+          start(async () => {
+            const result = await addPartnerAction(fields);
+            if (result?.error) {
+              setError(result.error);
+              return;
+            }
+            window.location.assign("/app/partners");
+          });
+        }}
+        className={`${primaryButton} mt-5`}
+      >
         {pending ? "Adding…" : "Add this partner"}
       </button>
-    </form>
+    </div>
   );
 }
 
@@ -213,13 +286,24 @@ export function RecordGiftForm({
   partner: PartnerWithTotals;
   targets: GiftTarget[];
 }) {
-  const [state, formAction, pending] = useActionState(recordGiftAction, undefined);
+  /*
+    A transition, like everything else on this page. Recording a gift changes
+    the figures on the partner's own card, and refreshing the page from inside
+    a form standing on it is what leaves the button reading "Recording…" over a
+    gift that is already in the ledger.
+  */
+  const [pending, start] = useTransition();
+  const [state, setState] = useState<
+    { error?: string; saved?: boolean; message?: string } | undefined
+  >(undefined);
   const [towards, setTowards] = useState("");
+  const [amount, setAmount] = useState("");
+  const [status, setStatus] = useState("received");
+  const [designation, setDesignation] = useState("");
+  const [message, setMessage] = useState("");
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="partnerId" value={partner.id} />
-
+    <div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="eyebrow text-smoke">How much, in dollars</span>
@@ -228,13 +312,20 @@ export function RecordGiftForm({
             required
             inputMode="decimal"
             placeholder="850"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
             className={`${inputClass} tabular`}
           />
         </label>
 
         <label className="block">
           <span className="eyebrow text-smoke">Has it arrived?</span>
-          <select name="status" defaultValue="received" className={inputClass}>
+          <select
+            name="status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            className={inputClass}
+          >
             <option value="received">Yes — it is in the bank</option>
             <option value="promised">Not yet — they have promised it</option>
           </select>
@@ -286,6 +377,8 @@ export function RecordGiftForm({
             required
             maxLength={120}
             placeholder="School fees for one child"
+            value={designation}
+            onChange={(event) => setDesignation(event.target.value)}
             className={inputClass}
           />
           <span className="mt-2 block text-xs text-smoke">
@@ -297,7 +390,13 @@ export function RecordGiftForm({
 
       <label className="mt-4 block">
         <span className="eyebrow text-smoke">Anything they said with it</span>
-        <textarea name="message" rows={2} className={inputClass} />
+        <textarea
+          name="message"
+          rows={2}
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          className={inputClass}
+        />
       </label>
 
       {state?.error && (
@@ -311,10 +410,33 @@ export function RecordGiftForm({
         </p>
       )}
 
-      <button type="submit" disabled={pending} className={`${primaryButton} mt-5`}>
+      <button
+        type="button"
+        disabled={pending || !amount.trim() || !towards}
+        onClick={() => {
+          setState(undefined);
+          start(async () => {
+            const result = await recordGiftAction({
+              partnerId: partner.id,
+              amount,
+              towards,
+              designation,
+              status,
+              message,
+            });
+            setState(result);
+            /*
+              Clear the amount on success so the same gift cannot be recorded
+              twice by a second click on a form that still looks filled in.
+            */
+            if (result?.saved) setAmount("");
+          });
+        }}
+        className={`${primaryButton} mt-5`}
+      >
         {pending ? "Recording…" : "Record this gift"}
       </button>
-    </form>
+    </div>
   );
 }
 
@@ -342,8 +464,10 @@ export function VerifyButton({
         ) {
           return;
         }
-        start(() => {
-          void setVerifiedAction(partnerId, !verified);
+        start(async () => {
+          await setVerifiedAction(partnerId, !verified);
+          // Reloaded rather than revalidated — see the note in actions.ts.
+          window.location.assign("/app/partners");
         });
       }}
       className={
@@ -366,8 +490,10 @@ export function RevokeLoginButton({ partnerId, name }: { partnerId: string; name
       disabled={pending}
       onClick={() => {
         if (!confirm(`Take away ${name}'s login? They stay verified.`)) return;
-        start(() => {
-          void revokeLoginAction(partnerId);
+        start(async () => {
+          await revokeLoginAction(partnerId);
+          // This button is one of the things the reload removes.
+          window.location.assign("/app/partners");
         });
       }}
       className={quietButton}
@@ -496,27 +622,52 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
   );
 }
 
+/**
+ * Their details.
+ *
+ * A transition rather than a form action, like everything else on this page —
+ * saving re-renders the card these fields live in, and doing that from inside a
+ * `useActionState` form is what leaves the button reading "Saving…" over work
+ * that is already in the database.
+ */
 export function PartnerDetailsForm({ partner }: { partner: PartnerWithTotals }) {
-  const [state, formAction, pending] = useActionState(updatePartnerAction, undefined);
+  const [pending, start] = useTransition();
+  const [state, setState] = useState<
+    { error?: string; saved?: boolean } | undefined
+  >(undefined);
+  const [fields, setFields] = useState({
+    name: partner.name,
+    kind: partner.kind,
+    location: partner.location,
+    contactName: partner.contactName,
+    note: partner.note,
+  });
+
+  const set = <K extends keyof typeof fields>(key: K, value: (typeof fields)[K]) =>
+    setFields((current) => ({ ...current, [key]: value }));
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="partnerId" value={partner.id} />
-
+    <div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
           <span className="eyebrow text-smoke">Name</span>
           <input
             name="name"
             required
-            defaultValue={partner.name}
+            value={fields.name}
+            onChange={(event) => set("name", event.target.value)}
             className={inputClass}
           />
         </label>
 
         <label className="block">
           <span className="eyebrow text-smoke">Kind</span>
-          <select name="kind" defaultValue={partner.kind} className={inputClass}>
+          <select
+            name="kind"
+            value={fields.kind}
+            onChange={(event) => set("kind", event.target.value)}
+            className={inputClass}
+          >
             {PARTNER_KINDS.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
@@ -529,7 +680,8 @@ export function PartnerDetailsForm({ partner }: { partner: PartnerWithTotals }) 
           <span className="eyebrow text-smoke">Where they are</span>
           <input
             name="location"
-            defaultValue={partner.location}
+            value={fields.location}
+            onChange={(event) => set("location", event.target.value)}
             className={inputClass}
           />
         </label>
@@ -538,7 +690,8 @@ export function PartnerDetailsForm({ partner }: { partner: PartnerWithTotals }) 
           <span className="eyebrow text-smoke">Who to write to</span>
           <input
             name="contactName"
-            defaultValue={partner.contactName}
+            value={fields.contactName}
+            onChange={(event) => set("contactName", event.target.value)}
             className={inputClass}
           />
         </label>
@@ -549,7 +702,8 @@ export function PartnerDetailsForm({ partner }: { partner: PartnerWithTotals }) 
         <textarea
           name="note"
           rows={2}
-          defaultValue={partner.note}
+          value={fields.note}
+          onChange={(event) => set("note", event.target.value)}
           className={inputClass}
         />
         <span className="mt-2 block text-xs text-smoke">
@@ -570,12 +724,20 @@ export function PartnerDetailsForm({ partner }: { partner: PartnerWithTotals }) 
       )}
 
       <button
-        type="submit"
-        disabled={pending}
+        type="button"
+        disabled={pending || !fields.name.trim()}
+        onClick={() => {
+          setState(undefined);
+          start(async () => {
+            setState(
+              await updatePartnerAction({ partnerId: partner.id, ...fields }),
+            );
+          });
+        }}
         className={`${quietButton} mt-4`}
       >
         {pending ? "Saving…" : "Save details"}
       </button>
-    </form>
+    </div>
   );
 }
