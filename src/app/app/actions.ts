@@ -19,9 +19,9 @@ import { PHOTOS_TAG, deletePhoto, parseSlotId, savePhoto } from "@/lib/photos";
 
 type FormState = { error?: string; saved?: boolean } | undefined;
 
-export async function signInAction(_prev: FormState, formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
+export async function signInAction(input: { email: string; password: string }) {
+  const email = input.email.trim();
+  const password = input.password;
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
@@ -33,16 +33,27 @@ export async function signInAction(_prev: FormState, formData: FormData) {
     return { error: "That email and password don't match." };
   }
 
-  redirect("/app");
+  /*
+    The caller navigates; this does not redirect.
+
+    Signing in replaces this form with the dashboard, and a `useActionState`
+    form whose action re-renders the page without the form cannot commit the
+    result it is waiting for — the cookie is set and the button sits on
+    "Signing in…" until somebody reloads. Intermittent, and the worst possible
+    place for it: the front door. The partner screens hit the same thing; see
+    the note in app/partners/actions.ts.
+  */
+  return { ok: true };
 }
 
-export async function createFirstUserAction(
-  _prev: FormState,
-  formData: FormData,
-) {
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
+export async function createFirstUserAction(input: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  const name = input.name.trim();
+  const email = input.email.trim();
+  const password = input.password;
 
   if (!name || !email) return { error: "Enter your name and email." };
   if (password.length < 10) {
@@ -58,7 +69,8 @@ export async function createFirstUserAction(
     };
   }
 
-  redirect("/app");
+  // Navigated by the caller, for the reason given on `signInAction`.
+  return { ok: true };
 }
 
 export async function inviteUserAction(_prev: FormState, formData: FormData) {
