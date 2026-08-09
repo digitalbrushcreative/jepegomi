@@ -2,7 +2,21 @@ export const site = {
   name: "Jepegomi",
   longName: "Jesus People Gospel Ministries",
   domain: "jepegomi.org",
-  url: "https://jepegomi.org",
+  /*
+    The www host, deliberately, while `domain` above stays bare.
+
+    Vercel serves the site at www and answers the apex with a 308 to it. So the
+    bare address still *works* everywhere a person types it — but anything the
+    code emits as a link should point at the host that answers, not at the one
+    that redirects: a canonical URL in a page's metadata, an Open Graph tag, the
+    "see what is needed" button in an email. A redirect is free for a reader and
+    not free for a crawler deciding which of two addresses is the real page.
+
+    `domain` is what gets *printed* — "jepegomi.org/needs" reads better than the
+    www — so the two are separate on purpose. Display the bare one, link the
+    real one.
+  */
+  url: "https://www.jepegomi.org",
   /*
     The address printed on the site, and the one every form tells people to
     reply to. It is at the ministry's own domain rather than at gmail.com for
