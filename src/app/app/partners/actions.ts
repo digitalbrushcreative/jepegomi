@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath, updateTag } from "next/cache";
-import { redirect } from "next/navigation";
 import { budget, donation } from "@/content/kitchen";
 import { requireUser } from "@/lib/auth";
 import {
@@ -42,8 +41,6 @@ import {
  * church that does not want an account.
  */
 
-type FormState = { error?: string; saved?: boolean; message?: string } | undefined;
-
 function refresh() {
   revalidatePath("/app/partners");
 }
@@ -78,12 +75,19 @@ function refreshLedger(slug?: string) {
  * is there to be unticked for the case that does exist — entering a church whose
  * gift arrived through somebody else and whose details are still second-hand.
  */
-export async function addPartnerAction(_prev: FormState, formData: FormData) {
+export async function addPartnerAction(input: {
+  name: string;
+  email: string;
+  kind: string;
+  location: string;
+  contactName: string;
+  note: string;
+  verified: boolean;
+}) {
   await requireUser();
 
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
-  const rawKind = String(formData.get("kind") ?? "church");
+  const name = input.name.trim();
+  const email = input.email.trim();
 
   if (!name) return { error: "A partner needs a name." };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -95,11 +99,11 @@ export async function addPartnerAction(_prev: FormState, formData: FormData) {
     result = await createPartner({
       name,
       email,
-      kind: isPartnerKind(rawKind) ? rawKind : "church",
-      location: String(formData.get("location") ?? "").trim(),
-      contactName: String(formData.get("contactName") ?? "").trim(),
-      note: String(formData.get("note") ?? "").trim(),
-      verified: formData.get("verified") === "on",
+      kind: isPartnerKind(input.kind) ? input.kind : "church",
+      location: input.location.trim(),
+      contactName: input.contactName.trim(),
+      note: input.note.trim(),
+      verified: input.verified,
     });
   } catch (error) {
     console.error("Partners: could not add a partner.", error);
@@ -113,20 +117,12 @@ export async function addPartnerAction(_prev: FormState, formData: FormData) {
   }
 
   /*
-    Redirect, don't revalidate-in-place.
-
-    Adding a partner changes which cards this page is made of, and asking the
-    page to regenerate that list underneath the form that is still waiting for
-    this action's answer leaves the button on "Adding…" indefinitely — the row
-    is written, and the screen never says so. Sending the browser back to the
-    page instead fetches it whole, which is what a changed list needs anyway.
-    `revalidatePath` on a route we are about to navigate to is redundant work in
-    every case, and in this one it is the thing that hangs.
-
-    The message this used to return is no loss: their card, now on the page, is
-    the better version of it.
+    No `revalidatePath` here: the caller reloads the page, for the same reason
+    the Encounter Church seed does. This one adds a card to the list rather than
+    deleting the form, so it is the less fragile of the two — but it is the same
+    machinery, and one proven way of refreshing this page beats two.
   */
-  redirect("/app/partners");
+  return { saved: true };
 }
 
 /* ------------------------------------------------ the church that built it */
@@ -262,21 +258,21 @@ export async function seedEncounterChurchAction(rawEmail: string) {
     appear on.
   */
   /*
-    A redirect rather than a `{ saved: true }`, and not for tidiness.
+    Returns rather than redirecting, and the caller reloads the page itself.
 
-    Succeeding here removes this form from the page — the panel is only rendered
-    while Encounter Church is missing, which is the right behaviour for a button
-    with one job. But a `useActionState` form that unmounts itself on success
-    never applies the state it was waiting for, so its own button sits on
-    "Adding…" for ever while the work is, in fact, already done. Simon then
-    clicks it again.
+    This action is unusual in one way that turns out to matter: succeeding
+    removes the very panel the button lives in, because the panel is only
+    rendered while Encounter Church is missing. Neither `redirect` nor
+    `revalidatePath` survives that. Both re-render /app/partners without the
+    component that is awaiting this result, the transition never commits, and
+    the button sits on "Adding…" while the work is already done — measured with
+    timing probes: every row written and this line reached in 17ms, and the
+    screen still saying "Adding…" ninety seconds later. Simon presses it again.
 
-    Redirecting ends the action instead of returning into a component that is
-    about to disappear. It is also what `seedKitchenNeedsAction` does, for the
-    same reason. The message this used to return is no loss: the partner card
-    appearing above, with $8,000 against it, says it better.
+    So the navigation is the caller's, and it is a real one. See the note in
+    `SeedEncounterForm`.
   */
-  redirect("/app/partners");
+  return { saved: true };
 }
 
 /* ------------------------------------------------- recording what arrived */
@@ -297,16 +293,20 @@ export async function seedEncounterChurchAction(rawEmail: string) {
  * moved to whatever status actually describes it, which is usually 'received',
  * because money he is typing in is money that has already landed.
  */
-export async function recordGiftAction(_prev: FormState, formData: FormData) {
+export async function recordGiftAction(input: {
+  partnerId: string;
+  amount: string;
+  towards: string;
+  designation: string;
+  status: string;
+  message: string;
+}) {
   await requireUser();
 
-  const partnerId = String(formData.get("partnerId") ?? "");
-  const amountCents = parseUsd(String(formData.get("amount") ?? ""));
-  const towards = String(formData.get("towards") ?? "");
-  const message = String(formData.get("message") ?? "").trim().slice(0, 2000);
-
-  const rawStatus = String(formData.get("status") ?? "received");
-  const status: PledgeStatus = rawStatus === "promised" ? "promised" : "received";
+  const { partnerId, towards } = input;
+  const amountCents = parseUsd(input.amount);
+  const message = input.message.trim().slice(0, 2000);
+  const status: PledgeStatus = input.status === "promised" ? "promised" : "received";
 
   if (amountCents === null) {
     return { error: "Enter the amount, in dollars — like 850." };
@@ -359,7 +359,7 @@ export async function recordGiftAction(_prev: FormState, formData: FormData) {
 
       const designation = area
         ? areaOf(area).label
-        : String(formData.get("designation") ?? "").trim().slice(0, 120);
+        : input.designation.trim().slice(0, 120);
 
       if (!designation) {
         return { error: "Say what the gift was towards." };
@@ -397,10 +397,20 @@ export async function recordGiftAction(_prev: FormState, formData: FormData) {
   };
 }
 
+/*
+  The two buttons below leave the page to be reloaded by their caller rather
+  than revalidating it here.
+
+  Both change the shape of the card they sit on — un-verifying takes away the
+  login badge and the Remove-login button with it, revoking takes away its own
+  button — and refreshing a list from inside a control that the refresh deletes
+  is what leaves this page's buttons spinning over work that is already done.
+  The whole of /app is uncached, so a plain page load costs a single query and
+  is the one refresh that cannot get this wrong.
+*/
 export async function setVerifiedAction(partnerId: string, verified: boolean) {
   await requireUser();
   await setPartnerVerified(partnerId, verified);
-  refresh();
 }
 
 /**
@@ -484,26 +494,28 @@ export async function revokeLoginAction(partnerId: string) {
       }),
     );
   }
-
-  refresh();
 }
 
-export async function updatePartnerAction(_prev: FormState, formData: FormData) {
+export async function updatePartnerAction(input: {
+  partnerId: string;
+  name: string;
+  kind: string;
+  location: string;
+  contactName: string;
+  note: string;
+}) {
   await requireUser();
 
-  const partnerId = String(formData.get("partnerId") ?? "");
-  const name = String(formData.get("name") ?? "").trim();
-  const rawKind = String(formData.get("kind") ?? "church");
-
+  const name = input.name.trim();
   if (!name) return { error: "A partner needs a name." };
 
   try {
-    await updatePartnerDetails(partnerId, {
+    await updatePartnerDetails(input.partnerId, {
       name,
-      kind: isPartnerKind(rawKind) ? rawKind : "church",
-      location: String(formData.get("location") ?? "").trim(),
-      contactName: String(formData.get("contactName") ?? "").trim(),
-      note: String(formData.get("note") ?? "").trim(),
+      kind: isPartnerKind(input.kind) ? input.kind : "church",
+      location: input.location.trim(),
+      contactName: input.contactName.trim(),
+      note: input.note.trim(),
     });
   } catch (error) {
     console.error("Partners: could not save details.", error);
