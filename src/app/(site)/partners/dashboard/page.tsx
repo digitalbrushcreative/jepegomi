@@ -30,7 +30,7 @@ async function OwnDashboard() {
         <form action={partnerSignOutAction}>
           <button
             type="submit"
-            className="cursor-pointer rounded-full border-2 border-black/12 px-6 py-2.5 text-sm font-bold text-smoke transition-colors hover:border-plum hover:text-plum"
+            className="cursor-pointer rounded-full border-2 border-white/25 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:border-marigold hover:text-marigold"
           >
             Sign out
           </button>
@@ -41,17 +41,21 @@ async function OwnDashboard() {
 }
 
 export default function PartnerDashboardPage() {
+  /*
+    No padding of its own: the component opens with a plum band that clears the
+    fixed header itself. See the note on `PartnerDashboard`.
+  */
   return (
-    <section className="px-6 pt-16 pb-24">
-      <Suspense
-        fallback={
+    <Suspense
+      fallback={
+        <section className="bg-plum-deep px-6 pt-20 pb-14 sm:pt-24">
           <div className="shell">
-            <p className="text-smoke">Loading…</p>
+            <p className="text-white/60">Loading…</p>
           </div>
-        }
-      >
-        <OwnDashboard />
-      </Suspense>
-    </section>
+        </section>
+      }
+    >
+      <OwnDashboard />
+    </Suspense>
   );
 }

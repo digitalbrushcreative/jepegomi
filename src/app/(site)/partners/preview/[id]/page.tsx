@@ -55,9 +55,16 @@ async function Preview({ params }: { params: Params }) {
   if (!partner) notFound();
 
   return (
-    <>
-      <div className="bg-plum-deep px-6 py-4 text-white">
-        <div className="shell flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
+    <PartnerDashboard
+      partner={partner}
+      /*
+        Inside the dashboard's own plum band rather than in a bar above it. The
+        band already clears the fixed header — stacking a second one on top of
+        it would only push their page further down the screen, and this is a
+        screen whose whole job is to show their page where they see it.
+      */
+      notice={
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-b border-white/15 pb-6 text-white">
           <p className="text-sm leading-relaxed">
             <span className="eyebrow mr-3 rounded-full bg-marigold px-3 py-1 text-plum-deep">
               Preview
@@ -79,27 +86,21 @@ async function Preview({ params }: { params: Params }) {
             Back to Partners
           </Link>
         </div>
-      </div>
-
-      <section className="px-6 pt-16 pb-24">
-        <PartnerDashboard
-          partner={partner}
-          action={
-            /*
-              Where their Sign out button is. Not a disabled copy of it — a
-              button that does nothing is a button somebody clicks twice — but
-              the honest thing for this screen, which is the way back.
-            */
-            <Link
-              href="/app/partners"
-              className="rounded-full border-2 border-black/12 px-6 py-2.5 text-sm font-bold text-smoke transition-colors hover:border-plum hover:text-plum"
-            >
-              Back to /app
-            </Link>
-          }
-        />
-      </section>
-    </>
+      }
+      action={
+        /*
+          Where their Sign out button is. Not a disabled copy of it — a button
+          that does nothing is a button somebody clicks twice — but the honest
+          thing for this screen, which is the way back.
+        */
+        <Link
+          href="/app/partners"
+          className="rounded-full border-2 border-white/25 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:border-marigold hover:text-marigold"
+        >
+          Back to /app
+        </Link>
+      }
+    />
   );
 }
 
@@ -107,9 +108,9 @@ export default function PartnerPreviewPage({ params }: { params: Params }) {
   return (
     <Suspense
       fallback={
-        <section className="px-6 pt-16 pb-24">
+        <section className="bg-plum-deep px-6 pt-20 pb-14 sm:pt-24">
           <div className="shell">
-            <p className="text-smoke">Loading…</p>
+            <p className="text-white/60">Loading…</p>
           </div>
         </section>
       }

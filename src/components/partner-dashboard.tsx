@@ -46,10 +46,13 @@ import {
 export async function PartnerDashboard({
   partner,
   action,
+  notice,
 }: {
   partner: Partner;
   /** Rendered beside the name — sign-out for them, a way back for /app. */
   action?: ReactNode;
+  /** A strip above the name, inside the plum. Used by the /app preview. */
+  notice?: ReactNode;
 }) {
   const [needs, areaGifts, pledges, updates, site] = await Promise.all([
     listNeedsForPartner(partner.id),
@@ -90,22 +93,46 @@ export async function PartnerDashboard({
   const awaiting = totalClaimed - totalReceived;
 
   return (
-    <div className="shell">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <p className="eyebrow text-plum">Partner</p>
-          <h1 className="font-display mt-3 text-4xl font-bold text-balance sm:text-5xl">
-            {partner.name}
-          </h1>
-          {partner.location && (
-            <p className="mt-2 text-smoke">{partner.location}</p>
-          )}
+    <>
+      {/*
+        The plum band this page opens with is not decoration.
+
+        The site header is fixed, four rem tall, and deliberately has no colour
+        of its own — it borrows whatever it sits over, which is why every other
+        page begins with something dark. This page used to begin on cream, so
+        the whole global nav rendered white on near-white and simply could not
+        be read, on top of the church's own name. Opening on plum, like the rest
+        of the site, is what makes the nav legible.
+      */}
+      <section className="relative overflow-hidden bg-plum-deep px-6 pt-20 pb-8 sm:pt-24">
+        <div className="grain-layer" />
+
+        <div className="shell relative">
+          {notice}
+
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p className="eyebrow text-marigold">Partner</p>
+              <h1 className="font-display mt-3 text-4xl font-bold text-balance text-white sm:text-5xl">
+                {partner.name}
+              </h1>
+              {partner.location && (
+                <p className="mt-2 text-white/60">{partner.location}</p>
+              )}
+            </div>
+
+            {action}
+          </div>
         </div>
+      </section>
 
-        {action}
-      </div>
-
-      <dl className="mt-12 grid gap-px overflow-hidden rounded-2xl bg-white/15 sm:grid-cols-3">
+      <div className="shell px-6 pb-24">
+        {/*
+          Below the seam, not straddling it. The tiles are plum-deep and so is
+          the band above, so an overlap makes their top edge — and the label
+          sitting in it — disappear into the background.
+        */}
+        <dl className="mt-10 grid gap-px overflow-hidden rounded-2xl bg-white/15 shadow-warm sm:grid-cols-3">
         <Stat
           label="Given so far"
           value={usd(totalReceived)}
@@ -274,7 +301,8 @@ export async function PartnerDashboard({
           </div>
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
