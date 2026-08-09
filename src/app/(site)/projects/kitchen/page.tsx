@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { BudgetPanel } from "@/components/budget-panel";
+import { getContent } from "@/cms/content";
 import { Icon, type IconName } from "@/components/icons";
+import { KitchenAccounts } from "@/components/kitchen-accounts";
 import { FoodAtSchoolLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
 import { PhotoGallery } from "@/components/photo-gallery";
 import { ProgressPot } from "@/components/progress-pot";
 import { ButtonLink, SectionTitle } from "@/components/ui";
-import {
-  beforeAfter,
-  budgetTotals,
-  donation,
-  progress,
-  remainingNeeds,
-  statsFor,
-} from "@/content/kitchen";
+import { showsAccounts } from "@/lib/disclosure";
+import { areaOf } from "@/lib/giving";
 import { getChildrenFed } from "@/lib/enrolment";
-import { getBeforeAfterSources, getGalleryPhotos } from "@/lib/photos";
+import { accountSet, visibilityOf } from "@/lib/project-accounts";
+import { getKitchenReport, kitchenStats } from "@/lib/kitchen";
+import {
+  getProjectBudget,
+  getPublishedNeeds,
+  getStillNeededCents,
+} from "@/lib/needs";
+import {
+  getBeforeAfterSources,
+  getGalleryCategories,
+  getGalleryPhotos,
+} from "@/lib/photos";
 import { site } from "@/lib/site";
 
 const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
@@ -24,49 +30,15 @@ const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
 export const metadata: Metadata = {
   title: "Kitchen Build",
   description:
-    "From open fires to a proper kitchen — progress on the Jepegomi Academy kitchen, funded by a partner church.",
+    "From open fires to a proper kitchen — the Jepegomi Academy kitchen a partner church built, cooking daily, with the dining area still to finish.",
 };
-
-const storyPoints = [
-  <>
-    Children were eating meals cooked{" "}
-    <strong className="font-bold text-charcoal">outdoors over open fires</strong>
-  </>,
-  <>No proper kitchen, store room, or dining space</>,
-  <>
-    {donation.donorTitled} donated{" "}
-    <strong className="font-bold text-charcoal">
-      {usd(donation.amountUsd)}
-    </strong>{" "}
-    to fix that
-  </>,
-  <>
-    Kitchen now{" "}
-    <strong className="font-bold text-charcoal">
-      {progress.percentComplete}% complete
-    </strong>{" "}
-    — walls up, roof on
-  </>,
-  <>Final finishes in progress — see &ldquo;Still to complete&rdquo; below</>,
-];
-
-const academyFacts = (fed: string): { icon: IconName; text: string }[] => [
-  { icon: "church", text: `${site.leaders} — ${site.longName}` },
-  { icon: "pin", text: site.location },
-  { icon: "pot", text: "Daily meals: porridge (morning) + cooked lunch" },
-  { icon: "child", text: `Fed daily: ${fed} — many can't afford meals at home` },
-  {
-    icon: "globe",
-    text: "Also runs: church, Bible school, digital outreach, school transport",
-  },
-];
 
 function BeforeAfterCard({
   card,
   src,
   tone,
 }: {
-  card: typeof beforeAfter.before | typeof beforeAfter.after;
+  card: { heading: string; alt: string; bullets: string[] };
   src: string;
   tone: "before" | "after";
 }) {
@@ -110,11 +82,93 @@ function BeforeAfterCard({
 }
 
 export default async function KitchenPage() {
-  const [photos, beforeAfterSrc, childrenFed] = await Promise.all([
-    getGalleryPhotos(),
-    getBeforeAfterSources(),
-    getChildrenFed(),
-  ]);
+  const [
+    photos,
+    beforeAfterSrc,
+    childrenFed,
+    accounts,
+    stillNeededCents,
+    report,
+    published,
+    categories,
+  ] = await Promise.all([
+      getGalleryPhotos(),
+      getBeforeAfterSources(),
+      getChildrenFed(),
+      getContent("projectAccounts"),
+      /*
+        What finishing the kitchen costs, summed from the published items still
+        open in the ledger rather than from a constant in a source file. Simon
+        marks the water tank received in /app and this figure moves on the next
+        page load, on this page and on the front page both.
+      */
+      getStillNeededCents("kitchen"),
+      getKitchenReport(),
+      getPublishedNeeds(),
+      getGalleryCategories(),
+    ]);
+
+
+  /*
+    The story of the build, in five lines. Built here rather than at module
+    scope because who gave and where they are now come out of the CMS, and a
+    constant computed at import time would be whatever was saved when the
+    process started.
+  */
+  const storyPoints = [
+    <>
+      Children were eating meals cooked{" "}
+      <strong className="font-bold text-charcoal">
+        outdoors over open fires
+      </strong>
+    </>,
+    <>No proper kitchen, store room, or dining space</>,
+    <>
+      {report.donorTitled} in {report.donorLocation}{" "}
+      <strong className="font-bold text-charcoal">partnered with us</strong> to
+      fix that
+    </>,
+    <>
+      The kitchen is{" "}
+      <strong className="font-bold text-charcoal">built and cooking</strong> —
+      every meal comes out of it now
+    </>,
+    <>
+      The dining area beside it is what is left — see &ldquo;Still to
+      complete&rdquo; below
+    </>,
+  ];
+
+  /*
+    The three things the gift could not reach, read off the ledger rather than
+    out of a list beside it. These are rows in `needs` — the same rows /needs
+    asks for and a partner claims against — so the cards here cannot go on
+    describing a water tank somebody has already paid for.
+  */
+  const remaining = published.filter(
+    (need) => areaOf(need.area).id === "kitchen" && !need.closed,
+  );
+
+
+  /*
+    Whether the reconciliation is printed here or only invited to.
+
+    `disclosure: null` because nobody is signed in on a public page — so this is
+    true only when Simon has set the switch in /app to "Anyone", which is him
+    deliberately putting the ministry's own books back on the open web. The
+    default is the other thing, and the section below says so either way.
+  */
+  const publishAccounts = showsAccounts({
+    visibility: visibilityOf(accounts, "kitchen"),
+    disclosure: null,
+    areaId: accountSet("kitchen").area,
+  });
+
+  // Only read when it is about to be drawn — a public page should not pay for
+  // the accounts on every visit to keep them hidden.
+  const budget = publishAccounts
+    ? await getProjectBudget(accountSet("kitchen").area)
+    : null;
 
   /*
     Every mention of how many children eat here comes from the same enrolment
@@ -122,7 +176,21 @@ export default async function KitchenPage() {
     quote three different totals at each other.
   */
   const fed = childrenFed ? `${childrenFed} children` : "every child";
-  const stats = statsFor(childrenFed);
+  const stats = kitchenStats(report, childrenFed);
+
+  const academyFacts: { icon: IconName; text: string }[] = [
+    { icon: "church", text: `${site.leaders} — ${site.longName}` },
+    { icon: "pin", text: site.location },
+    { icon: "pot", text: "Daily meals: porridge (morning) + cooked lunch" },
+    {
+      icon: "child",
+      text: `Fed daily: ${fed} — every child the school teaches`,
+    },
+    {
+      icon: "globe",
+      text: "Also runs: church, Bible school, digital outreach, school transport",
+    },
+  ];
 
   return (
     <>
@@ -134,7 +202,7 @@ export default async function KitchenPage() {
           <div className="flex-1">
             <p className="eyebrow flex items-center gap-3 text-marigold">
               <span aria-hidden="true" className="h-px w-7 bg-marigold" />
-              Funded by {donation.donor} in {donation.donorLocation}
+              Funded by {report.donor} in {report.donorLocation}
             </p>
 
             <FoodAtSchoolLogo
@@ -150,17 +218,17 @@ export default async function KitchenPage() {
             <ul className="mt-8 max-w-xl">
               {[
                 <>
-                  Donor:{" "}
+                  Partner:{" "}
                   <strong className="font-bold text-white">
-                    {donation.donor} in {donation.donorLocation}
+                    {report.donor} in {report.donorLocation}
                   </strong>
                 </>,
                 <>
-                  Gift:{" "}
+                  Built:{" "}
                   <strong className="font-bold text-white">
-                    {usd(donation.amountUsd)}
-                  </strong>{" "}
-                  to build a dedicated kitchen
+                    a kitchen and store room
+                  </strong>
+                  , with a dining area beside it
                 </>,
                 <>Location: Jepegomi Academy, Nairobi, Kenya</>,
                 <>
@@ -170,9 +238,9 @@ export default async function KitchenPage() {
                 <>
                   Status:{" "}
                   <strong className="font-bold text-white">
-                    {progress.percentComplete}% complete
+                    Built and cooking
                   </strong>{" "}
-                  — structure done, finishing underway
+                  — the dining area is still to finish
                 </>,
               ].map((item, index) => (
                 <li
@@ -190,15 +258,15 @@ export default async function KitchenPage() {
 
           <div className="flex flex-col items-start sm:items-center">
             <ProgressPot
-              percent={progress.percentComplete}
+              percent={report.percentComplete}
               className="h-28 w-auto text-white/80"
             />
             <p className="font-display mt-4 text-6xl leading-none font-semibold text-white">
-              {progress.percentComplete}%
+              {report.percentComplete}%
             </p>
-            <p className="eyebrow mt-2 text-marigold">Kitchen complete</p>
+            <p className="eyebrow mt-2 text-marigold">Of the build done</p>
             <p className="mt-2 max-w-[13rem] text-sm text-white/50 sm:text-center">
-              {progress.caption}
+              {report.progressCaption}
             </p>
           </div>
         </div>
@@ -231,7 +299,7 @@ export default async function KitchenPage() {
           <div>
             <p className="eyebrow text-plum">The Story</p>
             <SectionTitle className="mt-3">
-              {donation.donorTitled} in {donation.donorLocation}
+              {report.donorTitled} in {report.donorLocation}
               <br />
               <span className="text-plum">→</span> Jepegomi Academy, Nairobi
             </SectionTitle>
@@ -257,7 +325,7 @@ export default async function KitchenPage() {
                 &ldquo;Quality Education With Values&rdquo;
               </p>
               <div className="mt-7">
-                {academyFacts(fed).map((fact) => (
+                {academyFacts.map((fact) => (
                   <div
                     key={fact.text}
                     className="flex gap-4 border-t border-white/20 py-4 first:border-t-0 first:pt-0"
@@ -290,12 +358,12 @@ export default async function KitchenPage() {
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             <BeforeAfterCard
-              card={beforeAfter.before}
+              card={report.before}
               src={beforeAfterSrc.before}
               tone="before"
             />
             <BeforeAfterCard
-              card={beforeAfter.after}
+              card={report.after}
               src={beforeAfterSrc.after}
               tone="after"
             />
@@ -318,7 +386,7 @@ export default async function KitchenPage() {
               {photos.length} photos · tap any to view full size
             </p>
           </div>
-          <PhotoGallery photos={photos} />
+          <PhotoGallery photos={photos} categories={categories} />
         </div>
       </section>
 
@@ -330,10 +398,10 @@ export default async function KitchenPage() {
           <div className="flex flex-col items-center text-center">
             <p className="eyebrow text-clay">Still to Complete</p>
             <SectionTitle className="mt-3 flex flex-col items-center">
-              What the {usd(budgetTotals.given)} could not reach
+              What the gift could not reach
             </SectionTitle>
             <p className="mx-auto mt-6 max-w-xl leading-relaxed text-smoke">
-              The gift is fully spent, and the building stands. These three
+              The gift is fully spent and the kitchen is cooking. These three
               things ran out of money before they were reached.
             </p>
           </div>
@@ -342,19 +410,27 @@ export default async function KitchenPage() {
             Dashed and unfilled, where everything that was actually built is
             solid. These are the holes in the building, and they should look
             like holes.
+
+            Each card used to carry its own price. Three named fixtures with a
+            figure against each — a water tank, stone for a floor, the wiring
+            for a hall — is a delivery schedule for a compound in Nairobi, which
+            is not what anybody meant to publish. The descriptions stay, because
+            they are what the ask is; the itemised costs went behind the partner
+            door with the rest of the accounts. See lib/disclosure.ts. The total
+            below is the figure a reader can act on and the only one they need.
           */}
           <div className="mt-12 grid gap-5 sm:grid-cols-3">
-            {remainingNeeds.map((need) => (
+            {remaining.map((need) => (
               <div
-                key={need.text}
+                key={need.id}
                 className="flex flex-col rounded-2xl border-2 border-dashed border-clay/35 bg-clay/5 px-6 py-7"
               >
-                <Icon name={need.icon} className="h-8 w-8 text-clay" />
+                <Icon
+                  name={(need.icon || areaOf(need.area).icon) as IconName}
+                  className="h-8 w-8 text-clay"
+                />
                 <p className="mt-4 flex-1 text-sm leading-relaxed text-charcoal">
-                  {need.text}
-                </p>
-                <p className="font-display tabular mt-5 text-3xl font-semibold text-clay">
-                  {usd(need.costUsd)}
+                  {need.summary || need.title}
                 </p>
               </div>
             ))}
@@ -363,13 +439,67 @@ export default async function KitchenPage() {
           <div className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
             <p className="eyebrow text-white/70">Still needed to finish</p>
             <p className="font-display tabular text-4xl font-semibold text-marigold">
-              {usd(budgetTotals.stillNeeded)}
+              {usd(stillNeededCents / 100)}
             </p>
           </div>
         </div>
       </section>
 
-      <BudgetPanel />
+      {/*
+        The accounts, or the invitation to them.
+
+        This was a button reading "See where it went" that opened Simon's whole
+        reconciliation to anybody who pressed it. The willingness is the thing
+        worth keeping and it is kept in both branches — the section says the
+        books are open whether or not it prints them. What changed is that where
+        they are printed is now Simon's to set, in /app under Giving → Project
+        accounts, because a line-by-line account of what a ministry in Nairobi
+        bought and what it is still short of is not only a comfort to donors.
+
+        Deliberately not phrased as a wall in the closed branch. A reader who is
+        not a partner should come away knowing the accounts exist and are shown,
+        which is the whole point of having them.
+      */}
+      <div className="relative bg-sand px-6 py-20">
+        <ClothEdge className="text-sand" />
+
+        <div className="shell">
+          {budget ? (
+            <>
+              <div className="text-center">
+                <p className="eyebrow text-plum">The accounts</p>
+                <SectionTitle className="mt-3">
+                  Every shilling of the gift, accounted for
+                </SectionTitle>
+                <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
+                  Pastor Simon reconciled the build line by line — what each
+                  thing was estimated at, what it actually cost, and where it ran
+                  over.
+                </p>
+              </div>
+
+              <div className="mx-auto mt-12 max-w-3xl">
+                <KitchenAccounts budget={budget} report={report} />
+              </div>
+            </>
+          ) : (
+            <div className="text-center">
+              <p className="font-display mx-auto max-w-lg text-2xl leading-snug font-semibold text-balance">
+                Every shilling of the gift is accounted for.
+              </p>
+              <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
+                Pastor Simon reconciled the build line by line — what each thing
+                was estimated at, what it actually cost, and where it ran over.
+                Partners who gave towards this work read it in full when they
+                sign in.
+              </p>
+              <ButtonLink href="/partners" className="mt-8">
+                Partner sign-in
+              </ButtonLink>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* The ask. */}
       <section className="relative overflow-hidden bg-plum-deep px-6 py-20 text-center sm:py-24">
@@ -378,23 +508,24 @@ export default async function KitchenPage() {
 
         <div className="shell relative">
           <div className="mx-auto max-w-md">
-          <p className="eyebrow text-marigold">Partner With Us</p>
-          <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
-            Help us finish the kitchen
-          </h2>
+            <p className="eyebrow text-marigold">Partner With Us</p>
+            <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
+              Help us finish the kitchen
+            </h2>
 
-          {/*
+            {/*
             No account number here — the giving page explains how the details
             are sent, and it is the one place that explanation lives.
           */}
-          <p className="mt-6 leading-relaxed text-white/65">
-            {usd(budgetTotals.stillNeeded)} finishes it. Gifts can be marked for
-            the kitchen, and we will send you the giving details ourselves.
-          </p>
+            <p className="mt-6 leading-relaxed text-white/65">
+              {usd(stillNeededCents / 100)} finishes it. Gifts can be marked
+              for the kitchen, and we will send you the giving details
+              ourselves.
+            </p>
 
-          <ButtonLink href="/give" icon="give" className="mt-9">
-            How to give
-          </ButtonLink>
+            <ButtonLink href="/give" icon="give" className="mt-9">
+              How to give
+            </ButtonLink>
           </div>
         </div>
       </section>

@@ -12,8 +12,10 @@ import type {
   PartnerNeed,
   Pledge,
   PledgeStatus,
+  ProjectBudget,
 } from "@/lib/giving";
 import { percentOf } from "@/lib/money";
+import type { NeedPart } from "@/lib/projects";
 
 /**
  * The giving ledger.
@@ -64,7 +66,14 @@ function toNeed(row: Row): Need {
     summary: str(row.summary),
     detail: str(row.detail),
     area: str(row.area),
+    partId: row.part_id ? str(row.part_id) : null,
     costCents: int(row.cost_cents),
+    estimatedCents:
+      row.estimated_cents === null || row.estimated_cents === undefined
+        ? null
+        : int(row.estimated_cents),
+    note: str(row.note),
+    icon: str(row.icon),
     published: Boolean(row.published),
     closed: Boolean(row.closed),
     position: int(row.position),
@@ -90,6 +99,17 @@ function toNeedWithLedger(row: Row): NeedWithLedger {
   return {
     ...need,
     ledger: toLedger(need.costCents, int(row.claimed_cents), int(row.received_cents)),
+  };
+}
+
+function toPart(row: Row): NeedPart {
+  return {
+    id: str(row.id),
+    area: str(row.area),
+    title: str(row.title),
+    summary: str(row.summary),
+    sequence: int(row.sequence),
+    createdAt: toIso(row.created_at),
   };
 }
 
@@ -165,6 +185,114 @@ export async function getPublishedNeeds(): Promise<NeedWithLedger[]> {
   }
 }
 
+/**
+ * One project's accounts, rebuilt from its needs.
+ *
+ * This is the query that let src/content/kitchen.ts stop being the source of
+ * truth for Pastor Simon's reconciliation. The letter was a TypeScript array;
+ * the database held a hand-seeded copy of the same lines with the estimates
+ * flattened into prose, and the two were free to drift the moment either was
+ * corrected. Now there is one set of rows, Simon edits them in /app like every
+ * other item, and this reads the letter back out of them.
+ *
+ * `closed` does the sorting, because it already means the right thing: finished
+ * work above, work the money never reached below. Unpublished rows are included
+ * on purpose — the six lines the kitchen gift was spent on are unpublished
+ * precisely so the site stops asking for cement somebody bought in 2023, and
+ * they are the better part of the account.
+ *
+ * Not cached. Every caller is behind a session or a disclosure check, so there
+ * is no anonymous traffic to protect, and a figure Simon has just corrected
+ * showing up on the next page load beats a tag to remember to expire.
+ */
+export async function getProjectBudget(area: string): Promise<ProjectBudget> {
+  const empty: ProjectBudget = {
+    spent: [],
+    outstanding: [],
+    spentCents: 0,
+    stillNeededCents: 0,
+    estimatedCents: 0,
+  };
+
+  if (!isDatabaseConfigured()) return empty;
+
+  try {
+    const rows = await sql()`
+      SELECT id, title, cost_cents, estimated_cents, note, closed
+      FROM needs
+      WHERE area = ${area}
+      ORDER BY closed, position, created_at
+    `;
+
+    const budget: ProjectBudget = { ...empty, spent: [], outstanding: [] };
+
+    for (const row of rows) {
+      const cost = int(row.cost_cents);
+      const estimated =
+        row.estimated_cents === null || row.estimated_cents === undefined
+          ? cost
+          : int(row.estimated_cents);
+
+      const line = {
+        id: str(row.id),
+        item: str(row.title),
+        estimatedCents: estimated,
+        /*
+          Zero is how a line the letter marks "Used" — spent, with no figure
+          against it — is written down, and it has to read back as "we do not
+          know" rather than as "it cost nothing". A closed row at zero is the
+          only way to say that with a column that cannot be null.
+        */
+        actualCents: row.closed ? (cost > 0 ? cost : null) : null,
+        note: str(row.note),
+      };
+
+      if (row.closed) {
+        budget.spent.push(line);
+        budget.spentCents += cost;
+        budget.estimatedCents += estimated;
+      } else {
+        budget.outstanding.push(line);
+        budget.stillNeededCents += cost;
+      }
+    }
+
+    return budget;
+  } catch (error) {
+    console.error(`Giving: could not read the accounts for "${area}".`, error);
+    return empty;
+  }
+}
+
+/**
+ * What finishing a project would cost — the one figure off its accounts that is
+ * public, and the only one the front page and the project pages need.
+ *
+ * Published rows only, unlike `getProjectBudget`: this is an ask, and the site
+ * must not print a total that includes a draft nobody has decided to ask for.
+ * Cached and tagged with the rest of the ledger, because it is on the front page
+ * and every visitor pays for it.
+ */
+export async function getStillNeededCents(area: string): Promise<number> {
+  "use cache";
+  cacheTag(NEEDS_TAG);
+  cacheLife("max");
+
+  if (!isDatabaseConfigured()) return 0;
+
+  try {
+    const rows = await sql()`
+      SELECT COALESCE(SUM(cost_cents), 0)::int AS cents
+      FROM needs
+      WHERE area = ${area} AND published AND NOT closed
+    `;
+    return int(rows[0]?.cents);
+  } catch (error) {
+    console.error(`Giving: could not total what "${area}" still needs.`, error);
+    return 0;
+  }
+}
+
 export async function getNeedBySlug(slug: string): Promise<NeedWithLedger | null> {
   "use cache";
   cacheTag(NEEDS_TAG, needTag(slug));
@@ -183,6 +311,36 @@ export async function getNeedBySlug(slug: string): Promise<NeedWithLedger | null
   } catch (error) {
     console.error(`Giving: could not read the need "${slug}".`, error);
     return null;
+  }
+}
+
+/**
+ * Every part of every project, in running order.
+ *
+ * Not filtered by anything, and there is nothing to filter by — a part has no
+ * published flag of its own. It becomes visible where its items are visible,
+ * so a part holding only drafts is a heading nobody on the public site ever
+ * sees, without a second switch to forget to throw.
+ *
+ * Cached under the same tag as the needs, because the two are read together
+ * everywhere and a part that moves in the running order changes what /give
+ * offers just as surely as a new item does.
+ */
+export async function getParts(): Promise<NeedPart[]> {
+  "use cache";
+  cacheTag(NEEDS_TAG);
+  cacheLife("max");
+
+  if (!isDatabaseConfigured()) return [];
+
+  try {
+    const rows = await sql()`
+      SELECT * FROM need_parts ORDER BY area, sequence, created_at
+    `;
+    return rows.map(toPart);
+  } catch (error) {
+    console.error("Giving: could not read the parts.", error);
+    return [];
   }
 }
 
@@ -242,6 +400,14 @@ export async function listNeeds(): Promise<NeedWithLedger[]> {
     ORDER BY n.closed, n.position, n.created_at
   `;
   return rows.map(toNeedWithLedger);
+}
+
+/** The same parts, read live, because /app must never show a stale ordering. */
+export async function listParts(): Promise<NeedPart[]> {
+  const rows = await sql()`
+    SELECT * FROM need_parts ORDER BY area, sequence, created_at
+  `;
+  return rows.map(toPart);
 }
 
 export async function getNeedById(id: string): Promise<NeedWithLedger | null> {
@@ -455,8 +621,20 @@ export type NeedInput = {
   title: string;
   summary: string;
   detail: string;
+  /**
+   * Which project. Ignored whenever `partId` is set — a part already belongs to
+   * a project, and an item that claimed a different one would sit in a list it
+   * is not part of. The actions resolve this before calling; see `readNeedForm`.
+   */
   area: string;
+  partId: string | null;
   costCents: number;
+  /** What it was expected to cost, if that differs. Null is the ordinary answer. */
+  estimatedCents: number | null;
+  /** One line on why the two differ. Read only by a project's accounts. */
+  note: string;
+  /** An `IconName`, or empty to fall back to the project's own icon. */
+  icon: string;
   published: boolean;
   closed: boolean;
   position: number;
@@ -467,9 +645,12 @@ export async function createNeed(input: NeedInput) {
   const slug = await uniqueSlug(input.title);
 
   await sql()`
-    INSERT INTO needs (id, slug, title, summary, detail, area, cost_cents, published, closed, position)
+    INSERT INTO needs (id, slug, title, summary, detail, area, part_id, cost_cents,
+                       estimated_cents, note, icon, published, closed, position)
     VALUES (${id}, ${slug}, ${input.title}, ${input.summary}, ${input.detail},
-            ${input.area}, ${input.costCents}, ${input.published}, ${input.closed}, ${input.position})
+            ${input.area}, ${input.partId}, ${input.costCents},
+            ${input.estimatedCents}, ${input.note}, ${input.icon},
+            ${input.published}, ${input.closed}, ${input.position})
   `;
 
   return { id, slug };
@@ -500,12 +681,74 @@ export async function updateNeed(id: string, input: NeedInput) {
   await sql()`
     UPDATE needs SET
       slug = ${slug}, title = ${input.title}, summary = ${input.summary},
-      detail = ${input.detail}, area = ${input.area}, cost_cents = ${input.costCents},
+      detail = ${input.detail}, area = ${input.area}, part_id = ${input.partId},
+      cost_cents = ${input.costCents},
+      estimated_cents = ${input.estimatedCents}, note = ${input.note},
+      icon = ${input.icon},
       published = ${input.published}, closed = ${input.closed}, position = ${input.position}
     WHERE id = ${id}
   `;
 
   return { id, slug, previousSlug: existing.slug };
+}
+
+/* ------------------------------------------------------- parts of a project */
+
+export type PartInput = {
+  area: string;
+  title: string;
+  summary: string;
+  sequence: number;
+};
+
+export async function getPartById(id: string): Promise<NeedPart | null> {
+  const rows = await sql()`SELECT * FROM need_parts WHERE id = ${id}`;
+  return rows[0] ? toPart(rows[0]) : null;
+}
+
+export async function createPart(input: PartInput) {
+  const id = randomUUID();
+
+  await sql()`
+    INSERT INTO need_parts (id, area, title, summary, sequence)
+    VALUES (${id}, ${input.area}, ${input.title}, ${input.summary}, ${input.sequence})
+  `;
+
+  return id;
+}
+
+/**
+ * Moving a part — including, sometimes, to a different project.
+ *
+ * When the project changes, its items go with it. They have to: the area on an
+ * item is what every other query groups by, and a "walls up" part filed under
+ * the academy whose cement is still filed under the kitchen would appear in one
+ * list with no items and another with items and no heading. One statement, so
+ * the two cannot end up half-moved.
+ */
+export async function updatePart(id: string, input: PartInput) {
+  await sql()`
+    UPDATE need_parts SET
+      area = ${input.area}, title = ${input.title},
+      summary = ${input.summary}, sequence = ${input.sequence}
+    WHERE id = ${id}
+  `;
+
+  await sql()`UPDATE needs SET area = ${input.area} WHERE part_id = ${id}`;
+}
+
+/**
+ * Deleting a part, whatever is claimed against its items.
+ *
+ * Unlike deleting a need, this is always allowed, because it destroys nothing:
+ * the column is ON DELETE SET NULL, so the items come loose and go on sitting
+ * under the project with their ledgers intact. Returns how many were let go, so
+ * /app can say what just happened rather than leaving Simon to notice.
+ */
+export async function deletePart(id: string) {
+  const rows = await sql()`SELECT id FROM needs WHERE part_id = ${id}`;
+  await sql()`DELETE FROM need_parts WHERE id = ${id}`;
+  return rows.length;
 }
 
 export async function deleteNeed(id: string) {

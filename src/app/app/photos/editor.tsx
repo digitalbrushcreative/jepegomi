@@ -2,21 +2,17 @@
 
 import Image from "next/image";
 import { useState, useTransition } from "react";
-import {
-  PHOTO_CATEGORIES,
-  type Photo,
-  type PhotoCategory,
-} from "@/content/kitchen";
-import { ACCEPTED_MIME, MAX_BYTES } from "@/lib/photo-rules";
+import { ACCEPTED_MIME, MAX_BYTES, MAX_LABEL } from "@/lib/photo-rules";
+import type { GalleryPhoto } from "@/lib/photos";
 import { deletePhotoAction, uploadPhotoAction } from "../actions";
 
-type Filter = PhotoCategory | "all" | "beforeafter";
+type Filter = string | "all" | "beforeafter";
 
 export type Slot = {
   key: string;
   label: string;
   caption: string;
-  category: PhotoCategory | null;
+  category: string | null;
   src: string;
 };
 
@@ -25,12 +21,18 @@ function validate(file: File): string | null {
     return "Not a JPEG, PNG, WebP or AVIF image.";
   }
   if (file.size > MAX_BYTES) {
-    return "Larger than 15 MB — please compress it first.";
+    return `Larger than ${MAX_LABEL} — please compress it first.`;
   }
   return null;
 }
 
-function SlotCard({ slot }: { slot: Slot }) {
+function SlotCard({
+  slot,
+  categories,
+}: {
+  slot: Slot;
+  categories: readonly { id: string; label: string }[];
+}) {
   const [src, setSrc] = useState(slot.src);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -156,7 +158,7 @@ function SlotCard({ slot }: { slot: Slot }) {
       <div className="mt-2 flex items-baseline justify-between gap-2">
         <p className="eyebrow text-plum">
           {slot.category
-            ? PHOTO_CATEGORIES.find((c) => c.id === slot.category)?.label
+            ? categories.find((c) => c.id === slot.category)?.label
             : "Before / After"}
         </p>
         {shown && !pending && (
@@ -188,9 +190,11 @@ function SlotCard({ slot }: { slot: Slot }) {
 export function Editor({
   gallery,
   beforeAfter,
+  categories,
 }: {
-  gallery: Photo[];
+  gallery: GalleryPhoto[];
   beforeAfter: Slot[];
+  categories: readonly { id: string; label: string }[];
 }) {
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -198,7 +202,7 @@ export function Editor({
     key: String(photo.id),
     label: String(photo.id),
     caption: photo.caption,
-    category: photo.category,
+    category: photo.category || null,
     src: photo.src,
   }));
 
@@ -215,7 +219,7 @@ export function Editor({
   const tabs: { id: Filter; label: string }[] = [
     { id: "all", label: `All (${total})` },
     { id: "beforeafter", label: "Before / After" },
-    ...PHOTO_CATEGORIES.map((category) => ({
+    ...categories.map((category) => ({
       id: category.id as Filter,
       label: category.label,
     })),
@@ -246,7 +250,7 @@ export function Editor({
 
       <div className="mt-8 grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
         {visible.map((slot) => (
-          <SlotCard key={slot.key} slot={slot} />
+          <SlotCard key={slot.key} slot={slot} categories={categories} />
         ))}
       </div>
     </>

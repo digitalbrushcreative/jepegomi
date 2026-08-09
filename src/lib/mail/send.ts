@@ -77,12 +77,22 @@ export function isMailConfigured() {
  * something in a header before it is allowed near one, and if nothing survives,
  * the bare address is used.
  *
+ * `@` is stripped along with the rest, which looks like one character too many
+ * until you write out what survives without it. "Ruth <someone@else.com>" has
+ * its brackets taken away and becomes the display name `Ruth someone@else.com`
+ * in front of the real address — and an unquoted display name holding an `@` is
+ * not a valid one under RFC 5322, so what a lenient parser makes of it is its
+ * own business rather than ours. The address in the brackets was always the one
+ * that counted; this makes the part in front of it unable to argue.
+ *
+ * No name anybody actually has contains an `@`, so nothing legitimate is lost.
+ *
  * This is belt and braces over providers that mostly sanitise their own JSON
  * input. Mostly is not a thing to build a public form on.
  */
 export function named(name: string, email: string): MailAddress {
   const clean = name
-    .replace(/[\r\n\t\u0000-\u001f<>,;:"\\]/g, " ")
+    .replace(/[\r\n\t\u0000-\u001f<>,;:"\\@]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 80);

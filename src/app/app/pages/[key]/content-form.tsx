@@ -13,6 +13,68 @@ function Help({ text }: { text?: string }) {
   return <span className="mt-2 block text-sm leading-relaxed text-smoke">{text}</span>;
 }
 
+/**
+ * One of a fixed set of answers.
+ *
+ * Radio buttons, with every option's explanation on screen at once. These
+ * settings are decisions about who can see something, and a dropdown asks
+ * somebody to choose between three things while showing them one — which is how
+ * a person means to pick "the people who paid for it" and picks the line above
+ * it. The selected one is drawn as selected, so the current state is readable
+ * without clicking anything.
+ */
+function Choice({
+  name,
+  field,
+  value,
+}: {
+  name: string;
+  field: Extract<LeafField, { type: "choice" }>;
+  value: string;
+}) {
+  const known = field.options.some((option) => option.value === value);
+  const [current, setCurrent] = useState(
+    known ? value : (field.options[0]?.value ?? ""),
+  );
+
+  return (
+    <fieldset>
+      <legend className="eyebrow text-smoke">{field.label}</legend>
+      <Help text={field.help} />
+
+      <div className="mt-3 space-y-2">
+        {field.options.map((option) => (
+          <label
+            key={option.value}
+            className={`flex cursor-pointer items-start gap-3 rounded border p-4 transition-colors ${
+              current === option.value
+                ? "border-plum bg-plum/5"
+                : "border-black/12 bg-white hover:bg-sand/50"
+            }`}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option.value}
+              checked={current === option.value}
+              onChange={() => setCurrent(option.value)}
+              className="mt-1 h-4 w-4 accent-plum"
+            />
+            <span>
+              <span className="block text-sm font-medium">{option.label}</span>
+              {option.help && (
+                <span className="mt-1 block text-sm leading-relaxed text-smoke">
+                  {option.help}
+                </span>
+              )}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 /** One non-repeating field: a line of text, a block of prose, or an image path. */
 function Leaf({
   name,
@@ -20,7 +82,7 @@ function Leaf({
   value,
 }: {
   name: string;
-  field: LeafField;
+  field: Exclude<LeafField, { type: "choice" }>;
   value: string;
 }) {
   const [current, setCurrent] = useState(value);
@@ -157,23 +219,38 @@ export function ContentForm({
       <input type="hidden" name="__key" value={documentKey} />
 
       <div className="space-y-8">
-        {Object.entries(fields).map(([name, field]) =>
-          field.type === "list" ? (
-            <ListEditor
-              key={name}
-              name={name}
-              field={field}
-              value={(values[name] as Row[] | undefined) ?? []}
-            />
-          ) : (
+        {Object.entries(fields).map(([name, field]) => {
+          if (field.type === "list") {
+            return (
+              <ListEditor
+                key={name}
+                name={name}
+                field={field}
+                value={(values[name] as Row[] | undefined) ?? []}
+              />
+            );
+          }
+
+          if (field.type === "choice") {
+            return (
+              <Choice
+                key={name}
+                name={name}
+                field={field}
+                value={String(values[name] ?? "")}
+              />
+            );
+          }
+
+          return (
             <Leaf
               key={name}
               name={name}
               field={field}
               value={String(values[name] ?? "")}
             />
-          ),
-        )}
+          );
+        })}
       </div>
 
       {/*

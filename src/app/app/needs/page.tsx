@@ -6,9 +6,21 @@ import { ensureSchema } from "@/lib/db";
 import { formatDay } from "@/lib/dates";
 import { PLEDGE_LABELS, areaOf, pledgeTowards } from "@/lib/giving";
 import { usd } from "@/lib/money";
-import { listGeneralPledges, listNeeds, listOpenPledges } from "@/lib/needs";
+import {
+  listGeneralPledges,
+  listNeeds,
+  listOpenPledges,
+  listParts,
+} from "@/lib/needs";
+import { buildProjects } from "@/lib/projects";
 import { PageHeader, Stat } from "../ui";
-import { NewNeedForm, PledgeActions, SeedKitchenButton } from "./need-forms";
+import {
+  EditPartForm,
+  NewNeedForm,
+  NewPartForm,
+  PledgeActions,
+  SeedKitchenButton,
+} from "./need-forms";
 
 /**
  * The ledger, from Simon's side.
@@ -24,11 +36,21 @@ export default async function AdminNeedsPage() {
 
   await ensureSchema();
 
-  const [needs, open, general] = await Promise.all([
+  const [needs, open, general, parts] = await Promise.all([
     listNeeds(),
     listOpenPledges(),
     listGeneralPledges(),
+    listParts(),
   ]);
+
+  /*
+    The same grouping the public pages use, run over every item rather than the
+    published ones. That is the point of using it here: this is the only screen
+    that shows what the sequence is actually doing — which part is open, which
+    is waiting, and on what — and it must be the same calculation, or /app will
+    say a part is open on a day /needs does not offer it.
+  */
+  const projects = buildProjects(needs, parts);
 
   /*
     The queue is only the claims that have an item to open. A gift towards
@@ -247,6 +269,14 @@ export default async function AdminNeedsPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="eyebrow rounded-full bg-sand px-3 py-1 text-smoke">
                       {areaOf(need.area).label}
+                      {/*
+                        Which step it is in, on the same chip as the project,
+                        because "kitchen" and "kitchen · walls up" are the two
+                        halves of one answer and reading them as two badges
+                        invites the eye to treat them as two facts.
+                      */}
+                      {parts.find((part) => part.id === need.partId) &&
+                        ` · ${parts.find((part) => part.id === need.partId)!.title}`}
                     </span>
                     {!need.published && (
                       <span className="eyebrow rounded-full bg-plum/10 px-3 py-1 text-plum">
@@ -275,6 +305,89 @@ export default async function AdminNeedsPage() {
         </ul>
       )}
 
+      {/* --------------------------------------- the order of the work */}
+      <h2 className="font-display mt-14 text-2xl font-bold">
+        The order of the work
+      </h2>
+      <p className="mt-2 max-w-2xl leading-relaxed text-smoke">
+        A project can be broken into parts — walls up, roof and door, fitting
+        out — and each part holds its own itemised costs. A part opens for
+        giving once every part before it is fully claimed, so nobody is ever
+        asked to buy the paint while the walls are still an open line. Items
+        left out of a part are offered straight away.
+      </p>
+
+      {projects.filter((project) => project.parts.some((group) => group.part))
+        .length === 0 ? (
+        <p className="mt-4 max-w-2xl rounded border border-dashed border-smoke/40 bg-sand p-6 leading-relaxed text-smoke">
+          No parts yet, so every item is offered as soon as it is published.
+          That is the right answer for a list of unrelated things. Add parts
+          when the order matters.
+        </p>
+      ) : (
+        <div className="mt-6 space-y-10">
+          {projects.map((project) => {
+            const sequenced = project.parts.filter((group) => group.part);
+            if (sequenced.length === 0) return null;
+
+            return (
+              <div key={project.area.id}>
+                <h3 className="font-display text-lg font-bold">
+                  {project.area.label}
+                </h3>
+
+                <ul className="mt-3 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8">
+                  {sequenced.map((group) => (
+                    <li key={group.part!.id} className="bg-white">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-black/8 px-6 py-4">
+                        <p className="font-medium">
+                          <span className="tabular text-smoke">
+                            {group.part!.sequence}.
+                          </span>{" "}
+                          {group.part!.title}
+                        </p>
+
+                        {/*
+                          What the sequence is doing to this part today, in the
+                          words the public pages use. Simon should never have to
+                          work out from a number why something is not being
+                          offered.
+                        */}
+                        <span
+                          className={`eyebrow rounded-full px-3 py-1 ${
+                            group.settled
+                              ? "bg-green/12 text-green"
+                              : group.ready
+                                ? "bg-marigold/20 text-charcoal"
+                                : "bg-sand text-smoke"
+                          }`}
+                        >
+                          {group.settled
+                            ? "Fully claimed"
+                            : group.ready
+                              ? `Open now · ${usd(group.stillAskingCents)}`
+                              : `Waits on ${group.waitsOn?.title}`}
+                        </span>
+                      </div>
+
+                      <EditPartForm
+                        part={group.part!}
+                        itemCount={group.needs.length}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <h3 className="font-display mt-10 text-lg font-bold">Add a part</h3>
+      <div className="max-w-2xl">
+        <NewPartForm />
+      </div>
+
       {/* --------------------------------------------- adding another */}
       <h2 className="font-display mt-14 text-2xl font-bold">Add an item</h2>
       <p className="mt-2 max-w-2xl leading-relaxed text-smoke">
@@ -283,7 +396,7 @@ export default async function AdminNeedsPage() {
         finish, and &ldquo;support the ministry&rdquo; is not.
       </p>
       <div className="max-w-2xl">
-        <NewNeedForm />
+        <NewNeedForm parts={parts} />
       </div>
     </div>
   );

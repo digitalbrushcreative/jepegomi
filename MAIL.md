@@ -58,11 +58,21 @@ programs sending. Worth applying for either way.
 
 ## Setup
 
-### 1. Point the domain
+### 1. Where the DNS lives — Vercel, not cPanel
 
-`jepegomi.org` currently has **no DNS records at all** — no nameservers, no MX,
-nothing. Everything below assumes you have first pointed the domain's
-nameservers at whoever is going to hold the DNS (the cPanel host is fine).
+**Done.** `jepegomi.org` is delegated to `ns1.vercel-dns.com` and
+`ns2.vercel-dns.com`, and the site serves from there.
+
+This is the single fact that changes every instruction below, so it is worth
+stating plainly: **cPanel does not control this domain's DNS.** It cannot add a
+record, and it will not create one for you as a side effect of anything you do
+in its interface. Every record — including the `MX` for the mailbox — is added
+at **Vercel Dashboard → Domains → jepegomi.org → DNS Records**, or with the CLI:
+
+```
+vercel dns ls  jepegomi.org
+vercel dns add jepegomi.org <name> <type> <value> [priority]
+```
 
 ### 2. The mailbox, in cPanel
 
@@ -75,8 +85,18 @@ nameservers at whoever is going to hold the DNS (the cPanel host is fine).
    The forwarder is the point. Mail is *kept* in the ministry's own mailbox, so
    it survives whoever is answering it this year, **and** copied to the address
    Simon actually has open on his phone, so nothing waits a week to be read.
-3. Confirm cPanel added the **MX record** for the domain. It usually does this
-   itself when the first mailbox is created.
+3. **Add the MX record yourself, at Vercel.** This is the step that used to
+   happen on its own and no longer does. Find the mail server hostname in cPanel
+   (*Email → Email Accounts → Connect Devices*, or the welcome email), then:
+
+   ```
+   vercel dns add jepegomi.org @ MX <your-host's-mail-server> 10
+   ```
+
+   Until this exists, `jepegomi.org` has no `MX` at all and every message sent
+   to `support@` bounces — the mailbox can be created perfectly and still never
+   receive anything. The `send.jepegomi.org` MX in step 3 is *not* this record
+   and does not stand in for it.
 
 Optional but worth it: add `support@jepegomi.org` as a *Send mail as* address in
 Gmail (Settings → Accounts → Add another email address), using the cPanel SMTP
@@ -85,38 +105,69 @@ details. Simon can then reply from Gmail and have it come *from* `support@`.
 ### 3. Resend
 
 1. Sign up at resend.com and **add the domain** `jepegomi.org`.
-2. Resend gives you DNS records to add — typically a `TXT` for DKIM, an `MX` and
-   `TXT` pair on a `send.` subdomain for return-path, and a suggested `DMARC`
-   record. Add them in cPanel under **Domains → Zone Editor**.
+2. Resend generates the DNS records — it does **not** publish them. Nothing
+   outside Vercel can write to this zone, so adding the domain in Resend and
+   then waiting achieves nothing; the records have to be added at Vercel first.
 
-   The `MX` record Resend asks for is on a **subdomain** (`send.jepegomi.org`).
-   It does not touch the `MX` for `jepegomi.org` itself, so your mailbox keeps
-   working. Do not remove the cPanel MX record.
-3. Wait for Resend to show the domain as **verified**. Minutes usually, up to a
-   few hours.
+   What was actually published, and what Resend now checks for:
+
+   | Type | Name | Value | Priority |
+   |---|---|---|---|
+   | `TXT` | `resend._domainkey` | the DKIM public key, `p=MIGf…` | — |
+   | `MX` | `send` | `feedback-smtp.eu-west-1.amazonses.com` | 10 |
+   | `TXT` | `send` | `v=spf1 include:amazonses.com ~all` | — |
+   | `TXT` | `_dmarc` | `v=DMARC1; p=none;` | — |
+
+   The `MX` here is on the **`send.` subdomain** — a return path for bounces. It
+   has nothing to do with the domain's own `MX` from step 2, and neither
+   replaces the other.
+3. **Verify** in the Resend dashboard. Do not try this with the sending key: it
+   is scoped to sending and answers `restricted_api_key` (401) on every domain
+   endpoint. That scope is correct — use the button.
+
+   If it will not verify, the question is almost never patience. Ask the
+   authoritative server directly, which takes caching out of the picture:
+
+   ```
+   dig +short @ns1.vercel-dns.com TXT resend._domainkey.jepegomi.org
+   dig +short @ns1.vercel-dns.com MX  send.jepegomi.org
+   ```
+
+   An empty answer means the record is absent, not slow, and no amount of
+   waiting will change it.
 4. **API Keys → Create**, with *Sending access* only. Copy it once — it is not
    shown again.
 
 ### 4. SPF, DKIM, DMARC
 
-DKIM comes from Resend in step 3. The other two are yours to get right, and they
-are what decides whether a gift receipt lands in an inbox or a spam folder.
+DKIM and SPF both come from step 3 now, and the shape is worth understanding
+because it is not the one most guides describe.
 
-**SPF** — one record only. If cPanel already created one, *edit* it rather than
-adding a second; two SPF records is the same as none.
+**SPF lives on `send.jepegomi.org`, not on the root.** Resend sends through
+Amazon SES with a return path on that subdomain, so that is where the receiving
+server checks SPF. **Do not add `include:_spf.resend.com` at the root** — it is
+not consulted, and inventing a root SPF record now is how you end up with two of
+them later, which is exactly the same as having none.
 
-```
-Type: TXT   Name: @   Value: v=spf1 include:_spf.resend.com include:<your-host's-spf> ~all
-```
-
-Your host's include is in cPanel's existing SPF record — keep it, or mail sent
-from webmail starts failing.
-
-**DMARC** — start permissive, so you can watch before you enforce:
+A root SPF record becomes worth adding only when something sends *as*
+`@jepegomi.org` over SMTP — cPanel webmail, typically. At that point add one
+record, with your host's include and nothing else:
 
 ```
-Type: TXT   Name: _dmarc   Value: v=DMARC1; p=none; rua=mailto:support@jepegomi.org
+Type: TXT   Name: @   Value: v=spf1 include:<your-host's-spf> ~all
 ```
+
+**DMARC** starts permissive, and currently has no reporting address:
+
+```
+Type: TXT   Name: _dmarc   Value: v=DMARC1; p=none;
+```
+
+Adding `rua=mailto:dmarc@jepegomi.org` is what turns it into something you can
+learn from — but it is pointless until step 2's `MX` exists, because the reports
+would have nowhere to be delivered. Do it in that order. Reports are daily XML
+from every large provider, so send them to an alias nobody reads rather than to
+`support@`.
 
 Once reports look clean for a couple of weeks, tighten `p=none` to
 `p=quarantine`, and later `p=reject`. Going straight to `p=reject` before DKIM
@@ -164,6 +215,7 @@ will never send an empty account number.
 | "Send me the details", `/give` | Copied on the outgoing message | The account details, or a note that Simon will reply |
 | A gift promised, `/give` and `/needs/*` | The claim, the balance, and who it is from | Receipt, the account details, and what happens next |
 | Enrolment enquiry, `/academy` | The enquiry, `Reply-To` the parent — and a row in `/app` → **Enquiries** | Acknowledgement and an invitation to visit |
+| Sign-in code asked for, `/partners` | — | Six digits, good for 15 minutes and one use |
 | Partner login issued, `/app` | — | Sign-in link and password (opt-out checkbox in `/app`) |
 | Partner login revoked, `/app` | — | A note that it has been turned off |
 | CMS account created, `/app` | — | Where to sign in. **Never** the password |
@@ -184,9 +236,25 @@ Two rules the code keeps, both worth preserving:
 
 ## Testing it
 
-**Locally**, leave both API keys blank. Nothing is sent — every message is
-printed to the terminal in full, so you can read the wording and check the
-recipients without a provider account.
+**Locally**, there are two useful settings, and `.env.local` is currently on the
+second.
+
+*Blank keys.* Nothing is sent — every message is printed to the terminal in
+full, so you can read the wording and check the recipients without a provider
+account. This needs nothing set up at all.
+
+*Testing mode.* A Resend key plus the shared sender `onboarding@resend.dev`,
+which works before the domain is verified and so is available today, while
+`jepegomi.org` still has no DNS. Real mail, in a real inbox, rendered by a real
+client — the only way to find out that a template looks wrong in Gmail.
+
+The restriction to know: `onboarding@resend.dev` delivers **only to the address
+that owns the Resend account**, and refuses anything else with a 403. So mail
+the site sends *inward* arrives and can be read end to end; mail it sends
+*outward* to a member of the public fails and is logged. Nothing breaks either
+way — `send.ts` turns every failure into a logged result. Once the domain is
+verified, swapping the three address variables back (they are sitting commented
+out in `.env.local`) lifts the restriction entirely.
 
 **In production**, the honest test is other people's mail servers:
 

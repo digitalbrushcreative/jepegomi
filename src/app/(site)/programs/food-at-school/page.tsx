@@ -38,7 +38,7 @@ const day = [
 export const metadata: Metadata = {
   title: "Food at School",
   description:
-    "Morning porridge and a hot lunch, every school day, for children at Jepegomi Academy.",
+    "Morning porridge and a hot lunch, every school day, for children at Jepegomi Academy — a balanced diet that keeps a classroom alert and learning.",
 };
 
 export default async function FoodAtSchoolPage() {
@@ -78,7 +78,10 @@ export default async function FoodAtSchoolPage() {
               <div>
                 <SectionTitle>{section.title}</SectionTitle>
                 {paragraphs(section.body).map((text) => (
-                  <p key={text} className="mt-5 max-w-2xl text-lg leading-relaxed text-smoke">
+                  <p
+                    key={text}
+                    className="mt-5 max-w-2xl text-lg leading-relaxed text-smoke"
+                  >
                     {text}
                   </p>
                 ))}
@@ -102,7 +105,10 @@ export default async function FoodAtSchoolPage() {
               {program.closingHeading}
             </h2>
             {paragraphs(program.closingBody).map((text) => (
-              <p key={text} className="mt-5 text-lg leading-relaxed text-white/80">
+              <p
+                key={text}
+                className="mt-5 text-lg leading-relaxed text-white/80"
+              >
                 {text}
               </p>
             ))}
@@ -111,7 +117,7 @@ export default async function FoodAtSchoolPage() {
                 href="/projects/kitchen"
                 className="bg-white !text-green hover:bg-white/90"
               >
-                Follow the build
+                See the kitchen
               </ButtonLink>
               <ButtonLink
                 href="/give"

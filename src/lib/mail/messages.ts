@@ -100,7 +100,7 @@ export function contactAcknowledgement(enquiry: ContactEnquiry): Message {
         quote(enquiry.message) +
         rule() +
         p(
-          "In the meantime, you are very welcome to look around the site — the school, the church, the feeding programme and the kitchen we are building are all there.",
+          "In the meantime, you are very welcome to look around the site — the school, the church, the feeding programme and the kitchen it cooks in are all there.",
           { small: true, muted: true },
         ) +
         button(site.url, "Visit jepegomi.org") +
@@ -574,6 +574,78 @@ ${textFooter()}`,
 /* ------------------------------------------------------------------ accounts */
 
 /**
+ * The six digits somebody asked for so they can look at their own giving.
+ *
+ * Written to be read in a notification on a phone, so the code is early and the
+ * explanation is late. The one thing it must say clearly is what to do if it was
+ * not them: this message goes to an address that has given to the ministry, and
+ * an unexpected one means somebody typed that address into the site.
+ *
+ * No link that signs anybody in. The code is typed back into the page it was
+ * asked for from, which is what keeps a mail scanner following links in an
+ * incoming message from spending it before the recipient sees it — see the note
+ * in lib/partner-codes.ts.
+ */
+export function partnerSignInCode(partner: {
+  name: string;
+  email: string;
+  contactName: string;
+  code: string;
+  /** How long it lasts, in words — the page and the email have to agree. */
+  lifetime: string;
+}): Message {
+  const heading = "Your sign-in code";
+
+  return {
+    to: [named(partner.name, partner.email)],
+    replyTo: publicInbox(),
+    subject: `${partner.code} — your Jepegomi sign-in code`,
+    tag: "partner-sign-in-code",
+    html: renderEmail({
+      preheader: `Your code is ${partner.code}. It lasts ${partner.lifetime}.`,
+      eyebrow: "Partners",
+      heading,
+      body:
+        lead(`Dear ${escape(partner.contactName || partner.name)},`) +
+        p(
+          `Here is the code for seeing everything ${escape(partner.name)} has given, what it went to, and how each piece of work is going. Type it into the page you asked from.`,
+        ) +
+        panel(
+          `<p style="margin:0 0 16px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;line-height:42px;font-weight:700;letter-spacing:8px;color:#7a1b5c;">${escape(partner.code)}</p>`,
+          { tone: "plum" },
+        ) +
+        p(`It lasts ${escape(partner.lifetime)}, and works once.`, {
+          small: true,
+          muted: true,
+        }) +
+        rule() +
+        p(
+          "If you did not ask for this, somebody typed your address into the sign-in page and nothing has happened — the code is useless to them without this email. You do not need to do anything, but do reply and tell us if it keeps arriving.",
+          { small: true, muted: true },
+        ) +
+        signoff(),
+      footerNote: `You are getting this because somebody asked to sign in to the partner area with this address on ${escape(site.domain)}.`,
+    }),
+    text: `Dear ${partner.contactName || partner.name},
+
+Here is the code for seeing everything ${partner.name} has given, what it went
+to, and how each piece of work is going. Type it into the page you asked from.
+
+    ${partner.code}
+
+It lasts ${partner.lifetime}, and works once.
+
+If you did not ask for this, somebody typed your address into the sign-in page
+and nothing has happened — the code is useless to them without this email. You
+do not need to do anything, but do reply and tell us if it keeps arriving.
+
+${site.leaders}
+${site.longName}
+${textFooter()}`,
+  };
+}
+
+/**
  * A partner church being handed the key to its own dashboard.
  *
  * The password is in the email, in plain text, because that is how the system
@@ -608,14 +680,14 @@ export function partnerLoginIssued(partner: {
           `${escape(site.leaders)} have set up a login for ${escape(partner.name)}, so you can see everything ${escape(partner.name)} has given, what it went to, and how each piece of work is going.`,
         ) +
         facts([
-          ["Sign in at", `<a href="${site.url}/partners" style="color:#7a1b5c;">${escape(site.domain)}/partners</a>`],
+          ["Sign in at", `<a href="${site.url}/partners/password" style="color:#7a1b5c;">${escape(site.domain)}/partners/password</a>`],
           ["Email", escape(partner.email)],
           [
             "Password",
             `<span style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:17px;letter-spacing:0.5px;background:#f5ecdd;padding:4px 10px;border-radius:6px;">${escape(partner.password)}</span>`,
           ],
         ]) +
-        button(`${site.url}/partners`, "Sign in") +
+        button(`${site.url}/partners/password`, "Sign in") +
         rule() +
         p(
           "Keep this email somewhere safe, or write the password down and delete it — the page shows your giving, so it is worth treating like any other login. If you would like it changed, or you did not expect this, reply to this email and we will sort it out.",
@@ -631,7 +703,7 @@ ${site.leaders} have set up a login for ${partner.name}, so you can see
 everything ${partner.name} has given, what it went to, and how each piece of
 work is going.
 
-Sign in at: ${site.url}/partners
+Sign in at: ${site.url}/partners/password
 Email:      ${partner.email}
 Password:   ${partner.password}
 

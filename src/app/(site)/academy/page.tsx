@@ -5,7 +5,12 @@ import { EnrolmentEnquiryForm } from "@/app/(site)/academy/enquiry-form";
 import { AcademyLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
 import { PhotoBand, PhotoStrip } from "@/components/photos";
-import { ButtonLink, Eyebrow, Placeholder, SectionTitle } from "@/components/ui";
+import {
+  ButtonLink,
+  Eyebrow,
+  Placeholder,
+  SectionTitle,
+} from "@/components/ui";
 
 const graduation = {
   src: "/photos/academy/graduation.jpg",
@@ -88,7 +93,7 @@ const inside = [
 export const metadata: Metadata = {
   title: "Jepegomi Academy",
   description:
-    "Jepegomi Academy educates children in the Kahawa community and anchors the Food at School feeding program.",
+    "Jepegomi Academy teaches children from kindergarten to Grade 6 in Kahawa Sukari — quality education with values, in classrooms the ministry built itself.",
 };
 
 export default async function AcademyPage() {
@@ -218,9 +223,10 @@ export default async function AcademyPage() {
 
       {/*
         The one thing this page was missing. Everything above it is a case for
-        the school — the classrooms, the graduating class, the meals — read
+        the school — the classrooms, the graduating class, how it grew — read
         mostly by two sorts of visitor: a donor, who has the giving page to go
-        to, and a parent in Kahawa, who until now had nowhere at all. The form
+        to, and a parent in Kahawa Sukari, who until now had nowhere at all. The
+        form
         goes at the foot rather than in the hero because a parent who has just
         arrived is not ready to ask; one who has read this far is.
       */}

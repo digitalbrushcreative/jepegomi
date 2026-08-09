@@ -16,15 +16,40 @@ import {
 import { sql } from "@/lib/db";
 import { cmsAccountCreated, queue } from "@/lib/mail";
 import { PHOTOS_TAG, deletePhoto, parseSlotId, savePhoto } from "@/lib/photos";
+import {
+  RATES,
+  callerKey,
+  consume,
+  forget,
+  retryWording,
+} from "@/lib/rate-limit";
 
 type FormState = { error?: string; saved?: boolean } | undefined;
 
 export async function signInAction(input: { email: string; password: string }) {
-  const email = input.email.trim();
+  const email = input.email.trim().toLowerCase();
   const password = input.password;
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
+  }
+
+  /*
+    The same throttle the partner door has, for the same reason and with more at
+    stake: this account can rewrite every page on the site. See the note in
+    app/(site)/partners/actions.ts — counted per address and per caller, and
+    cleared the moment somebody gets in.
+  */
+  const emailKey = `signin:admin:${email}`;
+  const attempt = await consume(emailKey, RATES.signIn);
+  const byCaller = await consume(
+    `signin:admin:ip:${await callerKey()}`,
+    RATES.signInByIp,
+  );
+
+  if (!attempt.ok || !byCaller.ok) {
+    const wait = Math.max(attempt.retryAfterSeconds, byCaller.retryAfterSeconds);
+    return { error: `Too many attempts. Try again ${retryWording(wait)}.` };
   }
 
   if (!(await signIn(email, password))) {
@@ -32,6 +57,8 @@ export async function signInAction(input: { email: string; password: string }) {
     // email addresses have accounts.
     return { error: "That email and password don't match." };
   }
+
+  await forget(emailKey);
 
   /*
     The caller navigates; this does not redirect.

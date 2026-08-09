@@ -23,6 +23,7 @@ import {
 import { findOrCreatePartner } from "@/lib/partners";
 import { releaseAbandonedPayments, startPayment } from "@/lib/payments";
 import { isPesapalConfigured } from "@/lib/pesapal";
+import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import { site } from "@/lib/site";
 
 /**
@@ -167,13 +168,26 @@ async function openPayment(input: {
   let description: string;
   let tags: string[];
 
-  try {
-    const partnerId = await findOrCreatePartner(input.giver);
+  /*
+    Every reason to refuse is established before a partner row is written.
 
+    The order used to be the other way round — the partner first, then the item
+    and the balance — and it meant a refused payment still left a row behind.
+    Somebody posting a $999,999 claim against a water tank got the honest error
+    and the ledger got their name, their email and their location anyway, from a
+    form no one has to sign in to use. Nothing is exposed by that, but the
+    Partners screen is a queue Simon works through and vouches for one at a time,
+    and filling it with rows that never gave anything is a way to make that queue
+    useless. The promise path further down has always done it in this order; this
+    is the payment path catching up with it.
+  */
+  try {
     if (input.towards === "other") {
       if (!input.designation) {
         return { error: "Say what you would like the gift to go towards." };
       }
+
+      const partnerId = await findOrCreatePartner(input.giver);
 
       pledgeId = await recordGeneralPledge({
         partnerId,
@@ -195,6 +209,8 @@ async function openPayment(input: {
           error: `Only ${usd(need.ledger.openCents)} of that item is still open. Try that, or less.`,
         };
       }
+
+      const partnerId = await findOrCreatePartner(input.giver);
 
       const claim = await claimNeed({
         needId: need.id,
@@ -313,6 +329,29 @@ export async function giveAction(
         listed: false,
         sent: false,
       },
+    };
+  }
+
+  /*
+    A limit, and a deliberately generous one.
+
+    What it is actually for is not spam. A pledge holds part of a need's balance
+    the moment it is written — that is the whole mechanism that stops two
+    churches paying for the same water tank — so a loop posting claims can empty
+    every meter on /needs and leave real givers reading "$0 still open" against
+    work nobody has paid for. Simon can decline them all in /app, but not before
+    somebody has been turned away.
+
+    Fifteen an hour from one caller, because the cost of being wrong runs the
+    other way here, exactly as it does for the timing trap this form already
+    switches off: a church office where four people give from the same
+    connection on a Sunday must not be stopped, and the message says where to
+    write if it ever happens anyway.
+  */
+  const limit = await consume(`form:give:${await callerKey()}`, RATES.givingForm);
+  if (!limit.ok) {
+    return {
+      error: `That is a lot of gifts from one place in a short time — nothing has been recorded. Try again ${retryWording(limit.retryAfterSeconds)}, or write to ${site.email} and we will do it by hand.`,
     };
   }
 

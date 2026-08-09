@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { Icon } from "@/components/icons";
@@ -10,18 +11,30 @@ import {
   Placeholder,
   SectionTitle,
 } from "@/components/ui";
+import { LatestVideos } from "@/components/videos";
+import { latestVideos } from "@/lib/youtube";
 
 export const metadata: Metadata = {
   title: "Jepegomi Digital",
   description:
-    "Sunday services and weekday fellowships from Kahawa, streamed on YouTube and Facebook — and what it takes to keep them going out.",
+    "Sunday services and weekday fellowships from Kahawa Sukari, streamed on YouTube and Facebook — and what it takes to keep them going out.",
+};
+
+/*
+  The one photograph of the work itself rather than of what the work films. It
+  is in the hero because everything the page goes on to ask for — a laptop that
+  can edit, a camera, a light, a connection that holds — is visible in it.
+*/
+const stream = {
+  src: "/photos/digital/streaming-desk.jpg",
+  alt: "A laptop running OBS Studio on a stand at the back of the church, its screen showing the live sermon being mixed, while Pastor Simon preaches from the pulpit behind it",
 };
 
 const streams = [
   {
     src: "/photos/digital/preaching.jpg",
     alt: "Pastor Simon Nderitu preaching from a lectern with an open Bible, a projector screen beside him reading Preaching the Gospel in Kenya and Beyond",
-    caption: "A message going out from the sanctuary at Kahawa.",
+    caption: "A message going out from the sanctuary at Kahawa Sukari.",
   },
   {
     src: "/photos/digital/teaching.jpg",
@@ -32,6 +45,14 @@ const streams = [
 
 export default async function DigitalPage() {
   const digital = await getContent("digital");
+
+  /*
+    The channel's own recent uploads, read from YouTube's public feed. Empty
+    until the address is in the CMS, and empty again if the feed will not answer
+    — the section below simply goes back to being a heading and two buttons. See
+    lib/youtube.ts.
+  */
+  const videos = await latestVideos(digital.youtubeUrl);
 
   /*
     A channel with no address is still worth naming — "Jepegomi Africa" is
@@ -48,24 +69,46 @@ export default async function DigitalPage() {
   return (
     <>
       <section className="bg-charcoal px-6 pt-28 pb-20">
-        <div className="shell">
-          <JepegomiLogo
-            variant="mono"
-            title="Jepegomi Digital"
-            className="h-20 w-auto text-white"
-          />
-          <p className="eyebrow mt-8 text-white/45">{digital.eyebrow}</p>
-          <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
-            {digital.heading}
-          </h1>
-          {paragraphs(digital.intro).map((text) => (
-            <p
-              key={text}
-              className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
-            >
-              {text}
-            </p>
-          ))}
+        <div className="shell grid items-center gap-12 lg:grid-cols-[1fr_20rem]">
+          <div>
+            <JepegomiLogo
+              variant="mono"
+              title="Jepegomi Digital"
+              className="h-20 w-auto text-white"
+            />
+            <p className="eyebrow mt-8 text-white/45">{digital.eyebrow}</p>
+            <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+              {digital.heading}
+            </h1>
+            {paragraphs(digital.intro).map((text) => (
+              <p
+                key={text}
+                className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+              >
+                {text}
+              </p>
+            ))}
+          </div>
+
+          {/*
+            The photograph that explains the page in one look: the whole studio
+            is a laptop on a stand at the back of the church, and the service it
+            is mixing is happening ten feet in front of it.
+
+            Portrait, and given a portrait frame rather than being cropped into
+            a band — the preacher is at the top of the shot and the desk is at
+            the bottom, so any wide crop of it loses one or the other.
+          */}
+          <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl bg-white/5 shadow-warm lg:mx-0">
+            <Image
+              src={stream.src}
+              alt={stream.alt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 320px"
+              priority
+              className="object-cover"
+            />
+          </div>
         </div>
       </section>
 
@@ -104,8 +147,22 @@ export default async function DigitalPage() {
             The channel is called {digital.youtubeName}
           </SectionTitle>
 
+          {videos.length > 0 && (
+            <>
+              <p className="mt-6 max-w-2xl leading-relaxed text-smoke">
+                The most recent messages, straight from the channel. Nothing
+                loads from YouTube until you press play.
+              </p>
+              <div className="mt-8">
+                <LatestVideos videos={videos} />
+              </div>
+            </>
+          )}
+
           {live.length > 0 && (
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div
+              className={`flex flex-wrap gap-4 ${videos.length > 0 ? "mt-12" : "mt-8"}`}
+            >
               {live.map((channel) => (
                 <ButtonLink
                   key={channel.label}
@@ -128,10 +185,18 @@ export default async function DigitalPage() {
           {missing.length > 0 && (
             <div className="mt-8 rounded border border-dashed border-smoke/30 bg-white p-8">
               <Eyebrow>Still to confirm</Eyebrow>
+              {/*
+                Written for whichever is still missing rather than for both,
+                because the YouTube channel is now confirmed and on the page
+                above — telling a reader to go and search for something they can
+                already see would read as a page that has not been looked at.
+              */}
               <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
-                Search {digital.youtubeName} and you will find the messages. The
-                exact addresses below still need to come from Simon, and this
-                page would rather say so than send you somewhere wrong.
+                {missing.length === 1
+                  ? "The address below still needs to come from Simon"
+                  : "The addresses below still need to come from Simon"}
+                , and this page would rather say so than send you somewhere
+                wrong.
               </p>
               <ul className="mt-5 flex flex-wrap gap-3">
                 {missing.map((channel) => (
@@ -149,9 +214,7 @@ export default async function DigitalPage() {
       <section className="px-6 py-24">
         <div className="shell">
           <Eyebrow>{digital.supportEyebrow}</Eyebrow>
-          <SectionTitle className="mt-4">
-            {digital.supportHeading}
-          </SectionTitle>
+          <SectionTitle className="mt-4">{digital.supportHeading}</SectionTitle>
           {paragraphs(digital.supportIntro).map((text) => (
             <p
               key={text}

@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
-import { beforeAfter } from "@/content/kitchen";
 import { currentUser } from "@/lib/auth";
-import { getBeforeAfterSources, getGalleryPhotos } from "@/lib/photos";
+import { getKitchenReport } from "@/lib/kitchen";
+import {
+  getBeforeAfterSources,
+  getGalleryCategories,
+  getGalleryPhotos,
+} from "@/lib/photos";
 import { PageHeader } from "../ui";
 import { Editor, type Slot } from "./editor";
 
@@ -16,23 +20,25 @@ export default async function PhotosPage() {
   const user = await currentUser();
   if (!user) redirect("/app");
 
-  const [gallery, sources] = await Promise.all([
+  const [gallery, sources, report, categories] = await Promise.all([
     getGalleryPhotos(),
     getBeforeAfterSources(),
+    getKitchenReport(),
+    getGalleryCategories(),
   ]);
 
   const beforeAfterSlots: Slot[] = [
     {
       key: "before",
       label: "B",
-      caption: beforeAfter.before.heading,
+      caption: report.before.heading,
       category: null,
       src: sources.before,
     },
     {
       key: "after",
       label: "A",
-      caption: beforeAfter.after.heading,
+      caption: report.after.heading,
       category: null,
       src: sources.after,
     },
@@ -53,7 +59,11 @@ export default async function PhotosPage() {
       />
 
       <div>
-        <Editor gallery={gallery} beforeAfter={beforeAfterSlots} />
+        <Editor
+          gallery={gallery}
+          beforeAfter={beforeAfterSlots}
+          categories={categories}
+        />
       </div>
     </div>
   );

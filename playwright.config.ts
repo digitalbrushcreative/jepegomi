@@ -55,10 +55,23 @@ export default defineConfig({
       form that is not what any of them are testing.
     */
     { name: "setup", testMatch: /auth\.setup\.ts/ },
+    /*
+      The pure rules — who may see whose accounts, what an uploaded file really
+      is, what may reach an email header. No browser, no server, no database, so
+      this project is the one that still runs on a laptop with nothing set up,
+      and it is the one that fails in under a second when a rule changes.
+    */
+    { name: "rules", testMatch: /rules\.spec\.ts/ },
+    /*
+      Signed out, which is the state both of these files are about: what a
+      visitor sees, and what somebody who is not supposed to be here cannot get.
+      No `storageState`, so nothing in either can accidentally lean on the
+      session the setup project saved.
+    */
     {
       name: "public",
       use: { ...devices["Desktop Chrome"] },
-      testMatch: /public\.spec\.ts/,
+      testMatch: /(public|security)\.spec\.ts/,
     },
     {
       name: "cms",

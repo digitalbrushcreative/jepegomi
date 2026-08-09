@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { Icon, type IconName } from "@/components/icons";
 import { ButtonLink, PageHero } from "@/components/ui";
+import { CODE_LIFETIME } from "@/lib/partner-codes";
 import { currentPartner, isPartnerAreaConfigured } from "@/lib/partners";
 import { PartnerLoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "Partner sign in",
   description:
-    "Partner churches can sign in to see everything they have supported, and the progress on it.",
+    "Anyone who has given can sign in to see everything they have supported, and the progress on it.",
   // Nothing here is for a search engine, and a church's giving is nobody's
   // business but theirs.
   robots: { index: false, follow: false },
 };
 
 const promises: { icon: IconName; title: string; body: string }[] = [
+  {
+    icon: "globe",
+    title: "No account to make",
+    body: "If you have given, you are already here. The address on your gift is the account — we email a code to it, you type the code in, and that is the whole of it.",
+  },
   {
     icon: "give",
     title: "Everything you have given",
@@ -70,18 +77,20 @@ async function PartnerEntrance() {
         </ul>
 
         <div className="mt-12 rounded-2xl border border-dashed border-smoke/30 bg-sand p-7">
-          <p className="eyebrow text-plum">No login yet?</p>
+          <p className="eyebrow text-plum">No code arriving?</p>
           <p className="mt-3 max-w-xl leading-relaxed text-smoke">
-            Logins are set up by hand, one church at a time, after we have
-            confirmed who you are. Write to{" "}
+            A code only goes to an address we already have a gift against, so if
+            you gave under a different one — a treasurer&apos;s address, or the
+            church office — try that. If you gave by bank transfer or M-Pesa and
+            were never asked for an address, write to{" "}
             <a
-              href={`mailto:${site.email}?subject=${encodeURIComponent("Partner login")}`}
+              href={`mailto:${site.email}?subject=${encodeURIComponent("Partner sign in")}`}
               className="font-medium text-plum underline underline-offset-4"
             >
               {site.email}
             </a>{" "}
-            and we will arrange it. You do not need a login to give — nothing on
-            the giving pages is behind this door.
+            and we will put it right. You do not need to sign in to give —
+            nothing on the giving pages is behind this door.
           </p>
           <ButtonLink href="/needs" variant="secondary" className="mt-6">
             See what&apos;s needed
@@ -92,9 +101,25 @@ async function PartnerEntrance() {
       <div className="rounded-2xl bg-white p-8 shadow-warm-lg">
         <h2 className="font-display text-2xl font-semibold">Sign in</h2>
         <p className="mt-2 mb-7 text-sm leading-relaxed text-smoke">
-          With the email and password we sent you.
+          No password. We email you a code that lasts {CODE_LIFETIME}.
         </p>
         <PartnerLoginForm />
+
+        {/*
+          Small, and at the bottom, because it is for the handful of churches
+          Simon set a password up for before the code door existed. Everybody
+          else should never think about it. See ./password/page.tsx.
+        */}
+        <p className="mt-7 border-t border-black/10 pt-6 text-sm leading-relaxed text-smoke">
+          Given a password before?{" "}
+          <Link
+            href="/partners/password"
+            className="font-medium text-plum underline underline-offset-4"
+          >
+            Sign in with it here
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );
@@ -118,9 +143,9 @@ export default function PartnersPage() {
   return (
     <>
       <PageHero
-        eyebrow="Partner Churches"
+        eyebrow="Partners"
         title="Your giving, in full"
-        intro="Sign in to see every item your church has supported, what has arrived against each one, and how the work is going."
+        intro="Sign in to see every item you have supported, what has arrived against each one, and how the work is going. If you have given, you already have an account — it is your email address."
       />
 
       <section className="px-6 py-20 sm:py-24">

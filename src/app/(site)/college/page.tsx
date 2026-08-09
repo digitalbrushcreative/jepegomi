@@ -3,7 +3,13 @@ import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { BibleCollegeLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
+import { PhotoBand } from "@/components/photos";
 import { ButtonLink, Eyebrow, Placeholder, SectionTitle } from "@/components/ui";
+
+const seminar = {
+  src: "/photos/college/seminar.jpg",
+  alt: "About seventeen students standing together outside the iron-sheet sanctuary at a college seminar",
+};
 
 export const metadata: Metadata = {
   title: "Contextual Bible Training College",
@@ -72,6 +78,12 @@ export default async function CollegePage() {
           ))}
         </div>
       </section>
+
+      {/*
+        The page had no photograph of anybody in it — a college described only in
+        fees and month counts. The students are the argument for the place.
+      */}
+      <PhotoBand photo={seminar} aspect="aspect-[21/9]" className="pt-16" />
 
       <section className="px-6 py-24">
         <div className="shell">

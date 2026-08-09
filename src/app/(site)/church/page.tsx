@@ -3,7 +3,12 @@ import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { JepegomiLogo } from "@/components/logos";
 import { PhotoBand, PhotoStrip } from "@/components/photos";
-import { ButtonLink, Eyebrow, Placeholder, SectionTitle } from "@/components/ui";
+import {
+  ButtonLink,
+  Eyebrow,
+  Placeholder,
+  SectionTitle,
+} from "@/components/ui";
 import { site } from "@/lib/site";
 
 const sanctuary = {
@@ -20,7 +25,8 @@ const life = [
   {
     src: "/photos/church/service.jpg",
     alt: "A man standing at a lectern reading to rows of seated children",
-    caption: "The pupils' service — one of the many uses the sanctuary is put to.",
+    caption:
+      "The pupils' service — one of the many uses the sanctuary is put to.",
   },
   {
     src: "/photos/church/building.jpg",
@@ -37,7 +43,8 @@ const property = [
   {
     src: "/photos/church/signage.jpg",
     alt: "A weathered painted wall reading Jepegomi Family Church and Jepegomi Academy, Quality Education with Values, beneath a hand-lettered board",
-    caption: "The sign at the gate — hand-painted, and long overdue a facelift.",
+    caption:
+      "The sign at the gate — hand-painted, and long overdue a facelift.",
   },
   {
     src: "/photos/church/playground.jpg",
@@ -54,7 +61,7 @@ const property = [
 export const metadata: Metadata = {
   title: "Church",
   description:
-    "Sunday services at Jesus People Gospel Ministries — the church in Kahawa, Nairobi that the academy, the college and the feeding program all belong to.",
+    "Sunday services at Jesus People Gospel Ministries — the church in Kahawa Sukari, Nairobi that the academy, the college and the feeding program all belong to.",
 };
 
 export default async function ChurchPage() {

@@ -15,6 +15,12 @@ import { type NavLink, navLinks } from "@/lib/site";
  * brown for Food at School. Every page on this site opens on a dark hero, which
  * is what makes white nav type safe to lay straight over it.
  *
+ * "Dark" is now a promise the heroes have to keep rather than a fact about flat
+ * colour. Once the homepage slides carried photographs, the outer links and the
+ * menu button ended up over open picture — so HeroSlider lays a scrim band
+ * across the top of any slide with a backdrop. A hero that puts a photograph up
+ * there owes this header the same band.
+ *
  * Once you scroll off the hero there is nothing dark left underneath, so it
  * takes on a solid plum of its own rather than leaving white links floating
  * over cream paper.
@@ -81,7 +87,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
                   className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm transition-colors ${
                     isActive(link)
                       ? "text-white"
-                      : "text-white/60 hover:text-white"
+                      : "text-white/75 hover:text-white"
                   }`}
                 >
                   {link.label}
@@ -119,7 +125,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
                 key={link.href}
                 href={link.href}
                 className={`rounded px-3 py-2 text-sm transition-colors ${
-                  isActive(link) ? "text-white" : "text-white/60 hover:text-white"
+                  isActive(link) ? "text-white" : "text-white/75 hover:text-white"
                 }`}
               >
                 {link.label}

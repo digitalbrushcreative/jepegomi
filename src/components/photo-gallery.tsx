@@ -2,11 +2,22 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PHOTO_CATEGORIES, type Photo, type PhotoCategory } from "@/content/kitchen";
+import type { GalleryPhoto } from "@/lib/photos";
 
-type Filter = PhotoCategory | "all";
+type Filter = string | "all";
 
-export function PhotoGallery({ photos }: { photos: Photo[] }) {
+/**
+ * @param categories The runs of photographs, from the CMS. Passed in rather than
+ * imported because this is a client component and the list is now a database
+ * read — see `getGalleryCategories`.
+ */
+export function PhotoGallery({
+  photos,
+  categories,
+}: {
+  photos: GalleryPhoto[];
+  categories: readonly { id: string; label: string }[];
+}) {
   const [filter, setFilter] = useState<Filter>("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -49,7 +60,7 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
 
   const tabs: { id: Filter; label: string }[] = [
     { id: "all", label: `All (${photos.length})` },
-    ...PHOTO_CATEGORIES.map((category) => ({
+    ...categories.map((category) => ({
       id: category.id as Filter,
       label: category.label,
     })),
@@ -104,7 +115,7 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
             </div>
             <div className="px-4 pt-3 pb-4">
               <p className="eyebrow text-marigold/80">
-                {PHOTO_CATEGORIES.find((c) => c.id === photo.category)?.label}
+                {categories.find((c) => c.id === photo.category)?.label}
               </p>
               <p className="mt-1.5 text-xs leading-relaxed text-white/55">
                 {photo.caption}

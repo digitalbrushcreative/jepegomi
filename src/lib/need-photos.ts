@@ -1,5 +1,5 @@
 import path from "node:path";
-import { ACCEPTED_MIME, MAX_BYTES } from "@/lib/photo-rules";
+import { extensionFor, readImageUpload } from "@/lib/image-upload";
 import { getPhotoWriter } from "@/lib/photo-writer";
 
 /**
@@ -25,25 +25,17 @@ function writer() {
   return getPhotoWriter(PHOTO_DIR, REPO_DIR, "progress photo");
 }
 
-function extensionFor(mime: string) {
-  return mime === "image/jpeg" ? ".jpg" : `.${mime.slice("image/".length)}`;
-}
-
 /**
  * Named for the update it belongs to, so a photo can never end up on the wrong
  * one and deleting the update is enough to know which file to take with it.
  */
 export async function saveUpdatePhoto(updateId: string, file: File) {
-  if (!ACCEPTED_MIME.includes(file.type)) {
-    throw new Error("That file is not a JPEG, PNG, WebP or AVIF image.");
-  }
-  if (file.size > MAX_BYTES) {
-    throw new Error("That image is larger than 15 MB.");
-  }
+  /* Verified from the bytes, not from the name. See lib/image-upload.ts. */
+  const { bytes, mime } = await readImageUpload(file);
 
-  const filename = `${updateId}${extensionFor(file.type)}`;
+  const filename = `${updateId}${extensionFor(mime)}`;
   const target = writer();
-  await target.write(filename, Buffer.from(await file.arrayBuffer()));
+  await target.write(filename, bytes);
 
   return {
     src: `${PUBLIC_BASE}/${filename}`,

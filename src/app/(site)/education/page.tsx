@@ -5,7 +5,7 @@ import { HubCard, PageHero } from "@/components/ui";
 const pupils = {
   src: "/photos/academy/pupils.jpg",
   alt: "A group of young children in green jumpers and checked uniform standing together outside the school",
-  caption: "Jepegomi Academy, Kahawa.",
+  caption: "Jepegomi Academy, Kahawa Sukari.",
 };
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ const education = [
     eyebrow: "For children",
     title: "Jepegomi Academy",
     blurb:
-      "Quality education with values — the school in Kahawa where the children learn, and where every one of the Food at School meals is served.",
+      "Quality education with values — the school in Kahawa Sukari, teaching children from kindergarten to Grade 6 in classrooms the ministry built itself.",
     cta: "See the Academy",
     icon: "child" as const,
   },
@@ -48,7 +48,7 @@ export default function EducationPage() {
       <PageHero
         eyebrow="Education"
         title="Teaching children, and teaching the people who teach them"
-        intro="One arm of the ministry with two ends — a school for the children of Kahawa, and a Bible college for the adults who will lead and teach in it."
+        intro="One arm of the ministry with two ends — a school for the children of Kahawa Sukari, and a Bible college for the adults who will lead and teach in it."
       />
 
       <PhotoBand photo={pupils} aspect="aspect-[21/9]" className="pt-4" />

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { toIso } from "@/lib/dates";
 import { isDatabaseConfigured, sql } from "@/lib/db";
 import type { Partner, PartnerWithTotals } from "@/lib/giving";
+import { claimCode, forgetCode, issueCode } from "@/lib/partner-codes";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { hasSessionSecret, session } from "@/lib/session";
 
@@ -14,14 +15,33 @@ import { hasSessionSecret, session } from "@/lib/session";
  *
  * There are three separate states here and they are deliberately not one flag:
  *
- *   arrived     a row exists. They claimed something. Nothing is confirmed.
- *   verified    Simon has satisfied himself this is really that church.
+ *   arrived     a row exists. They gave, or claimed something. Nothing is
+ *               confirmed, and they can already sign in — with a code emailed
+ *               to the address the gift came from — to see that gift and
+ *               nothing else.
+ *   verified    Simon has satisfied himself this is really that church. This no
+ *               longer decides who may *sign in*; it decides how far into the
+ *               books they can read once they have. See lib/disclosure.ts.
  *   has a login verified, *and* Simon has issued them a password.
  *
- * Most partners will stop at verified and never want a login, and that has to
- * be an ordinary outcome rather than an account left half-made. A login is
- * something a partner church asks for so it can watch its own giving; it is not
- * a step on the way to being trusted.
+ * ## Why `verified` stopped being the door
+ *
+ * It used to be: sign-in needed a hand-set password *and* Simon's tick, so
+ * every giver who was not a partner church had no way in at all. That made a
+ * ledger nobody could read — a person who sent $40 was recorded and then shown
+ * nothing, and the only way to be shown anything was to write and ask, and wait
+ * for Simon to type a password into a form. The code door in lib/partner-codes.ts
+ * replaces that: anybody whose address is in the ledger can prove it is theirs
+ * and read their own giving.
+ *
+ * The tick stayed, because it was always answering a different question. "Is
+ * this really Grace Chapel?" is not "may this person see their own gift", and
+ * conflating them is what made the ministry's own accounts reachable by picking
+ * "Church" out of a dropdown on the public giving form. Now the tick is the only
+ * thing that opens the books, and it is set by a person who checked.
+ *
+ * The password door is kept for the churches already given one — it is a second
+ * way in, not a different level of access.
  */
 const partnerSession = session("partner", "jepegomi_partner");
 
@@ -151,6 +171,17 @@ export async function getPartnerByEmail(email: string): Promise<Partner | null> 
   return rows[0] ? toPartner(rows[0]) : null;
 }
 
+/**
+ * The older door: a password Simon issued by hand.
+ *
+ * Kept for the churches already carrying one, and still gated on `verified_at`
+ * — not because verification is what grants access any more, but because that
+ * is the only state in which a password is ever set. `setPartnerPassword`
+ * refuses an unverified partner and `setPartnerVerified(false)` clears the hash,
+ * so a row that fails this condition has no usable password to check anyway.
+ * Saying it in the query means an un-ticked partner cannot be let back in by a
+ * hash that outlived the tick.
+ */
 export async function signInPartner(email: string, password: string) {
   const rows = await sql()`
     SELECT id, password_hash
@@ -168,15 +199,69 @@ export async function signInPartner(email: string, password: string) {
   return true;
 }
 
-export async function signOutPartner() {
-  await partnerSession.clear();
+/**
+ * A sign-in code for whoever gives from this address, or null if nobody does.
+ *
+ * Null is not an error and the caller must not say so out loud. "No partner has
+ * that address" answers the question "does this church give to Jepegomi?" for
+ * anybody with a list of church addresses, and that is precisely the fact this
+ * whole area exists to keep private — so the action above this says the same
+ * sentence either way. See the note in (site)/partners/actions.ts.
+ *
+ * Deliberately does *not* create a partner for an address it has never seen.
+ * `findOrCreatePartner` is for somebody who has just given something; a row
+ * minted at the door would be an empty dashboard for a stranger, and a way to
+ * write rows into the ledger by typing addresses into a form.
+ */
+export async function issueSignInCode(
+  email: string,
+): Promise<{ partner: Partner; code: string } | null> {
+  const partner = await getPartnerByEmail(email);
+  if (!partner) return null;
+
+  return { partner, code: await issueCode(partner.id) };
 }
 
 /**
- * The signed-in partner, or null. The verified check is repeated here rather
- * than trusted from sign-in time: if Simon un-verifies a partner, whoever is
- * already holding a valid cookie has to stop seeing the dashboard on their next
- * page load, not in thirty days when the cookie runs out.
+ * Spends a code and, if it was the right one, starts the session.
+ *
+ * No `verified_at` condition, unlike the password door below. That is the whole
+ * point of this one: the code proves control of the address the gift came from,
+ * and a person who gave $40 is owed the record of their $40 without waiting for
+ * anybody to tick anything. What they can *read* once inside still depends on
+ * the tick — that rule is in lib/disclosure.ts, applied on every render.
+ */
+export async function signInPartnerWithCode(email: string, code: string) {
+  const partner = await getPartnerByEmail(email);
+  if (!partner) return false;
+
+  if (!(await claimCode(partner.id, code))) return false;
+
+  await partnerSession.start(partner.id);
+  return true;
+}
+
+export async function signOutPartner() {
+  const partnerId = await partnerSession.read();
+  await partnerSession.clear();
+
+  /*
+    Any code still live is thrown away on the way out. Somebody signing out of a
+    borrowed machine has usually just typed a code into it, and leaving the rest
+    of its quarter of an hour on the table costs nothing to close.
+  */
+  if (partnerId) await forgetCode(partnerId);
+}
+
+/**
+ * The signed-in partner, or null.
+ *
+ * The row is re-read on every page load rather than trusted from the cookie,
+ * which is what keeps `verified` honest: Simon un-ticking a partner has to shut
+ * the accounts on their next page load, not in thirty days when the cookie runs
+ * out. It is the *disclosure* that closes now rather than the door — see the
+ * note at the top of this file — and it closes here, because every screen works
+ * out what it may show from the `Partner` this function returns.
  */
 export async function currentPartner(): Promise<Partner | null> {
   if (!isPartnerAreaConfigured()) return null;
@@ -189,7 +274,7 @@ export async function currentPartner(): Promise<Partner | null> {
       SELECT id, name, kind, location, email, contact_name, verified_at, note,
              created_at, (password_hash IS NOT NULL) AS has_login
       FROM partners
-      WHERE id = ${partnerId} AND verified_at IS NOT NULL
+      WHERE id = ${partnerId}
     `;
     return rows[0] ? toPartner(rows[0]) : null;
   } catch {

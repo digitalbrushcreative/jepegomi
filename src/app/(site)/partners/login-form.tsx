@@ -1,40 +1,96 @@
 "use client";
 
 import { useActionState } from "react";
-import { type PartnerLoginState, partnerSignInAction } from "./actions";
+import { type CodeSignInState, codeSignInAction } from "./actions";
 
 const inputClass =
   "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-plum focus:ring-2 focus:ring-plum/20";
 
+const buttonClass =
+  "mt-7 w-full cursor-pointer rounded-full bg-green px-7 py-3.5 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:-translate-y-0.5 hover:bg-green-light disabled:translate-y-0 disabled:opacity-60";
+
+/**
+ * The sentence shown once a code has been asked for.
+ *
+ * "If that address" and not "we have sent", and it is the same sentence whether
+ * or not anything was sent. The form cannot say "we don't know that address"
+ * without becoming a way to ask which churches give to this ministry — so it
+ * never says it, and this is the wording that stays true either way. The
+ * matching reasoning, from the server's side, is at the top of ./actions.ts.
+ */
+const SENT = "If that address has given to Jepegomi, a code is on its way to it now.";
+
 export function PartnerLoginForm() {
-  const [state, formAction, pending] = useActionState<PartnerLoginState, FormData>(
-    partnerSignInAction,
+  const [state, formAction, pending] = useActionState<CodeSignInState, FormData>(
+    codeSignInAction,
     undefined,
   );
 
+  const onCodeStep = state?.step === "code";
+
   return (
     <form action={formAction}>
-      <label className="block">
-        <span className="eyebrow text-smoke">Email</span>
-        <input
-          name="email"
-          type="email"
-          autoComplete="username"
-          required
-          className={inputClass}
-        />
-      </label>
+      {onCodeStep ? (
+        <>
+          <p className="rounded-md bg-sand px-4 py-3 text-sm leading-relaxed text-smoke">
+            {SENT}
+          </p>
 
-      <label className="mt-5 block">
-        <span className="eyebrow text-smoke">Password</span>
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className={inputClass}
-        />
-      </label>
+          {/*
+            Carried forward and still editable, rather than hidden. Somebody
+            waiting on a code that is never coming is usually looking at a typo,
+            and the fix for a typo has to be visible — correcting it here and
+            pressing "send it again" sends to the corrected address.
+          */}
+          <label className="mt-5 block">
+            <span className="eyebrow text-smoke">Email</span>
+            <input
+              name="email"
+              type="email"
+              defaultValue={state.email}
+              autoComplete="email"
+              required
+              className={inputClass}
+            />
+          </label>
+
+          <label className="mt-5 block">
+            <span className="eyebrow text-smoke">Your code</span>
+            <input
+              name="code"
+              type="text"
+              /*
+                `one-time-code` is what tells iOS and Android to offer the digits
+                straight off the notification, so most people never open the
+                email at all. `inputMode` brings up the number pad; `pattern`
+                keeps it there without refusing a code pasted with a space in it,
+                which the server strips anyway.
+              */
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              pattern="[0-9\s]*"
+              maxLength={9}
+              autoFocus
+              required
+              className={`${inputClass} font-mono text-2xl tracking-[0.4em]`}
+            />
+          </label>
+        </>
+      ) : (
+        <label className="block">
+          <span className="eyebrow text-smoke">Email</span>
+          <input
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            className={inputClass}
+          />
+          <span className="mt-2 block text-sm leading-relaxed text-smoke">
+            The address you gave with. We will send a code to it.
+          </span>
+        </label>
+      )}
 
       {state?.error && (
         <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
@@ -42,13 +98,50 @@ export function PartnerLoginForm() {
         </p>
       )}
 
+      {/*
+        Which step this is travels on the button rather than in a hidden field,
+        and that is load-bearing. Only the *clicked* submit button's name and
+        value go into the FormData, so the resend below flips the branch simply
+        by being the one that was pressed — whereas a hidden `step` would arrive
+        alongside it and win, because `formData.get` returns the first of two.
+
+        Pressing Enter in a text box submits the first submit button in the form,
+        which is this one, so the keyboard path lands on the step it looks like.
+      */}
       <button
         type="submit"
+        name="step"
+        value={onCodeStep ? "code" : "email"}
         disabled={pending}
-        className="mt-7 w-full cursor-pointer rounded-full bg-green px-7 py-3.5 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:-translate-y-0.5 hover:bg-green-light disabled:translate-y-0 disabled:opacity-60"
+        className={buttonClass}
       >
-        {pending ? "Checking…" : "Sign in"}
+        {pending ? "Just a moment…" : onCodeStep ? "Sign in" : "Email me a code"}
       </button>
+
+      {onCodeStep && (
+        /*
+          A button, not a link: it posts the form it is in, so the address
+          already accepted is the one re-sent to. A link would drop everything
+          and start from an empty box.
+        */
+        <button
+          type="submit"
+          name="step"
+          value="email"
+          disabled={pending}
+          /*
+            The code box is `required`, and the browser enforces that against
+            whichever button submits — so without this, "send it again" is a
+            button that does nothing but put a tooltip on an empty box. This
+            step is not submitting a code and has no business being judged on
+            one.
+          */
+          formNoValidate
+          className="mt-5 w-full cursor-pointer text-sm text-smoke underline underline-offset-4 transition-colors hover:text-plum disabled:opacity-60"
+        >
+          Send it again, or use a different address
+        </button>
+      )}
     </form>
   );
 }

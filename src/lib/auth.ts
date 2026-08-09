@@ -60,13 +60,37 @@ export async function createFirstUser(input: {
   email: string;
   password: string;
 }) {
-  if (await hasAnyUser()) {
+  await ensureSchema();
+
+  const id = randomUUID();
+  const email = input.email.trim().toLowerCase();
+  const name = input.name.trim();
+  const passwordHash = await hashPassword(input.password);
+
+  /*
+    The emptiness of the table is checked *inside* the insert, not before it.
+    Read-then-write is the shape of thing that looks fine until two requests
+    arrive together — both see no users, both insert, and the installation step
+    that was supposed to mint exactly one administrator has minted two. That is
+    a small window and an unusually expensive one to lose: this is the only
+    endpoint on the site that hands out admin without anybody being signed in.
+
+    Postgres evaluates the WHERE NOT EXISTS against the same snapshot as the
+    insert, so the loser of the race inserts nothing and gets no row back.
+  */
+  const rows = await sql()`
+    INSERT INTO users (id, email, name, password_hash)
+    SELECT ${id}, ${email}, ${name}, ${passwordHash}
+    WHERE NOT EXISTS (SELECT 1 FROM users)
+    RETURNING id
+  `;
+
+  if (rows.length === 0) {
     throw new Error("An account already exists.");
   }
 
-  const user = await createUser(input);
-  await admin.start(user.id);
-  return user;
+  await admin.start(id);
+  return { id, name, email } satisfies SessionUser;
 }
 
 export async function signIn(email: string, password: string) {

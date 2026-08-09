@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { Fragment, useActionState, useRef, useState } from "react";
 import { type GiveState, giveAction } from "@/app/(site)/give/actions";
 import {
   Done,
@@ -24,6 +24,13 @@ import { parseUsd, usd } from "@/lib/money";
  * list turns away everyone whose gift does not happen to match a row in it, and
  * one that offers only a box wastes the list entirely.
  *
+ * The list is itemised down to the actual expense and grouped the way the work
+ * is: project, then the step of it being paid for now, then the costs inside
+ * that step. That is the difference between asking somebody to fund "the
+ * kitchen build" and letting them buy the cement — and it is why the page hands
+ * over only the parts that are ready to be worked on. What comes later is on
+ * /needs, in order, rather than in a form asking for it today.
+ *
  * The other thing it has to get right is that a giver does not have to take a
  * whole item. A need with $450 open and a single "Give $450" button quietly
  * turns away every church that could have given $100 — so the amount is a plain
@@ -46,7 +53,17 @@ import { parseUsd, usd } from "@/lib/money";
 export type GiveChoice = {
   slug: string;
   title: string;
+  /** The project it belongs to — "The kitchen build". */
   areaLabel: string;
+  /**
+   * The step of the work it is part of — "Walls up" — or empty for an item that
+   * belongs to the project as a whole. The list is drawn under these headings,
+   * so the page must hand the choices over already in order; see the note on
+   * the picker below.
+   */
+  partTitle?: string;
+  /** One line about the part, shown once under its heading. */
+  partSummary?: string;
   openCents: number;
 };
 
@@ -142,6 +159,37 @@ function Choice({
   );
 }
 
+/**
+ * The heading a run of choices sits under: the project, and the step of the
+ * work inside it.
+ *
+ * Sticky, because the list is now long enough to scroll past its own headings —
+ * and a radio button reading "Cement and sand, $420" with the project scrolled
+ * off the top is a giver about to put money towards they-are-not-quite-sure-what.
+ */
+function GroupHeading({
+  project,
+  part,
+  summary,
+}: {
+  project: string;
+  part?: string;
+  summary?: string;
+}) {
+  return (
+    <div className="sticky top-0 z-10 border-b border-sand-deep bg-sand/95 px-4 py-2.5 backdrop-blur-sm">
+      <p className="eyebrow text-plum">{project}</p>
+      {part && (
+        <p className="mt-1 text-sm font-semibold text-charcoal">{part}</p>
+      )}
+      {summary && (
+        <p className="mt-0.5 text-xs leading-relaxed text-smoke">{summary}</p>
+      )}
+    </div>
+  );
+}
+
+
 export function GiveForm({
   choices,
   fixed = false,
@@ -178,8 +226,41 @@ export function GiveForm({
   const [towards, setTowards] = useState(
     fixed && choices[0] ? choices[0].slug : choices.length === 0 ? OTHER : "",
   );
-  const [amount, setAmount] = useState("");
-  const [designation, setDesignation] = useState("");
+/*
+  Two of the boxes below keep their text in the DOM and a copy in React, rather
+  than being rendered from React the usual way.
+
+  They cannot simply be uncontrolled: the suggestion chips write into them,
+  choosing a different item clears the amount, and the paying button reads the
+  amount back so it can say "Give $250 now". All of that needs the value in
+  React.
+
+  But a `value={…}` box renders from React state, and React state on a fresh
+  page is empty — so anything typed before the client bundle arrives and
+  hydrates is wiped the instant it does, silently. On this page that is a giver
+  who typed 250, looked away, and looked back at an empty box; if they do not
+  notice, the form then tells them to enter an amount they are certain they
+  entered. The same fault had already eaten the email on the CMS sign-in form.
+
+  So: `defaultValue` means hydration leaves whatever is in the box alone,
+  `onChange` keeps the copy current, and the two setters below write the box and
+  the copy together when the change comes from code rather than a keystroke.
+*/
+  const amountRef = useRef<HTMLInputElement>(null);
+  const [amount, setAmountValue] = useState("");
+  const setAmount = (next: string) => {
+    if (amountRef.current) amountRef.current.value = next;
+    setAmountValue(next);
+  };
+
+  const designationRef = useRef<HTMLInputElement>(null);
+  const [designation, setDesignationValue] = useState("");
+  const setDesignation = (next: string) => {
+    // May be unmounted — this field only exists while "Something else" is
+    // chosen — so the copy is what survives either way.
+    if (designationRef.current) designationRef.current.value = next;
+    setDesignationValue(next);
+  };
 
   if (state?.done) return <Thanks state={state.done} email={contactEmail} />;
 
@@ -233,6 +314,11 @@ export function GiveForm({
           <legend className="eyebrow text-smoke">
             What would you like your gift to go to?
           </legend>
+          <p className="mt-2 text-sm leading-relaxed text-smoke">
+            Every line is one real cost, in the order the work has to happen.
+            Take one of them, take part of one, or say what you would like to
+            support in your own words.
+          </p>
 
           {/*
             Scrolls once the list is long enough that it would otherwise push
@@ -244,20 +330,49 @@ export function GiveForm({
               choices.length > 6 ? "max-h-[26rem] overflow-y-auto" : ""
             }`}
           >
-            {choices.map((choice) => (
-              <Choice
-                key={choice.slug}
-                value={choice.slug}
-                checked={towards === choice.slug}
-                onChoose={() => {
-                  setTowards(choice.slug);
-                  setAmount("");
-                }}
-                title={choice.title}
-                note={`${choice.areaLabel} · still open`}
-                figure={usd(choice.openCents)}
-              />
-            ))}
+            {choices.map((choice, index) => {
+              /*
+                A heading whenever the run changes, which is why the order the
+                page hands these over in matters: the choices arrive already
+                grouped, project by project and part by part, and this simply
+                notices the seam. Comparing against the previous choice rather
+                than building nested arrays keeps one flat list of radios named
+                "towards" — exactly what the picker had before — so there is
+                still no way for the browser to submit two of them.
+              */
+              const previous = choices[index - 1];
+              const newProject = previous?.areaLabel !== choice.areaLabel;
+              const newPart = newProject || previous?.partTitle !== choice.partTitle;
+
+              /*
+                A Fragment rather than a wrapper element, so every radio stays
+                a direct child of the scrolling box — `last:border-b-0` on the
+                rows below depends on it, and so does the box not growing a
+                stack of nested divs for the sake of two headings.
+              */
+              return (
+                <Fragment key={choice.slug}>
+                  {newPart && (
+                    <GroupHeading
+                      project={choice.areaLabel}
+                      part={choice.partTitle}
+                      summary={choice.partSummary}
+                    />
+                  )}
+                  <Choice
+                    value={choice.slug}
+                    checked={towards === choice.slug}
+                    onChoose={() => {
+                      setTowards(choice.slug);
+                      setAmount("");
+                    }}
+                    title={choice.title}
+                    note="still open"
+                    figure={usd(choice.openCents)}
+                  />
+                </Fragment>
+              );
+            })}
 
             <Choice
               value={OTHER}
@@ -286,8 +401,9 @@ export function GiveForm({
             name="designation"
             required
             maxLength={120}
-            value={designation}
-            onChange={(event) => setDesignation(event.target.value)}
+            ref={designationRef}
+            defaultValue={designation}
+            onChange={(event) => setDesignationValue(event.target.value)}
             placeholder="School fees for one child"
             className={inputClass}
           />
@@ -333,8 +449,9 @@ export function GiveForm({
             required
             autoComplete="off"
             placeholder="250"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
+            ref={amountRef}
+            defaultValue={amount}
+            onChange={(event) => setAmountValue(event.target.value)}
             className="tabular w-full bg-transparent text-lg outline-none"
           />
         </div>

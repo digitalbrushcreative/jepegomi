@@ -11,6 +11,7 @@ Everything the site shows. Each folder is served at `/photos/<folder>/`.
 | `academy/`  | The school, its classrooms and pupils    | Referenced by path in the page                |
 | `school/`   | Lunch queues and classrooms              | Referenced by path in the page                |
 | `meals/`    | The food, and how it used to be cooked   | Referenced by path in the page                |
+| `college/`  | The Bible college's students              | Referenced by path in the page                |
 | `digital/`  | Stills from the streamed services        | Referenced by path in the page                |
 | `transport/`| The academy's van                        | Referenced by path in the page                |
 

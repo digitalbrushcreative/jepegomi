@@ -13,7 +13,7 @@ const programs = [
     eyebrow: "Feeding",
     title: "Food at School",
     blurb:
-      "Morning porridge and a hot lunch, every school day, for children at Jepegomi Academy. For many it is the most reliable meal they get.",
+      "Morning porridge and a hot lunch, every school day, for children at Jepegomi Academy — balanced enough to carry them through a full day of lessons.",
     cta: "See the program",
     icon: "pot" as const,
   },
@@ -22,7 +22,7 @@ const programs = [
     eyebrow: "Streaming",
     title: "Jepegomi Digital",
     blurb:
-      "Sunday services and weekday fellowships, streamed from the sanctuary in Kahawa to whoever will watch — filmed, for now, on phones.",
+      "Sunday services and weekday fellowships, streamed from the sanctuary in Kahawa Sukari to whoever will watch — filmed, for now, on phones.",
     cta: "See the channel",
     icon: "globe" as const,
   },
