@@ -3,7 +3,7 @@
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { looksAutomated } from "@/lib/forms";
-import { areaForDesignation, isPartnerKind } from "@/lib/giving";
+import { areaForDesignation, areaForValue, isPartnerKind } from "@/lib/giving";
 import {
   type GiftDetails,
   giftNotification,
@@ -33,9 +33,11 @@ import { site } from "@/lib/site";
  * either picks a costed item off the list, in which case the amount is held
  * against that item's balance, or they say in their own words what they want to
  * support, in which case it is recorded against nothing and reconciled by hand.
- * Both end as a row in `pledges` with the same status, because from the
- * ministry's side they are the same event: somebody has promised money and
- * somebody has to write back.
+ * Choosing a whole project — the playground, the bus — is the second of those
+ * with the words filled in for them; see the note where it is resolved. Both
+ * end as a row in `pledges` with the same status, because from the ministry's
+ * side they are the same event: somebody has promised money and somebody has to
+ * write back.
  *
  * This is a public endpoint — a server action always is — so nothing the form
  * says is trusted. The need is looked up by its slug rather than by an id posted
@@ -284,10 +286,34 @@ export async function giveAction(
   _prev: GiveState,
   formData: FormData,
 ): Promise<GiveState> {
-  const towards = String(formData.get("towards") ?? "").trim();
-  if (!towards) {
+  const submitted = String(formData.get("towards") ?? "").trim();
+  if (!submitted) {
     return { error: "Choose something from the list, or tell us what to put it towards." };
   }
+
+  /*
+    A whole project, chosen from the picker — the playground, the bus, the
+    streaming kit. It is not a row in `needs` and it never will be: those
+    projects are costed as one figure, on their own pages, and breaking them
+    into a ledger nobody has itemised would be inventing lines.
+
+    So it is recorded as what it actually is — a gift the giver designated,
+    exactly like one typed into the box — and the words it carries are the
+    project's own label. That is not a formality: `areaForDesignation` matches
+    on the whole label, so the pledge lands filed under the project, and the
+    giver's dashboard shows them the playground rather than a line of text.
+
+    Resolved once, here, so both doors below share it. The area is looked up
+    from the registry rather than trusted, so `project:` followed by anything
+    else falls through to the slug lookup and is refused there.
+  */
+  const project = areaForValue(submitted);
+  const towards = project ? "other" : submitted;
+  const designation = project
+    ? project.label
+    : String(formData.get("designation") ?? "")
+        .trim()
+        .slice(0, 120);
 
   const amountCents = parseUsd(String(formData.get("amount") ?? ""));
   if (amountCents === null) {
@@ -371,9 +397,7 @@ export async function giveAction(
       towards,
       amountCents,
       message,
-      designation: String(formData.get("designation") ?? "")
-        .trim()
-        .slice(0, 120),
+      designation,
       giver: parsed.giver,
     });
 
@@ -389,10 +413,6 @@ export async function giveAction(
     was "other" would otherwise swallow every free-form gift on the site.
   */
   if (towards === "other") {
-    const designation = String(formData.get("designation") ?? "")
-      .trim()
-      .slice(0, 120);
-
     if (!designation) {
       return { error: "Say what you would like the gift to go towards." };
     }

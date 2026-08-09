@@ -30,6 +30,30 @@ const VIDEO_HOST = "https://www.youtube-nocookie.com";
 */
 const PESAPAL_HOSTS = ["https://pay.pesapal.com", "https://cybqa.pesapal.com"];
 
+/*
+  Google Analytics, and the three directives it touches.
+
+  The library is fetched from googletagmanager.com and then reports to
+  google-analytics.com, which is why the two are not the same list. The wildcard
+  is not laziness: GA4 sends its hits to a regional endpoint chosen at runtime —
+  region1.google-analytics.com for a reader in Europe, and so on — so a policy
+  naming only the bare host works everywhere until it silently doesn't.
+
+  `img-src` is there because gtag falls back to a pixel when it cannot use
+  `fetch` or `sendBeacon`, and a page that reports from most browsers but not
+  from the awkward ones is worse than one that reports from none: it reads as
+  data rather than as a fault.
+*/
+const ANALYTICS = {
+  script: "https://www.googletagmanager.com",
+  connect: [
+    "https://www.googletagmanager.com",
+    "https://www.google-analytics.com",
+    "https://*.google-analytics.com",
+  ],
+  img: ["https://www.googletagmanager.com", "https://www.google-analytics.com"],
+};
+
 const isDev = process.env.NODE_ENV === "development";
 
 /**
@@ -42,8 +66,13 @@ const isDev = process.env.NODE_ENV === "development";
  * need a request (see `cacheComponents` below). Buying a stricter policy by
  * making every page dynamic would trade the site's actual speed for defence in
  * depth against an injection route that does not exist here — there is no
- * `dangerouslySetInnerHTML` anywhere in src/, no third-party script, and the
- * only rich text an editor can write is paragraph breaks (see cms/prose.ts).
+ * `dangerouslySetInnerHTML` anywhere in src/, and the only rich text an editor
+ * can write is paragraph breaks (see cms/prose.ts).
+ *
+ * The one third-party script is Google's analytics tag, and it needs the
+ * inline allowance too: gtag's bootstrap has to run before the library it
+ * configures arrives, so it cannot be a file. See `ANALYTICS` above and
+ * components/analytics.tsx.
  *
  * So this policy is not the thing standing between the site and XSS; React's
  * escaping is. What it does is cheap and worth having anyway: it stops an
@@ -54,23 +83,24 @@ function contentSecurityPolicy() {
   return [
     "default-src 'self'",
     // 'unsafe-eval' is React's dev-only error reconstruction. Never in production.
-    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline' ${ANALYTICS.script}${isDev ? " 'unsafe-eval'" : ""}`,
     // Tailwind, and next/font's injected face declarations.
     "style-src 'self' 'unsafe-inline'",
     /*
       data: for inline SVG marks; blob: for the upload preview in /app/photos.
 
-      Still no host but this one, and the video stills are the reason that is
-      worth pointing out: they come from YouTube, but they come *through*
-      next/image, which fetches them on the server and serves them from here.
-      A directive that had to name i.ytimg.com would be a directive letting
-      every reader's browser announce itself to Google before pressing play.
+      The only hosts named are the analytics ones, and the video stills are the
+      reason that is worth pointing out: they come from YouTube, but they come
+      *through* next/image, which fetches them on the server and serves them
+      from here. A directive that had to name i.ytimg.com would be a directive
+      letting every reader's browser announce itself to Google before pressing
+      play.
     */
-    "img-src 'self' data: blob:",
+    `img-src 'self' data: blob: ${ANALYTICS.img.join(" ")}`,
     // next/font self-hosts, so nothing is fetched from Google at runtime.
     "font-src 'self' data:",
     `frame-src ${MAP_HOST} ${VIDEO_HOST}`,
-    "connect-src 'self'",
+    `connect-src 'self' ${ANALYTICS.connect.join(" ")}`,
     `form-action 'self' ${PESAPAL_HOSTS.join(" ")}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",

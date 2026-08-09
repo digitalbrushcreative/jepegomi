@@ -123,6 +123,35 @@ export type CmsDocument = {
 */
 const pupilsEnrolled = "131";
 
+/*
+  Scripture, on the four pages that carry it.
+
+  The two hubs, the needs list and the giving page — and no page has two. The
+  restraint is the point: a verse on every page is wallpaper, and wallpaper is
+  not read. Any page can drop its verse by clearing the field, and a page that
+  never had one is not missing anything.
+
+  `text` rather than `prose`, so a pasted passage cannot break the band into
+  several paragraphs — a verse is one.
+
+  The reference ends in NKJV because the New King James Version asks for the
+  initials after each quotation in media of this kind. Keeping it in the content
+  rather than in the component means it is visible to whoever edits the verse,
+  which is the person who needs to know.
+*/
+const verseFields = {
+  verse: {
+    type: "text",
+    label: "Scripture",
+    help: "Shown quietly between two sections. Leave blank for no verse on this page.",
+  },
+  verseRef: {
+    type: "text",
+    label: "Scripture reference",
+    help: "Ends in NKJV — the New King James Version asks for the initials after each quotation.",
+  },
+} satisfies Record<string, LeafField>;
+
 const site = {
   title: "Site details",
   path: null,
@@ -173,10 +202,8 @@ const giving = {
   description:
     "The giving page. Account details are deliberately not on the site — they are sent by email when somebody asks.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
-    waysEyebrow: { type: "text", label: "Section eyebrow" },
     waysHeading: { type: "text", label: "Section heading" },
     ways: {
       type: "list",
@@ -188,25 +215,23 @@ const giving = {
         body: { type: "prose", label: "Text" },
       },
     },
-    howEyebrow: { type: "text", label: "How to give — eyebrow" },
     howHeading: { type: "text", label: "How to give — heading" },
     howBody: { type: "prose", label: "How to give — text" },
     designationNote: {
       type: "prose",
       label: "Note about choosing where a gift goes",
     },
+    ...verseFields,
   },
   defaults: {
-    eyebrow: "Partner With Us",
     heading: "Support the ministry",
     intro:
       "Gifts to Jepegomi keep children fed and taught, the church serving its neighbourhood, and the building work moving. Every one of them goes further here than it would almost anywhere else.",
-    waysEyebrow: "Where gifts go",
     waysHeading: "One ministry, four kinds of work",
     ways: [
       {
         title: "The church",
-        body: "The congregation in Kahawa Sukari — the ministry everything else grew out of, and the people who run it day to day.",
+        body: "The congregation in Kahawa Sukari. Everything else grew out of it, and the people who run it day to day are here.",
       },
       {
         title: "The academy",
@@ -221,11 +246,13 @@ const giving = {
         body: "The kitchen build, and what comes after it. Gifts here buy materials and pay the trades doing the work.",
       },
     ],
-    howEyebrow: "The other way to give",
     howHeading: "Or write to us and we will send the details",
-    howBody: `If you would rather not pay on the site — and a bank transfer from overseas is usually better sent that way — we will send you the account details instead. We do not publish bank or M-Pesa details here, so ${siteDefaults.leaders} reply with the right account for wherever you are giving from.\n\nIt also means we can thank you properly, and tell you what your gift did.`,
+    howBody: `We do not publish account details here. Ask, and ${siteDefaults.leaders} reply with the right account for wherever you are giving from — usually the better route for a transfer from overseas.`,
     designationNote:
       "Tell us if you would like your gift to go to something in particular. If you don't, it goes wherever the need is greatest that month.",
+    verse:
+      "So let each one give as he purposes in his heart, not grudgingly or of necessity; for God loves a cheerful giver.",
+    verseRef: "2 Corinthians 9:7 NKJV",
   },
 } satisfies CmsDocument;
 
@@ -246,7 +273,6 @@ const needs = {
   description:
     "The wording around the giving list. The items and their costs are managed under Needs, not here.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
     emptyNote: {
@@ -254,7 +280,6 @@ const needs = {
       label: "When nothing is listed",
       help: "Shown in place of the list while there is nothing published — so the page is never blank.",
     },
-    howEyebrow: { type: "text", label: "How it works — eyebrow" },
     howHeading: { type: "text", label: "How it works — heading" },
     steps: {
       type: "list",
@@ -271,38 +296,65 @@ const needs = {
       label: "Note about partner logins",
       help: "Shown beside the sign-in link, explaining what a church gets a login for.",
     },
+    ...verseFields,
   },
   defaults: {
-    eyebrow: "Transparent Giving",
     heading: "What's needed, and what it costs",
     intro: [
       "Every item below is one thing the ministry is short of, with the price on it. You can take all of an item or part of one — whatever you give is held against it, and the balance stays open for somebody else to pick up.",
-      "The figures are the real ones. What has arrived, what has been promised and what is still open are all on the page, and they are the same numbers Pastor Simon works from.",
+      "The figures below are based on quotes and estimates for the work.",
     ].join("\n\n"),
     emptyNote:
-      "There is nothing listed at the moment. That does not mean nothing is needed — it means nothing has been costed carefully enough to put a figure in front of you, and we would rather show you nothing than a guess. Write to us and we will tell you where things stand.",
-    howEyebrow: "How it works",
-    howHeading: "From choosing an item to seeing the photographs",
+      "Nothing is listed just now — nothing has been costed carefully enough to put a figure in front of you, and we would rather show you nothing than a guess. Write to us and we will tell you where things stand.",
+    howHeading: "See what your giving does",
     steps: [
       {
         title: "Choose an item, and an amount",
-        body: "Take the whole thing or part of it. The moment you claim an amount it shows as promised on the page, so nobody else is asked for it — and the rest stays open.",
+        body: "All of it or part of it. What you take shows as promised at once; the rest stays open for somebody else.",
       },
       {
         title: "Pay it, or ask for the details",
-        body: "Pay by M-Pesa or card and it is done in a minute — card details are entered on Pesapal's own page, never on this site. Or ask for the account details instead, and Pastor Simon replies himself with the right account for wherever you are giving from.",
+        body: "M-Pesa or card — card details go to Pesapal, never to this site. Or ask for the account details and Pastor Simon writes back himself.",
       },
       {
         title: "The gift is marked received",
-        body: "A payment on the site records itself the moment it clears. A gift sent another way is marked received by hand when it lands. Either way the page updates, and every figure on it is one somebody stands behind.",
+        body: "Payments here record themselves. Anything sent another way is marked by hand when it lands. Either way, the page updates.",
       },
       {
         title: "You see what it did",
-        body: "Progress on the item is posted back with photographs, so the thing you paid for is a thing you can look at.",
+        body: "Progress is posted back with photographs — the thing you paid for is a thing you can look at.",
       },
     ],
     partnerNote:
-      "Churches and regular partners can be given a login, which shows every item they have supported, what has arrived against each, and the updates as they are posted. It shows their own giving only — never anybody else's.",
+      "No account to make. Sign in with the email you gave from and see everything you have given, and what came of it.",
+    verse:
+      "He who has pity on the poor lends to the Lord, And He will pay back what he has given.",
+    verseRef: "Proverbs 19:17 NKJV",
+  },
+} satisfies CmsDocument;
+
+/*
+  Where Pesapal sends a giver back to. Only the banner is content — what the page
+  actually says is decided by asking Pesapal what happened, and that answer is
+  not something anybody types.
+*/
+const thanks = {
+  title: "Thank you page",
+  path: "/give/thanks",
+  group: "giving",
+  description:
+    "The page a giver lands on after paying. The receipt below the banner is written by the payment itself.",
+  fields: {
+    heading: { type: "text", label: "Heading" },
+    intro: {
+      type: "prose",
+      label: "Intro",
+      help: "Read for the moment it takes to confirm the payment, so keep it to a line.",
+    },
+  },
+  defaults: {
+    heading: "Thank you",
+    intro: "One moment while we confirm this with Pesapal.",
   },
 } satisfies CmsDocument;
 
@@ -312,11 +364,6 @@ const about = {
   group: "main",
   description: "The church & the Nderitus.",
   fields: {
-    eyebrow: {
-      type: "text",
-      label: "Eyebrow",
-      help: "The small label above the heading.",
-    },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
     portrait: {
@@ -345,7 +392,6 @@ const about = {
     },
   },
   defaults: {
-    eyebrow: "The Ministry",
     heading: "The church & the Nderitus",
     intro: `${siteDefaults.longName} is a church and academy in Nairobi led by ${siteDefaults.leaders}.`,
     portrait: "/photos/founders/simon-and-joyce.png",
@@ -377,10 +423,8 @@ const church = {
   description:
     "Sunday services. Add the service times at the bottom and they stop showing as “to be confirmed”.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
-    sectionEyebrow: { type: "text", label: "Section eyebrow" },
     sectionTitle: { type: "text", label: "Section title" },
     body: { type: "prose", label: "Body" },
     services: {
@@ -405,14 +449,12 @@ const church = {
     },
   },
   defaults: {
-    eyebrow: "The Church",
     heading: "The church at the centre of it",
     intro: `${siteDefaults.longName} is a church in ${siteDefaults.location}, led by ${siteDefaults.leaders}. The academy, the college and the feeding program all belong to it.`,
-    sectionEyebrow: "Come and worship",
     sectionTitle: "Sunday at Jepegomi",
     body: [
       "The congregation gathers each week to worship, pray and hear the Word together. It is the oldest thing the ministry does, and the thing the rest of it is built on.",
-      "Visitors are welcome — you do not need to know anybody, and you do not need to bring anything.",
+      "Visitors are welcome. You do not need to know anybody, and you do not need to bring anything.",
     ].join("\n\n"),
     /*
       Deliberately empty. Nobody has told us what time the service starts, and a
@@ -438,12 +480,10 @@ const college = {
   path: "/college",
   group: "ministry",
   description:
-    "The Contextual Bible Training College — the programmes, the fees, and where fees are paid.",
+    "The Contextual Bible Training College: the programmes, the fees, and where fees are paid.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
-    sectionEyebrow: { type: "text", label: "Section eyebrow" },
     sectionTitle: { type: "text", label: "Section title" },
     body: { type: "prose", label: "Body" },
     students: { type: "text", label: "Students enrolled" },
@@ -454,7 +494,6 @@ const college = {
       label: "Next intake",
       help: "When the next class starts. Leave blank until the date is fixed — the page will say it is still to be confirmed rather than guess at one.",
     },
-    feesEyebrow: { type: "text", label: "Fees — eyebrow" },
     feesTitle: { type: "text", label: "Fees — heading" },
     feesBody: { type: "prose", label: "Fees — text" },
     programs: {
@@ -487,10 +526,8 @@ const college = {
     },
   },
   defaults: {
-    eyebrow: "The College",
     heading: "Contextual Bible Training College",
     intro: `The college is the training arm of ${siteDefaults.longName} — Bible teaching rooted in the community it serves, alongside the church and the school.`,
-    sectionEyebrow: "What we know",
     sectionTitle: "The college today",
     body: [
       `The Contextual Bible Training College is run by ${siteDefaults.leaders} as part of the ministry in ${siteDefaults.location}, teaching the Scriptures in and for the community that the church and the academy already serve.`,
@@ -501,7 +538,6 @@ const college = {
     schedule: "",
     enrolment: "",
     intake: "",
-    feesEyebrow: "Programmes & fees",
     feesTitle: "What each class costs, and how long it runs",
     feesBody:
       "Fees are paid monthly for the length of the programme. The total beside each one is what the whole course comes to if it runs its full length.",
@@ -579,7 +615,6 @@ const home = {
         href: { type: "text", label: "Second link" },
       },
     },
-    closingEyebrow: { type: "text", label: "Closing eyebrow" },
     closingHeading: { type: "text", label: "Closing heading" },
     closingBody: { type: "prose", label: "Closing text" },
   },
@@ -606,14 +641,14 @@ const home = {
       {
         eyebrow: "Sunday Services",
         title: "The church at the centre of it.",
-        body: "The congregation in Kahawa Sukari — the church that the academy, the college and the feeding program all belong to. Visitors are welcome.",
+        body: "The congregation in Kahawa Sukari. The academy, the college and the feeding program all belong to this church, and visitors are welcome.",
         href: "/church",
         cta: "Visit the church",
       },
       {
         eyebrow: "Jepegomi Academy",
         title: "Quality education with values.",
-        body: "The school in Kahawa Sukari, teaching children from kindergarten to Grade 6 — and teaching them character alongside the syllabus.",
+        body: "The school in Kahawa Sukari teaches children from kindergarten to Grade 6, and teaches them character alongside the syllabus.",
         href: "/academy",
         cta: "See the Academy",
       },
@@ -627,7 +662,7 @@ const home = {
       {
         eyebrow: "Food at School",
         title: "Every child eats, every school day.",
-        body: "Porridge in the morning and a cooked lunch at midday — enough to keep a child alert through a full day of lessons.",
+        body: "Porridge in the morning and a cooked lunch at midday, enough to keep a child alert through a full day of lessons.",
         href: "/programs/food-at-school",
         cta: "See the program",
       },
@@ -646,19 +681,19 @@ const home = {
       },
       {
         title: "Jepegomi Academy",
-        body: "Quality education with values — the school at the heart of the community, from kindergarten to Grade 6.",
+        body: "Quality education with values, from kindergarten to Grade 6, at the school in the middle of the community.",
         href: "/academy",
         cta: "See the Academy",
       },
       {
         title: "Bible College",
-        body: "The Contextual Bible Training College — the ministry's training arm, teaching the Scriptures where they are lived.",
+        body: "The ministry's training arm. The Contextual Bible Training College teaches the Scriptures where they are lived.",
         href: "/college",
         cta: "About the college",
       },
       {
         title: "Food at School",
-        body: "Morning porridge and a hot lunch, every school day — what a child needs to get through a full day of lessons.",
+        body: "Morning porridge and a hot lunch, every school day. It is what a child needs to get through a full day of lessons.",
         href: "/programs/food-at-school",
         cta: "See the program",
       },
@@ -677,7 +712,7 @@ const home = {
       {
         label: "The kitchen",
         heading: "Help us finish the kitchen",
-        body: "Every one of those meals now comes out of a real kitchen. A partner church in the United States partnered with us to build it, and it has been cooking every school day since — but the gift was spent before the last of the work was reached. A water tank, a proper floor where the children eat, and plaster and power in the dining hall are what is left.",
+        body: "Every one of those meals now comes out of a kitchen of its own. A partner church in the United States built it with us, and it has been cooking every school day since. Three things would finish the job: a water tank, a proper floor where the children eat, and plaster and power in the dining hall.",
         status: "",
         giveCta: "Give to the kitchen",
         cta: "See the kitchen",
@@ -686,17 +721,74 @@ const home = {
       {
         label: "The school bus",
         heading: "Get the children to school",
-        body: "The academy's van is off the road. The same partner church that built the kitchen has since given toward repairing it and bringing it back.\n\nBeyond that, the school has outgrown a van. A 26-seater bus carries it as it is now and leaves room for the children still to come, and the whole cost of it is still to raise.",
+        body: "The same partner church that built the kitchen has given toward getting the academy's van running again.\n\nBeyond that, the school has outgrown a van. A 26-seater bus carries it as it is today and leaves room for the children still to come, and the whole cost of it is still to raise.",
         status: "",
         giveCta: "Give to the bus",
         cta: "See the appeal",
         href: "/programs/transport",
       },
     ],
-    closingEyebrow: "Partner With Us",
     closingHeading: "Stand with the whole ministry",
     closingBody:
-      "A gift to Jepegomi holds up all of it — the church on Sunday, the classroom on Monday, the college that trains the next teachers, and the meal a child eats at school tomorrow.",
+      "A gift to Jepegomi holds up all of it: the church on Sunday, the classroom on Monday, the college that trains the next teachers, and the meal a child eats at school tomorrow.",
+  },
+} satisfies CmsDocument;
+
+/*
+  The words on a hub card. What is missing from it is the point: no link, no
+  icon. Where a card goes is a route, and routes are structure — the pages a hub
+  points at are fixed in the page file and the cards are matched to them in
+  order, so an editor can rewrite any card on the site and cannot send one
+  somewhere that does not exist.
+*/
+const hubCardFields = {
+  eyebrow: { type: "text", label: "Label" },
+  title: { type: "text", label: "Title" },
+  blurb: { type: "prose", label: "Text" },
+  cta: { type: "text", label: "Link text" },
+} satisfies Record<string, LeafField>;
+
+/** The help line under every hub's card list, since the caveat is the same one. */
+const hubCardsHelp =
+  "One card per page below, in the order they appear. Which page each card links to is set in the code, so adding a card here does nothing until there is a page for it.";
+
+const education = {
+  title: "Education",
+  path: "/education",
+  group: "ministry",
+  description:
+    "The landing page over the Academy and the college. The two pages themselves are edited separately.",
+  fields: {
+    heading: { type: "text", label: "Heading" },
+    intro: { type: "prose", label: "Intro" },
+    cards: {
+      type: "list",
+      label: "Cards",
+      itemLabel: "card",
+      help: hubCardsHelp,
+      fields: hubCardFields,
+    },
+  },
+  defaults: {
+    heading: "Teaching children, and teaching the people who teach them",
+    intro:
+      "One arm of the ministry with two ends — a school for the children of Kahawa Sukari, and a Bible college for the adults who will lead and teach in it.",
+    cards: [
+      {
+        eyebrow: "For children",
+        title: "Jepegomi Academy",
+        blurb:
+          "Quality education with values — the school in Kahawa Sukari, teaching children from kindergarten to Grade 6 in classrooms the ministry built itself.",
+        cta: "See the Academy",
+      },
+      {
+        eyebrow: "For adults",
+        title: "Contextual Bible Training College",
+        blurb:
+          "The ministry's training arm, teaching the Scriptures in and for the community the church already serves — from certificate to doctorate, with the fees on the page.",
+        cta: "About the college",
+      },
+    ],
   },
 } satisfies CmsDocument;
 
@@ -707,10 +799,8 @@ const academy = {
   description:
     "Jepegomi Academy. Fill in the school details at the bottom and they stop showing as “to be confirmed”.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
-    sectionEyebrow: { type: "text", label: "Section eyebrow" },
     sectionTitle: { type: "text", label: "Section title" },
     body: { type: "prose", label: "Body" },
     ages: {
@@ -724,15 +814,13 @@ const academy = {
     founded: { type: "text", label: "Year founded" },
   },
   defaults: {
-    eyebrow: "The School",
     heading: "Quality education with values",
-    intro: `Jepegomi Academy teaches ${pupilsEnrolled} children in the Kahawa Sukari community, from kindergarten to Grade 6 — a school the ministry built a classroom at a time, and is building still.`,
-    sectionEyebrow: "What we know",
+    intro: `Jepegomi Academy teaches ${pupilsEnrolled} children in the Kahawa Sukari community, from kindergarten to Grade 6, a school the ministry built a classroom at a time and is building still.`,
     sectionTitle: "The school today",
     body: [
-      `The Academy sits in ${siteDefaults.location}, run by the same hands as the church — ${siteDefaults.leaders}. Children come from families across the neighbourhood, many of whom could not otherwise afford to keep a child in school.`,
-      "It did not start where it stands. The first classrooms were a row of iron-sheet rooms on the roadside, with the school's name painted on by hand. Lessons happen in semi-permanent blocks now — stone to the window sill, iron sheet above, a proper roof over both — and the bigger classrooms the government requires are going up behind them.",
-      "The classes are small enough that a child is known by name rather than by number. And what the school is for was painted on that first signboard and has not changed since: value-based education — character and Scripture taught alongside the syllabus, because the ministry has never thought those were two separate subjects.",
+      `The Academy sits in ${siteDefaults.location}, run by the same hands as the church: ${siteDefaults.leaders}. Children come from families across the neighbourhood, many of whom could not otherwise afford to keep a child in school.`,
+      "It did not start where it stands. The first classrooms were a row of iron-sheet rooms on the roadside, with the school's name painted on by hand. Lessons happen in semi-permanent blocks now (stone to the window sill, iron sheet above, a proper roof over both), and the bigger classrooms the government requires are going up behind them.",
+      "The classes are small enough that a child is known by name rather than by number. And what the school is for was painted on that first signboard and has not changed since: value-based education: character and Scripture taught alongside the syllabus, because the ministry has never thought those were two separate subjects.",
     ].join("\n\n"),
     ages: "Kindergarten to Grade 6",
     pupils: pupilsEnrolled,
@@ -742,13 +830,62 @@ const academy = {
   },
 } satisfies CmsDocument;
 
+const programs = {
+  title: "Programs",
+  path: "/programs",
+  group: "programs",
+  description:
+    "The landing page over the three programs. Each program's own page is edited below it.",
+  fields: {
+    heading: { type: "text", label: "Heading" },
+    intro: { type: "prose", label: "Intro", help: "Optional." },
+    cards: {
+      type: "list",
+      label: "Cards",
+      itemLabel: "card",
+      help: hubCardsHelp,
+      fields: hubCardFields,
+    },
+    ...verseFields,
+  },
+  defaults: {
+    heading: "The ways Jepegomi serves its community day to day",
+    intro: "",
+    cards: [
+      {
+        eyebrow: "Feeding",
+        title: "Food at School",
+        blurb:
+          "Morning porridge and a hot lunch, every school day, for children at Jepegomi Academy — balanced enough to carry them through a full day of lessons.",
+        cta: "See the program",
+      },
+      {
+        eyebrow: "Streaming",
+        title: "Jepegomi Digital",
+        blurb:
+          "Sunday services and weekday fellowships, streamed from the sanctuary in Kahawa Sukari to whoever will watch — filmed, for now, on phones.",
+        cta: "See the channel",
+      },
+      {
+        eyebrow: "Getting to school",
+        title: "School Transport",
+        blurb:
+          "The academy's van is being repaired, and the school is raising for a 26-seater bus that carries the school it is growing into.",
+        cta: "See the appeal",
+      },
+    ],
+    verse:
+      "And let us not grow weary while doing good, for in due season we shall reap if we do not lose heart.",
+    verseRef: "Galatians 6:9 NKJV",
+  },
+} satisfies CmsDocument;
+
 const foodAtSchool = {
   title: "Food at School",
   path: "/programs/food-at-school",
   group: "programs",
   description: "The feeding program.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
     sections: {
@@ -761,12 +898,10 @@ const foodAtSchool = {
         body: { type: "prose", label: "Body" },
       },
     },
-    closingEyebrow: { type: "text", label: "Closing eyebrow" },
     closingHeading: { type: "text", label: "Closing heading" },
     closingBody: { type: "prose", label: "Closing text" },
   },
   defaults: {
-    eyebrow: "A program of Jepegomi Academy",
     heading: "A hot meal, every school day",
     intro:
       "Food at School gives every child at Jepegomi Academy porridge in the morning and a cooked lunch at midday — balanced enough to carry them through a full day of lessons.",
@@ -783,14 +918,13 @@ const foodAtSchool = {
       },
       {
         eyebrow: "Where it is cooked",
-        title: "In a real kitchen now, not on open fires.",
-        body: "For years all of it was cooked outdoors over open flames — slow, unsafe in bad weather, smoky, and hard to keep clean, with nowhere proper to store food. A partner church in the United States gave the kitchen, and it is the one the food comes out of today: a wood-burning jiko under a roof, a store room beside it, and a serving counter the children queue at.",
+        title: "In a kitchen of its own.",
+        body: "For years the cooking was done outdoors over open flames. A partner church in the United States gave the kitchen that replaced it, and it is where every meal comes from today: a wood-burning jiko under a roof, a store room beside it, and a serving counter the children queue at. It is the single biggest step this program has taken, and we are grateful for it.",
       },
     ],
-    closingEyebrow: "What's left",
-    closingHeading: "The kitchen cooks. The dining area is not finished.",
+    closingHeading: "The kitchen cooks. Next comes the room they eat in.",
     closingBody:
-      "The gift built the kitchen and was fully spent doing it. Three things it could not reach are still outstanding: a water tank to harvest rainwater, cabro stones to floor the area where the children eat, and plastering and electricity in the dining hall.",
+      "The gift built the kitchen and did everything it was given for. Three things would finish the job: a water tank to harvest rainwater, cabro stones to floor the area where the children eat, and plastering and electricity in the dining hall.",
   },
 } satisfies CmsDocument;
 
@@ -801,7 +935,6 @@ const digital = {
   description:
     "The streaming ministry — the YouTube and Facebook channels, and what it takes to keep them running.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
     sections: {
@@ -833,24 +966,27 @@ const digital = {
       help: "The full link. Same rule as YouTube — blank is better than wrong.",
     },
     /*
-      The bus, and the one figure this page prints: what it costs.
+      What the streaming would take, costed.
 
-      There was a "held in the bank" figure alongside it once, wired to a
-      percentage meter. It was zero, so none of it rendered — which made it the
-      most dangerous line on the site, because the day somebody banked a gift
-      toward the bus, a running total of the cash this ministry was holding would
-      have published itself with nobody deciding anything. It is not here, and
-      there is nothing to turn on by accident: what a stranger can read is the
-      price of a bus, which is a dealer's public figure and the thing they are
-      being asked for. What has come in against it is the ledger's business.
+      The page prints the total and not the list, and that is the same decision
+      the playground made for the same reason: a public itemisation of a camera,
+      a laptop and a pair of radio microphones is a delivery note for a compound
+      in Nairobi. What a giver needs is the figure and what it buys, both of
+      which the page says in words.
     */
-    busSeats: { type: "text", label: "Bus — how many seats" },
-    busPriceKes: {
-      type: "text",
-      label: "Bus — price in shillings",
-      help: "What the dealer quoted, in Kenyan shillings, digits only. The dollar figure on the page is worked out from this and the rate in Site details, and rounded to the nearest hundred — the rate moves daily and the price is a negotiation, so a round figure tells the truth about its own accuracy.",
+    kitHeading: { type: "text", label: "What it would take — heading" },
+    kitBody: { type: "prose", label: "What it would take — summary" },
+    kit: {
+      type: "list",
+      label: "The kit, costed",
+      itemLabel: "item",
+      help: "One row per thing that has to be bought, priced in shillings, digits only. The page adds them up and shows the total in dollars — the lines themselves are not published. Our own estimates from Nairobi prices until somebody quotes for them; correct a figure here and every total follows.",
+      fields: {
+        item: { type: "text", label: "Item" },
+        note: { type: "text", label: "Note" },
+        priceKes: { type: "text", label: "Price (KSh)" },
+      },
     },
-    supportEyebrow: { type: "text", label: "Support eyebrow" },
     supportHeading: { type: "text", label: "Support heading" },
     supportIntro: { type: "prose", label: "Support intro" },
     support: {
@@ -864,7 +1000,6 @@ const digital = {
     },
   },
   defaults: {
-    eyebrow: "Preaching the gospel in Kenya and beyond",
     heading: "The pulpit, online",
     intro:
       "When the lockdowns closed the doors, the sermons went out over the internet instead — and never stopped. Sunday services and weekday fellowships are streamed from the sanctuary in Kahawa Sukari to whoever will watch, wherever they are.",
@@ -880,19 +1015,48 @@ const digital = {
         body: "Services are streamed on Sunday and again through the week, on both YouTube and Facebook. The teaching is given by Simon and Joyce under the GOFAMI banner — God for the Family Ministries — and the archive of past messages stays up for anyone who wants to go back to one.",
       },
       {
-        eyebrow: "What makes it hard",
-        title: "It is filmed on phones, and the lighting fights back.",
-        body: "Everything is recorded on mobile phones, which sets a ceiling on how good the picture and the sound can be. The lighting is inconsistent, editing and uploading are slow, and nobody in the church has been trained to run any of it — so the whole thing rests on whoever has time that week.",
+        eyebrow: "What would take it further",
+        title: "Filmed on phones, and ready to go further.",
+        body: "Everything is recorded on mobile phones, which has carried the ministry a long way and sets a ceiling on the picture and the sound. Better lighting, a camera and someone trained to run it would lift every recording — and turn an occasional stream into a steady one.",
       },
     ],
     youtubeName: "Jepegomi Africa",
     youtubeUrl: "https://www.youtube.com/@jepegomiafrica",
     // The Facebook page is still not known. See SETUP.md.
     facebookUrl: "",
-    supportEyebrow: "Pray. Give. Watch.",
+    kitHeading: "What it would take",
+    kitBody:
+      "A laptop that can edit video, a camera, wireless microphones and a light — and a year of the connection it all goes out over. Bought once, it lifts every recording the ministry makes from here on.",
+    kit: [
+      {
+        item: "Laptop able to edit and stream video",
+        note: "Replaces the phones everything is recorded on now",
+        priceKes: "120000",
+      },
+      {
+        item: "DSLR camera and lens",
+        note: "The picture, at last, from something built to make one",
+        priceKes: "90000",
+      },
+      {
+        item: "Wireless microphones — a pair",
+        note: "The sound is what a viewer forgives least",
+        priceKes: "35000",
+      },
+      {
+        item: "Ring light and stand",
+        note: "For the weekday recordings indoors",
+        priceKes: "15000",
+      },
+      {
+        item: "A year of internet for streaming",
+        note: "The running cost that decides whether a service goes out at all",
+        priceKes: "60000",
+      },
+    ],
     supportHeading: "How you can partner with us",
     supportIntro:
-      "The cheapest way to help is free: watch a stream and share it. Everything after that is equipment and connection — the two things standing between a message worth hearing and a recording worth watching.",
+      "The cheapest way to help is free: watch a stream and share it. After that, it is equipment and connection.",
     support: [
       {
         title: "Watch, and share what you watch",
@@ -921,9 +1085,30 @@ const transport = {
   description:
     "The school run, and the appeal for a bigger bus, including what the bus costs.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
+    /*
+      The bus, and the one figure this page prints: what it costs.
+
+      These two were declared on the Digital document by mistake, which put them
+      in the wrong drawer of the editor and left the page reading a figure Simon
+      could not reach. They belong here, beside the words they price.
+
+      There was a "held in the bank" figure alongside them once, wired to a
+      percentage meter. It was zero, so none of it rendered — which made it the
+      most dangerous line on the site, because the day somebody banked a gift
+      toward the bus, a running total of the cash this ministry was holding would
+      have published itself with nobody deciding anything. It is not here, and
+      there is nothing to turn on by accident: what a stranger can read is the
+      price of a bus, which is a dealer's public figure and the thing they are
+      being asked for. What has come in against it is the ledger's business.
+    */
+    busSeats: { type: "text", label: "Bus — how many seats" },
+    busPriceKes: {
+      type: "text",
+      label: "Bus — price in shillings",
+      help: "What the dealer quoted, in Kenyan shillings, digits only. The dollar figure on the page is worked out from this and the rate in Site details, and rounded to the nearest hundred — the rate moves daily and the price is a negotiation, so a round figure tells the truth about its own accuracy.",
+    },
     sections: {
       type: "list",
       label: "Sections",
@@ -934,7 +1119,6 @@ const transport = {
         body: { type: "prose", label: "Body" },
       },
     },
-    supportEyebrow: { type: "text", label: "Support eyebrow" },
     supportHeading: { type: "text", label: "Support heading" },
     supportIntro: { type: "prose", label: "Support intro" },
     support: {
@@ -948,22 +1132,21 @@ const transport = {
     },
   },
   defaults: {
-    eyebrow: "Getting the children to school",
     heading: "The school run",
     intro:
-      "Children come to Jepegomi Academy from across Kahawa Sukari, and how they get there decides whether some of them get there at all. The van the school bought is off the road, and the ministry is raising for a bus of its own.",
+      "Children come to Jepegomi Academy from across Kahawa Sukari, and how they get there decides how many can come at all. The school has a van, and it is raising for a bus that will carry the school it is growing into.",
     busSeats: "26",
     busPriceKes: "2000000",
     sections: [
       {
         eyebrow: "Where we are",
-        title: "One van, off the road.",
-        body: "The academy has a van — a yellow Toyota, lettered for the school and the church. It was bought with money given toward a school vehicle, and it did that work for as long as it could. It is not running now. It broke down and has been standing since, which means the school run it used to do is not being done.\n\nThe same partner church that built the kitchen has since given toward repairing it and getting it back on the road.",
+        title: "The van that started it.",
+        body: "The academy has a van — a yellow Toyota, lettered for the school and the church. It was bought with money given toward a school vehicle and it did that work faithfully, and it is standing off the road while it waits on repairs.\n\nThe same partner church that built the kitchen has since given toward getting it running again, and we are grateful for it.",
       },
       {
-        eyebrow: "Where that money went",
-        title: "The vehicle money is the van.",
-        body: "What was given toward a school vehicle is what bought the van standing at the school. It is a vehicle, not a balance — none of it is sitting in a bank account waiting, and none of it is left over to put toward a bus.\n\nSo the bus fund starts at nothing. The figure below is the whole cost of it, not a gap left over after a balance.",
+        eyebrow: "Where that gift went",
+        title: "The vehicle money became the van.",
+        body: "What was given toward a school vehicle is what bought the van standing at the school — the gift became the vehicle, which is exactly what it was for.\n\nSo the bus is a fresh ask. The figure below is its whole cost, not a gap left over after a balance.",
       },
       {
         eyebrow: "Where we are going",
@@ -976,10 +1159,9 @@ const transport = {
         body: "Children who live too far to walk safely can enrol. Parents who cannot leave work to make the trip twice a day can send their child anyway. And the ministry stops paying to hire transport every time it needs to move anybody anywhere.",
       },
     ],
-    supportEyebrow: "Pray. Give. Sponsor.",
     supportHeading: "How you can partner with us",
     supportIntro:
-      "The whole cost is the ask, because nothing is banked against it yet. Every gift toward it is held for the bus and nothing else — the way the money given for a school vehicle went to the van and nowhere else.",
+      "Nothing is banked against the bus yet, so the whole cost is the ask. Every gift toward it is held for the bus and nothing else.",
     support: [
       {
         title: "Give toward the bus",
@@ -1004,12 +1186,10 @@ const contact = {
   description:
     "The contact page. The email and location themselves live in Site details.",
   fields: {
-    eyebrow: { type: "text", label: "Eyebrow" },
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
   },
   defaults: {
-    eyebrow: "Get in touch",
     heading: "Contact",
     intro:
       "We would love to hear from you — whether you want to give, partner, or just ask a question.",
@@ -1044,6 +1224,49 @@ const contact = {
   rather than hidden because a row whose number you cannot see is a row you
   cannot line up against the grid in /app -> Photos.
 */
+const projects = {
+  title: "Projects",
+  path: "/projects",
+  group: "giving",
+  description:
+    "The landing page over the build projects. Each card's figure — how far the kitchen has got, what the playground comes to — is added to its label automatically and is not typed here.",
+  fields: {
+    heading: { type: "text", label: "Heading" },
+    intro: { type: "prose", label: "Intro", help: "Optional." },
+    cards: {
+      type: "list",
+      label: "Cards",
+      itemLabel: "card",
+      help: `${hubCardsHelp} The current figure is appended to each label.`,
+      fields: hubCardFields,
+    },
+    ...verseFields,
+  },
+  defaults: {
+    heading: "The things we're building to serve better",
+    intro: "",
+    cards: [
+      {
+        eyebrow: "Cooking",
+        title: "Kitchen Build",
+        blurb:
+          "The kitchen and store room that replaced the open fires — built with a partner church, cooking daily, with the dining area still to finish. Photos, budget and what is left.",
+        cta: "See the build",
+      },
+      {
+        eyebrow: "The yard",
+        title: "The Playground",
+        blurb:
+          "Swings welded on site out of angle iron, a slide stripped to its frame, and all of it standing on bare packed earth. What proper equipment and a rubber crumb safe surface would cost.",
+        cta: "See what it costs",
+      },
+    ],
+    verse:
+      "So they said, “Let us rise up and build.” Then they set their hands to this good work.",
+    verseRef: "Nehemiah 2:18 NKJV",
+  },
+} satisfies CmsDocument;
+
 const gallery = {
   title: "Kitchen photos",
   path: "/projects/kitchen",
@@ -1087,13 +1310,13 @@ const gallery = {
       { slot: "5", category: "walls", caption: "Doorway and window openings formed" },
       { slot: "6", category: "walls", caption: "The passage between the kitchen and the store room" },
       { slot: "7", category: "walls", caption: "Concrete lintels cast over the openings" },
-      { slot: "8", category: "walls", caption: "Inside — the cooking platforms take shape" },
+      { slot: "8", category: "walls", caption: "Inside, the cooking platforms take shape" },
       { slot: "9", category: "walls", caption: "The serving counter, plastered" },
-      { slot: "10", category: "walls", caption: "Ring beam poured — walls at their full height" },
+      { slot: "10", category: "walls", caption: "Ring beam poured, walls at their full height" },
       { slot: "11", category: "roof", caption: "Roofed, plastered and standing" },
       { slot: "12", category: "roof", caption: "The kitchen from the yard" },
       { slot: "13", category: "roof", caption: "In the doorway, with cooking underway inside" },
-      { slot: "14", category: "roof", caption: "Inside — the jiko in place on a tiled floor" },
+      { slot: "14", category: "roof", caption: "Inside, the jiko in place on a tiled floor" },
       { slot: "15", category: "roof", caption: "The two-pot wood-burning jiko, close up" },
       { slot: "16", category: "people", caption: "The fire lit under the new jiko" },
       { slot: "17", category: "people", caption: "Rice and beans, plated for the children" },
@@ -1175,7 +1398,7 @@ const kitchen = {
     progressCaption: "Kitchen cooking · dining area still to finish",
     mealsPerDay: "2",
     kitchensCooking: "1",
-    beforeHeading: "Before — Cooking Outdoors",
+    beforeHeading: "Before: cooking outdoors",
     beforeAlt:
       "A cooking pot balanced on stones over an open wood fire on bare ground",
     beforeBullets: [
@@ -1183,7 +1406,7 @@ const kitchen = {
       { text: "No shelter, storage or dining space" },
       { text: "Exposed to weather & smoke" },
     ],
-    afterHeading: "Now — The New Kitchen",
+    afterHeading: "Now: the new kitchen",
     afterAlt: "The new kitchen building at Jepegomi Academy",
     afterBullets: [
       { text: "Brick walls & iron sheet roof" },
@@ -1214,23 +1437,6 @@ const playground = {
   description:
     "The playground appeal — what stands in the yard now, and what replacing it would cost. Prices are in Kenyan shillings; the dollars on the page are worked out from them and the rate in Site details.",
   fields: {
-    quoted: {
-      type: "choice",
-      label: "Has a supplier priced this yet?",
-      help: "While this says estimated, the page marks every figure as an estimate and says plainly that nothing has been quoted. Change it the day a real quote arrives and those warnings come off by themselves.",
-      options: [
-        {
-          value: "estimated",
-          label: "Not yet — these are estimates",
-          help: "Built from ordinary Nairobi supplier rates, sized to the yard.",
-        },
-        {
-          value: "quoted",
-          label: "Yes — a supplier has priced it",
-          help: "The same figures then read as a price, because by then they are one.",
-        },
-      ],
-    },
     equipmentHeading: { type: "text", label: "First half — heading" },
     equipmentBody: { type: "prose", label: "First half — summary" },
     equipment: {
@@ -1267,17 +1473,11 @@ const playground = {
     photo: { type: "image", label: "Photograph of the yard" },
     photoAlt: { type: "text", label: "Photograph — description for screen readers" },
     photoCaption: { type: "text", label: "Photograph — caption" },
-    estimateNote: {
-      type: "prose",
-      label: "The note that keeps the figures honest",
-      help: "Shown wherever a total is, while the job is still an estimate.",
-    },
   },
   defaults: {
-    quoted: "estimated",
     equipmentHeading: "What they play on",
     equipmentBody:
-      "Five pieces of galvanised equipment, replacing the three that are standing there and adding the two the school has never had.",
+      "Five pieces of galvanised equipment — three that carry on from what is standing there now, and two that are new to the school.",
     equipment: [
       {
         item: "Swing set — four seats, galvanised steel frame",
@@ -1286,28 +1486,28 @@ const playground = {
       },
       {
         item: "Climbing frame with monkey bars",
-        note: "The school has never had one",
+        note: "New to the school",
         priceKes: "180000",
       },
       {
         item: "Slide — 2.4 m, moulded deck on a steel frame",
-        note: "Replaces the bare rusted ramp in the yard",
+        note: "Takes over from the frame standing in the yard",
         priceKes: "110000",
       },
       {
         item: "Merry-go-round — six seats",
-        note: "The school has never had one",
+        note: "New to the school",
         priceKes: "100000",
       },
       {
         item: "See-saw — two seats, galvanised steel",
-        note: "Replaces the one on bare ground",
+        note: "Replaces the one made on site",
         priceKes: "55000",
       },
     ],
     groundHeading: "What they land on",
     groundBody:
-      "80 m² of rubber crumb across the fall zone, on a base that drains — and the footings that hold every frame in it.",
+      "80 m² of rubber crumb across the fall zone, on a base that drains, plus the footings that hold every frame in it.",
     ground: [
       {
         item: "Rubber crumb safety surfacing — 80 m² of fall zone",
@@ -1327,24 +1527,20 @@ const playground = {
     ],
     asItStands: [
       {
-        text: "Two swing frames welded from angle iron, with seats cut and folded out of sheet metal",
+        text: "Two swing frames welded from angle iron, with seats cut and folded by hand",
       },
-      { text: "A slide with nothing left but the frame and the rails" },
-      { text: "A see-saw, and no other equipment of any kind" },
+      { text: "A slide frame, ready for a deck to be fitted to it" },
+      { text: "A see-saw, made on site like the rest of it" },
+      { text: "Bare packed earth underfoot, waiting for a soft surface" },
       {
-        text: "All of it standing on bare packed earth — no surfacing anywhere in the yard",
-      },
-      {
-        text: "Nothing here was bought; it was made on site, and it has been out in the weather for years",
+        text: "All of it made at the church rather than bought, and out in the weather for years",
       },
     ],
     photo: "/photos/church/playground.jpg",
     photoAlt:
       "Two home-made steel swing frames with painted sheet-metal seats, a see-saw behind them and a rusted slide frame, all standing on bare earth beside the sanctuary",
     photoCaption:
-      "The playground as it stands — welded on site, painted by hand, and set in bare earth.",
-    estimateNote:
-      "These are estimates, not a quote. They are built from ordinary Nairobi supplier rates for standard equipment, sized to the yard in the photograph above. Nothing here has been priced by a supplier yet, and the figures will be replaced by real ones the moment they have been.",
+      "The playground today — welded on site and painted by hand at the church.",
   },
 } satisfies CmsDocument;
 
@@ -1384,17 +1580,21 @@ export const documents = {
   home,
   about,
   church,
+  education,
   academy,
   college,
+  programs,
   foodAtSchool,
   digital,
   transport,
   gallery,
   giving,
+  projects,
   kitchen,
   needs,
   playground,
   projectAccounts,
+  thanks,
   contact,
   site,
 };

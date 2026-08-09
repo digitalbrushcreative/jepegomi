@@ -361,21 +361,21 @@ const neverReached: LetterLine[] = [
     summary: "A water tank to harvest rainwater, and the pipes to run it",
     icon: "water",
     estimatedUsd: 850,
-    note: "Not bought — funds ran out",
+    note: "Still to be bought",
   },
   {
     item: "Cabro stones — the children's eating area floor",
     summary: "Cabro stones to floor the area where the children eat",
     icon: "paving",
     estimatedUsd: 1000,
-    note: "Not done — funds ran out",
+    note: "Still to be done",
   },
   {
     item: "Dining hall — plastering and electricity",
     summary: "Plaster and power in the dining hall",
     icon: "light",
     estimatedUsd: 1138,
-    note: "Not done — funds ran out",
+    note: "Still to be done",
   },
 ];
 
@@ -396,7 +396,7 @@ export async function seedKitchenNeedsAction() {
       title: line.item,
       summary: line.summary,
       detail: [
-        "This is one of the three items the $8,000 kitchen gift could not reach — the money was fully spent before it got this far.",
+        "One of the three items that would finish the kitchen project. The $8,000 gift built the kitchen itself and did everything it was given for; this is the next step.",
         line.note,
       ].join("\n\n"),
       area: "kitchen",

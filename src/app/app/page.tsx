@@ -23,7 +23,6 @@ function Shell({
 }) {
   return (
     <div className="w-full max-w-md">
-      <p className="eyebrow text-plum">Family only</p>
       <h1 className="font-display mt-3 text-3xl font-bold">{title}</h1>
       <p className="mt-3 leading-relaxed text-smoke">{intro}</p>
       {children}

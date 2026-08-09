@@ -28,7 +28,14 @@ export function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="eyebrow text-smoke">{label}</span>
+      {/*
+        Not `eyebrow`. These labels are whole questions — "How much would you
+        like to give?" — and at 11px uppercase with 0.14em tracking a question
+        stops being a label and becomes a sentence shouted in caps, which is
+        the hardest thing on the page to read at the one point where the reader
+        is being asked to do something. Sentence case, same weight.
+      */}
+      <span className="block text-sm font-bold text-smoke">{label}</span>
       {children}
       {hint && (
         <span className="mt-2 block text-xs leading-relaxed text-smoke">{hint}</span>
@@ -148,7 +155,7 @@ export function Done({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border-l-4 border-green bg-green/8 px-6 py-6">
+    <div className="rounded-xl border border-green/30 bg-green/8 px-6 py-6">
       <p className="font-display text-xl font-semibold">{heading}</p>
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-smoke">
         {children}

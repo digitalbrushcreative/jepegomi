@@ -37,6 +37,46 @@ export function SectionTitle({
   );
 }
 
+/**
+ * A verse, set between two sections.
+ *
+ * Deliberately not a card. The site already has a green aside for a quoted line
+ * — the academy motto on the kitchen page — and borrowing it here would make
+ * scripture shout on four pages at once. This is a breath in the page instead:
+ * the same hand-drawn rule that underlines every heading, the verse centred in
+ * the display face, and the reference in the eyebrow that labels everything
+ * else. Nothing new was invented to draw it.
+ *
+ * Renders nothing at all when the verse is blank, so a page carries scripture
+ * for exactly as long as somebody wants it to and no page has to be edited to
+ * take one away.
+ */
+export function Verse({ text, reference }: { text: string; reference: string }) {
+  if (!text.trim()) return null;
+
+  return (
+    <section className="px-6 py-16 sm:py-20">
+      <figure className="shell flex flex-col items-center text-center">
+        <WavyRule className="text-marigold" />
+
+        <blockquote className="font-display mt-6 max-w-2xl text-xl leading-snug font-medium text-balance sm:text-2xl">
+          {text}
+        </blockquote>
+
+        {/*
+          marigold-ink, not marigold: the brand yellow is not readable as text on
+          cream, which is the whole reason the ink variant exists.
+        */}
+        {reference.trim() && (
+          <figcaption className="eyebrow mt-5 text-marigold-ink">
+            {reference}
+          </figcaption>
+        )}
+      </figure>
+    </section>
+  );
+}
+
 type ButtonVariant = "primary" | "secondary" | "ghost";
 
 /*
@@ -117,7 +157,12 @@ export function HubCard({
           />
         )}
         <Eyebrow>{eyebrow}</Eyebrow>
-        <h3 className="font-display mt-3 text-2xl font-semibold">{title}</h3>
+        {/*
+          h2, not h3. On all three hub pages these cards are the first level
+          below the PageHero's h1 and nothing sits between, so an h3 left a hole
+          in the outline that screen-reader navigation reads as a missing level.
+        */}
+        <h2 className="font-display mt-3 text-2xl font-semibold">{title}</h2>
         <p className="mt-3 flex-1 leading-relaxed text-smoke">{blurb}</p>
         <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-plum">
           {cta}
@@ -145,7 +190,14 @@ export function PageHero({
   intro,
   children,
 }: {
-  eyebrow: string;
+  /**
+   * Optional, and worth staying that way. Most pages had one purely because the
+   * component demanded one, which is how /programs came to announce "PROGRAMS"
+   * directly above "The ways Jepegomi serves its community day to day" — the
+   * heading was already carrying it. Pass one only where it says something the
+   * heading does not, such as which arm of the ministry a page belongs to.
+   */
+  eyebrow?: string;
   title: string;
   intro?: string;
   children?: ReactNode;
@@ -156,8 +208,12 @@ export function PageHero({
 
       <div className="shell relative px-6 pt-28 pb-24 sm:pt-32 sm:pb-28">
         <div className="max-w-3xl">
-          <p className="eyebrow text-marigold">{eyebrow}</p>
-          <h1 className="font-display mt-4 text-4xl leading-[1.1] font-semibold text-balance text-white sm:text-[3.25rem]">
+          {eyebrow && <p className="eyebrow text-marigold">{eyebrow}</p>}
+          <h1
+            className={`font-display text-4xl leading-[1.1] font-semibold text-balance text-white sm:text-[3.25rem] ${
+              eyebrow ? "mt-4" : ""
+            }`}
+          >
             {title}
           </h1>
           {intro && (
@@ -189,7 +245,7 @@ export function PageHero({
  */
 export function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <span className="eyebrow inline-block rounded-full border border-dashed border-clay/50 bg-clay/10 px-3 py-1 text-clay">
+    <span className="eyebrow inline-block rounded-full border border-dashed border-clay/50 bg-clay/10 px-3 py-1 text-clay-ink">
       {children}
     </span>
   );

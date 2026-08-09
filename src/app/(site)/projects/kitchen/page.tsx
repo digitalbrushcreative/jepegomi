@@ -24,14 +24,17 @@ import {
   getGalleryPhotos,
 } from "@/lib/photos";
 import { site } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
 const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Kitchen Build",
   description:
     "From open fires to a proper kitchen — the Jepegomi Academy kitchen a partner church built, cooking daily, with the dining area still to finish.",
-};
+  path: "/projects/kitchen",
+});
 
 function BeforeAfterCard({
   card,
@@ -117,25 +120,25 @@ export default async function KitchenPage() {
   */
   const storyPoints = [
     <>
-      Children were eating meals cooked{" "}
+      Meals were cooked{" "}
       <strong className="font-bold text-charcoal">
         outdoors over open fires
       </strong>
+      , without a kitchen or a store room
     </>,
-    <>No proper kitchen, store room, or dining space</>,
     <>
       {report.donorTitled} in {report.donorLocation}{" "}
       <strong className="font-bold text-charcoal">partnered with us</strong> to
-      fix that
+      change that
     </>,
     <>
       The kitchen is{" "}
-      <strong className="font-bold text-charcoal">built and cooking</strong> —
-      every meal comes out of it now
+      <strong className="font-bold text-charcoal">built and cooking</strong>. Every
+      meal comes out of it now
     </>,
     <>
-      The dining area beside it is what is left — see &ldquo;Still to
-      complete&rdquo; below
+      Next is the room the children eat in. See &ldquo;Still to complete&rdquo;
+      below
     </>,
   ];
 
@@ -179,12 +182,12 @@ export default async function KitchenPage() {
   const stats = kitchenStats(report, childrenFed);
 
   const academyFacts: { icon: IconName; text: string }[] = [
-    { icon: "church", text: `${site.leaders} — ${site.longName}` },
+    { icon: "church", text: `${site.leaders}, ${site.longName}` },
     { icon: "pin", text: site.location },
     { icon: "pot", text: "Daily meals: porridge (morning) + cooked lunch" },
     {
       icon: "child",
-      text: `Fed daily: ${fed} — every child the school teaches`,
+      text: `Fed daily: ${fed}, every child the school teaches`,
     },
     {
       icon: "globe",
@@ -212,7 +215,7 @@ export default async function KitchenPage() {
             />
 
             <h1 className="sr-only">
-              Food at School — Kitchen Build progress, Jepegomi Academy
+              Food at School: Kitchen Build progress at Jepegomi Academy
             </h1>
 
             <ul className="mt-8 max-w-xl">
@@ -237,19 +240,18 @@ export default async function KitchenPage() {
                 </>,
                 <>
                   Status:{" "}
-                  <strong className="font-bold text-white">
-                    Built and cooking
-                  </strong>{" "}
-                  — the dining area is still to finish
+                  <strong className="font-bold text-white">Built and cooking</strong>
+                  . The dining area is still to finish
                 </>,
               ].map((item, index) => (
                 <li
                   key={index}
-                  className="flex items-baseline gap-3 border-b border-white/10 py-2.5 text-sm text-white/70"
+                  className="flex items-start gap-3 border-b border-white/10 py-2.5 text-sm text-white/70"
                 >
-                  <span aria-hidden="true" className="text-marigold">
-                    —
-                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="mt-[0.7em] h-px w-3.5 shrink-0 bg-marigold"
+                  />
                   <span>{item}</span>
                 </li>
               ))}
@@ -297,7 +299,6 @@ export default async function KitchenPage() {
       <section className="bg-cream px-6 py-20 sm:py-24">
         <div className="shell grid gap-14 lg:grid-cols-2 lg:gap-16">
           <div>
-            <p className="eyebrow text-plum">The Story</p>
             <SectionTitle className="mt-3">
               {report.donorTitled} in {report.donorLocation}
               <br />
@@ -307,11 +308,12 @@ export default async function KitchenPage() {
               {storyPoints.map((point, index) => (
                 <li
                   key={index}
-                  className="flex items-baseline gap-3 border-b border-sand-deep py-3 leading-relaxed text-smoke"
+                  className="flex items-start gap-3 border-b border-sand-deep py-3 leading-relaxed text-smoke"
                 >
-                  <span aria-hidden="true" className="text-marigold">
-                    —
-                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="mt-[0.7em] h-px w-3.5 shrink-0 bg-marigold"
+                  />
                   <span>{point}</span>
                 </li>
               ))}
@@ -351,7 +353,6 @@ export default async function KitchenPage() {
 
         <div className="shell">
           <div className="flex flex-col items-center text-center">
-            <p className="eyebrow text-plum">Then &amp; Now</p>
             <SectionTitle className="mt-3 flex flex-col items-center">
               From open fires to a proper kitchen
             </SectionTitle>
@@ -378,7 +379,6 @@ export default async function KitchenPage() {
 
         <div className="shell relative">
           <div className="flex flex-col items-center text-center">
-            <p className="eyebrow text-marigold">Photo Journal</p>
             <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
               Watching it come together
             </h2>
@@ -390,19 +390,18 @@ export default async function KitchenPage() {
         </div>
       </section>
 
-      {/* What the money could not reach. */}
+      {/* What is left to build. */}
       <section className="relative bg-cream px-6 py-20 sm:py-24">
         <ClothEdge className="text-cream" />
 
         <div className="shell">
           <div className="flex flex-col items-center text-center">
-            <p className="eyebrow text-clay">Still to Complete</p>
             <SectionTitle className="mt-3 flex flex-col items-center">
-              What the gift could not reach
+              What would finish it
             </SectionTitle>
             <p className="mx-auto mt-6 max-w-xl leading-relaxed text-smoke">
-              The gift is fully spent and the kitchen is cooking. These three
-              things ran out of money before they were reached.
+              The gift did everything it was given for, and the kitchen is
+              cooking. These three things would complete the room beside it.
             </p>
           </div>
 
@@ -467,12 +466,11 @@ export default async function KitchenPage() {
           {budget ? (
             <>
               <div className="text-center">
-                <p className="eyebrow text-plum">The accounts</p>
                 <SectionTitle className="mt-3">
                   Every shilling of the gift, accounted for
                 </SectionTitle>
                 <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
-                  Pastor Simon reconciled the build line by line — what each
+                  Pastor Simon reconciled the build line by line: what each
                   thing was estimated at, what it actually cost, and where it ran
                   over.
                 </p>
@@ -488,7 +486,7 @@ export default async function KitchenPage() {
                 Every shilling of the gift is accounted for.
               </p>
               <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
-                Pastor Simon reconciled the build line by line — what each thing
+                Pastor Simon reconciled the build line by line: what each thing
                 was estimated at, what it actually cost, and where it ran over.
                 Partners who gave towards this work read it in full when they
                 sign in.
@@ -508,7 +506,6 @@ export default async function KitchenPage() {
 
         <div className="shell relative">
           <div className="mx-auto max-w-md">
-            <p className="eyebrow text-marigold">Partner With Us</p>
             <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
               Help us finish the kitchen
             </h2>
@@ -529,6 +526,29 @@ export default async function KitchenPage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/programs/food-at-school",
+            label: "Food at School",
+            blurb:
+              "The porridge and hot lunch this kitchen cooks, every school day, for every child at the academy.",
+          },
+          {
+            href: "/academy",
+            label: "Jepegomi Academy",
+            blurb:
+              "The school the kitchen feeds — kindergarten to Grade 6 in Kahawa Sukari.",
+          },
+          {
+            href: "/needs",
+            label: "What's needed",
+            blurb:
+              "Every remaining cost on the kitchen, itemised, alongside everything else the ministry is short of.",
+          },
+        ]}
+      />
     </>
   );
 }

@@ -6,17 +6,20 @@ import { BibleCollegeLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
 import { PhotoBand } from "@/components/photos";
 import { ButtonLink, Eyebrow, Placeholder, SectionTitle } from "@/components/ui";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
 const seminar = {
   src: "/photos/college/seminar.jpg",
   alt: "About seventeen students standing together outside the iron-sheet sanctuary at a college seminar",
 };
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Contextual Bible Training College",
   description:
     "The Contextual Bible Training College — Bible training from certificate to doctorate, with the monthly fee and length of every programme.",
-};
+  path: "/college",
+});
 
 /*
   The whole cost of a programme, worked out rather than typed in — a monthly fee
@@ -66,7 +69,6 @@ export default async function CollegePage() {
             title="Contextual Bible Training College"
             className="h-20 w-auto text-white"
           />
-          <p className="eyebrow mt-8 text-white/45">{college.eyebrow}</p>
           <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
             {college.heading}
           </h1>
@@ -89,9 +91,8 @@ export default async function CollegePage() {
 
       <section className="px-6 py-24">
         <div className="shell">
-          <Eyebrow>{college.sectionEyebrow}</Eyebrow>
-          <SectionTitle className="mt-4">{college.sectionTitle}</SectionTitle>
-          <div className="mt-8 max-w-3xl space-y-6 text-lg leading-relaxed text-smoke">
+          <SectionTitle>{college.sectionTitle}</SectionTitle>
+          <div className="mt-8 measure space-y-6 text-lg leading-relaxed text-smoke">
             {paragraphs(college.body).map((text) => (
               <p key={text}>{text}</p>
             ))}
@@ -140,8 +141,7 @@ export default async function CollegePage() {
         <ClothEdge className="text-sand" />
 
         <div className="shell">
-          <Eyebrow>{college.feesEyebrow}</Eyebrow>
-          <SectionTitle className="mt-4">{college.feesTitle}</SectionTitle>
+          <SectionTitle>{college.feesTitle}</SectionTitle>
           <div className="mt-6 max-w-2xl space-y-6 leading-relaxed text-smoke">
             {paragraphs(college.feesBody).map((text) => (
               <p key={text}>{text}</p>
@@ -213,7 +213,7 @@ export default async function CollegePage() {
                 ))}
             </dl>
 
-            <div className="mt-8 space-y-4 leading-relaxed text-smoke">
+            <div className="measure mt-8 space-y-4 leading-relaxed text-smoke">
               {paragraphs(college.paymentsNote).map((text) => (
                 <p key={text}>{text}</p>
               ))}
@@ -230,6 +230,29 @@ export default async function CollegePage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/education",
+            label: "Education",
+            blurb:
+              "How the college and Jepegomi Academy fit together — one teaching arm with two ends.",
+          },
+          {
+            href: "/academy",
+            label: "Jepegomi Academy",
+            blurb:
+              "The ministry's primary school in Kahawa Sukari, kindergarten to Grade 6.",
+          },
+          {
+            href: "/give",
+            label: "How to give",
+            blurb:
+              "Ways to support the training, and what a gift to the ministry holds up.",
+          },
+        ]}
+      />
     </>
   );
 }

@@ -12,6 +12,8 @@ import {
   Placeholder,
   SectionTitle,
 } from "@/components/ui";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
 const graduation = {
   src: "/photos/academy/graduation.jpg",
@@ -39,7 +41,7 @@ const growth = [
     src: "/photos/academy/classroom-block.jpg",
     alt: "A long semi-permanent classroom block, stone to the window sills and iron sheet above, under a pitched roof with yellow fascia boards",
     caption:
-      "Where it is now. Semi-permanent blocks — stone to the sill, iron sheet above, a proper roof over both.",
+      "Where it is now. Semi-permanent blocks: stone to the sill, iron sheet above, a proper roof over both.",
   },
   {
     src: "/photos/academy/classrooms.jpg",
@@ -91,11 +93,12 @@ const inside = [
   },
 ];
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Jepegomi Academy",
   description:
     "Jepegomi Academy teaches children from kindergarten to Grade 6 in Kahawa Sukari — quality education with values, in classrooms the ministry built itself.",
-};
+  path: "/academy",
+});
 
 export default async function AcademyPage() {
   const [academy, siteDetails] = await Promise.all([
@@ -129,7 +132,6 @@ export default async function AcademyPage() {
             title="Jepegomi Academy"
             className="h-20 w-auto text-white"
           />
-          <p className="eyebrow mt-8 text-white/45">{academy.eyebrow}</p>
           <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
             {academy.heading}
           </h1>
@@ -148,9 +150,8 @@ export default async function AcademyPage() {
 
       <section className="px-6 py-24">
         <div className="shell">
-          <Eyebrow>{academy.sectionEyebrow}</Eyebrow>
-          <SectionTitle className="mt-4">{academy.sectionTitle}</SectionTitle>
-          <div className="mt-8 max-w-3xl space-y-6 text-lg leading-relaxed text-smoke">
+          <SectionTitle>{academy.sectionTitle}</SectionTitle>
+          <div className="mt-8 measure space-y-6 text-lg leading-relaxed text-smoke">
             {paragraphs(academy.body).map((text) => (
               <p key={text}>{text}</p>
             ))}
@@ -162,16 +163,14 @@ export default async function AcademyPage() {
             seen the roadside rooms they grew out of.
           */}
           <div className="mt-16">
-            <Eyebrow>How it grew</Eyebrow>
-            <SectionTitle className="mt-4">
+            <SectionTitle>
               From iron sheet on the roadside to a school
             </SectionTitle>
             <PhotoStrip photos={growth} className="mt-10" />
           </div>
 
           <div className="mt-20">
-            <Eyebrow>Where it stands</Eyebrow>
-            <SectionTitle className="mt-4">The compound today</SectionTitle>
+            <SectionTitle>The compound today</SectionTitle>
             <PhotoStrip photos={school} className="mt-10" />
           </div>
 
@@ -207,8 +206,7 @@ export default async function AcademyPage() {
           )}
 
           <div className="mt-20">
-            <Eyebrow>Inside the school</Eyebrow>
-            <SectionTitle className="mt-4">
+            <SectionTitle>
               What a semi-permanent classroom looks like
             </SectionTitle>
             <PhotoStrip photos={inside} className="mt-10" />
@@ -239,8 +237,7 @@ export default async function AcademyPage() {
 
         <div className="shell">
           <div className="mx-auto max-w-2xl">
-            <Eyebrow>Admissions</Eyebrow>
-            <SectionTitle className="mt-4">Ask about a place</SectionTitle>
+            <SectionTitle>Ask about a place</SectionTitle>
             <p className="mt-6 leading-relaxed text-smoke">
               There is no form to download and no fee to ask. Tell us a little
               about your child and we will write back — and the best thing after
@@ -253,6 +250,29 @@ export default async function AcademyPage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/programs/food-at-school",
+            label: "Food at School",
+            blurb:
+              "Morning porridge and a hot lunch, every school day — what the children here eat, and why it is part of the teaching rather than a charity beside it.",
+          },
+          {
+            href: "/programs/transport",
+            label: "School Transport",
+            blurb:
+              "The van that brings children in from too far to walk, and the 26-seater bus the school is raising for.",
+          },
+          {
+            href: "/college",
+            label: "Contextual Bible Training College",
+            blurb:
+              "The ministry's other school: Bible training for adults, from certificate to doctorate.",
+          },
+        ]}
+      />
     </>
   );
 }

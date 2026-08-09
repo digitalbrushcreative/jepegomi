@@ -25,7 +25,7 @@ export function GivingDetailsForm({ email }: { email: string }) {
 
   if (state?.done) {
     return (
-      <div className="mx-auto mt-9 max-w-lg rounded-2xl border-l-4 border-marigold bg-white/10 px-6 py-6 text-left">
+      <div className="mx-auto mt-9 max-w-lg rounded-2xl border border-marigold/30 bg-white/10 px-6 py-6 text-left">
         <p className="font-display text-xl font-semibold text-white">
           On its way to {state.done.email}.
         </p>

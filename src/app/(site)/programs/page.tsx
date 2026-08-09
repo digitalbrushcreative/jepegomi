@@ -1,57 +1,50 @@
 import type { Metadata } from "next";
-import { HubCard, PageHero } from "@/components/ui";
+import { HubCard, PageHero, Verse } from "@/components/ui";
+import { getContent } from "@/cms/content";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Programs",
   description: "The ways Jepegomi serves its community day to day.",
-};
+  path: "/programs",
+});
 
-/** Add a program by adding a card here and a page under /programs. */
-const programs = [
-  {
-    href: "/programs/food-at-school",
-    eyebrow: "Feeding",
-    title: "Food at School",
-    blurb:
-      "Morning porridge and a hot lunch, every school day, for children at Jepegomi Academy — balanced enough to carry them through a full day of lessons.",
-    cta: "See the program",
-    icon: "pot" as const,
-  },
-  {
-    href: "/programs/digital",
-    eyebrow: "Streaming",
-    title: "Jepegomi Digital",
-    blurb:
-      "Sunday services and weekday fellowships, streamed from the sanctuary in Kahawa Sukari to whoever will watch — filmed, for now, on phones.",
-    cta: "See the channel",
-    icon: "globe" as const,
-  },
-  {
-    href: "/programs/transport",
-    eyebrow: "Getting to school",
-    title: "School Transport",
-    blurb:
-      "The academy's van is off the road and being repaired. Beyond it, the school is raising for a 26-seater bus of its own.",
-    cta: "See the appeal",
-    icon: "bus" as const,
-  },
+/*
+  Where the cards go. Only where — the words on them are edited in the CMS and
+  are paired with this list in order, so a card is a route here and a paragraph
+  there. Add a program by adding a link here, a card in the editor, and a page
+  under /programs.
+*/
+const links = [
+  { href: "/programs/food-at-school", icon: "pot" as const },
+  { href: "/programs/digital", icon: "globe" as const },
+  { href: "/programs/transport", icon: "bus" as const },
 ];
 
-export default function ProgramsPage() {
+export default async function ProgramsPage() {
+  const content = await getContent("programs");
+
   return (
     <>
-      <PageHero
-        eyebrow="Programs"
-        title="The ways Jepegomi serves its community day to day"
-      />
+      <PageHero title={content.heading} intro={content.intro || undefined} />
 
       <section className="px-6 py-24">
         <div className="shell grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {programs.map((program) => (
-            <HubCard key={program.href} {...program} />
-          ))}
+          {links.map((link, index) => {
+            /*
+              The links decide how many cards there are, not the saved content.
+              A card added in the editor with no page to point at is dropped
+              rather than rendered as a link to nowhere.
+            */
+            const card = content.cards[index];
+            if (!card) return null;
+
+            return <HubCard key={link.href} {...link} {...card} />;
+          })}
         </div>
       </section>
+
+      <Verse text={content.verse} reference={content.verseRef} />
     </>
   );
 }

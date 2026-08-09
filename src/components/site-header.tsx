@@ -101,6 +101,17 @@ export function SiteHeader({ pathname }: { pathname: string }) {
                     <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.3" fill="none" />
                   </svg>
                 </Link>
+                {/*
+                  `impeccable detect` on a URL reports this as
+                  content-hidden-at-rest — "37% of page text stays at opacity 0
+                  after reveal handlers ran". It is a false positive and should
+                  stay one: this is a hover menu, and the headless pass never
+                  hovers, so the submenu copy is counted as text that shipped
+                  and never appeared. It opens on focus-within as well as
+                  hover, so it is reachable by keyboard, which is the thing that
+                  rule actually exists to protect. Do not "fix" it by making the
+                  panel visible at rest.
+                */}
                 <div className="invisible absolute left-0 top-full w-72 pt-2 opacity-0 transition-[opacity,visibility] group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                   <div className="overflow-hidden rounded-xl bg-white shadow-warm-lg">
                     {link.children.map((child) => (

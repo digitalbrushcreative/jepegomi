@@ -81,26 +81,26 @@ const brands: Record<
     Mark: JepegomiLogo,
     label: "Jesus People Gospel Ministries",
     background: "bg-plum-deep",
-    scrim: "from-plum-deep via-plum-deep/92 to-plum-deep/40",
+    scrim: "from-plum-deep via-plum-deep/92 to-plum-deep/80",
   },
   "/academy": {
     Mark: AcademyLogo,
     label: "Jepegomi Academy",
     background: "bg-green-deep",
-    scrim: "from-green-deep via-green-deep/92 to-green-deep/40",
+    scrim: "from-green-deep via-green-deep/92 to-green-deep/80",
     give: "!bg-white !text-green hover:!bg-cream",
   },
   "/college": {
     Mark: BibleCollegeLogo,
     label: "Contextual Bible Training College",
     background: "bg-charcoal",
-    scrim: "from-charcoal via-charcoal/92 to-charcoal/40",
+    scrim: "from-charcoal via-charcoal/92 to-charcoal/80",
   },
   "/programs/food-at-school": {
     Mark: FoodAtSchoolLogo,
     label: "Food at School",
     background: "bg-brown",
-    scrim: "from-brown via-brown/92 to-brown/40",
+    scrim: "from-brown via-brown/92 to-brown/80",
   },
 };
 
@@ -228,7 +228,7 @@ export function HeroSlider({
                     slide reads as it did before — type on a tinted image.
                   */}
                   <div
-                    className={`absolute inset-0 bg-gradient-to-r ${brand?.scrim ?? "from-plum-deep via-plum-deep/92 to-plum-deep/40"} lg:hidden`}
+                    className={`absolute inset-0 bg-gradient-to-r ${brand?.scrim ?? "from-plum-deep via-plum-deep/92 to-plum-deep/80"} lg:hidden`}
                   />
 
                   {/*
@@ -294,13 +294,22 @@ export function HeroSlider({
                     />
                   )}
 
-                  <p className="eyebrow mt-8 text-marigold">{slide.eyebrow}</p>
+                  {/*
+                    marigold is only 4.3:1 against the academy slide's green
+                    scrim; the lighter tint clears AA on all four backgrounds.
+                  */}
 
                   <h2 className="font-display mt-3 text-[2.4rem] leading-[1.05] font-semibold text-balance text-white sm:text-[3.25rem]">
                     {slide.title}
                   </h2>
 
-                  <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/70">
+                  {/*
+                    /85 rather than /70. On narrow screens this paragraph sits
+                    directly on the photograph, and at 70% over the lighter end
+                    of the tint it measured 3.6:1 — under AA for the one line
+                    that explains what the slide is.
+                  */}
+                  <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/85">
                     {slide.body}
                   </p>
 

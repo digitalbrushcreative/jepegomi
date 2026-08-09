@@ -10,10 +10,16 @@ import { kesPerUsd, usdFromKes } from "@/lib/money";
  * now, and this is where the numbers are read out of it and added up.
  *
  * The arithmetic stayed in code, which is the whole distinction: Simon types the
- * things that are facts about the world — what a swing set costs in shillings,
- * whether anybody has actually quoted for it — and the site works out what that
- * comes to in dollars. A total typed into a box is a total free to stop equalling
- * the lines above it the moment one of them is edited.
+ * things that are facts about the world — what a swing set costs in shillings —
+ * and the site works out what that comes to in dollars. A total typed into a box
+ * is a total free to stop equalling the lines above it the moment one of them is
+ * edited.
+ *
+ * There was a switch here saying whether a supplier had priced the job yet, and
+ * every figure the page printed wore an "estimated" label off the back of it.
+ * The site now says once, on /needs, that its figures come from quotes and
+ * estimates, and says it where somebody is deciding what to give — which is
+ * both more honest and less noisy than hedging each number in turn.
  */
 
 export type QuoteLine = {
@@ -25,13 +31,6 @@ export type QuoteLine = {
 };
 
 export type Playground = {
-  /**
-   * Whether a supplier has actually priced the job. While this is false the page
-   * marks every figure as an estimate and asks for a quote rather than for the
-   * money; when it is true the same figures read as a price, because by then
-   * they are one.
-   */
-  isQuoted: boolean;
   equipmentHeading: string;
   equipmentBody: string;
   equipment: QuoteLine[];
@@ -43,7 +42,6 @@ export type Playground = {
   totalUsd: number;
   asItStands: string[];
   photo: { src: string; alt: string; caption: string };
-  estimateNote: string;
 };
 
 /**
@@ -100,7 +98,6 @@ export async function getPlayground(): Promise<Playground> {
   const groundUsd = total(ground);
 
   return {
-    isQuoted: content.quoted === "quoted",
     equipmentHeading: content.equipmentHeading,
     equipmentBody: content.equipmentBody,
     equipment,
@@ -116,6 +113,5 @@ export async function getPlayground(): Promise<Playground> {
       alt: content.photoAlt,
       caption: content.photoCaption,
     },
-    estimateNote: content.estimateNote,
   };
 }

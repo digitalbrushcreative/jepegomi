@@ -3,13 +3,15 @@ import { getContent } from "@/cms/content";
 import { ContactForm } from "@/app/(site)/contact/contact-form";
 import { ButtonLink, PageHero, SectionTitle } from "@/components/ui";
 import { site } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const details = await getContent("site");
-  return {
+  return pageMeta({
     title: "Contact",
     description: `Get in touch with ${details.longName} in ${details.location}.`,
-  };
+    path: "/contact",
+  });
 }
 
 export default async function ContactPage() {
@@ -21,7 +23,6 @@ export default async function ContactPage() {
   return (
     <>
       <PageHero
-        eyebrow={contact.eyebrow}
         title={contact.heading}
         intro={contact.intro}
       />

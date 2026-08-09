@@ -13,13 +13,18 @@ import {
   SectionTitle,
 } from "@/components/ui";
 import { LatestVideos } from "@/components/videos";
+import { getAppeal } from "@/lib/appeals";
+import { usd } from "@/lib/money";
 import { latestVideos } from "@/lib/youtube";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Jepegomi Digital",
   description:
     "Sunday services and weekday fellowships from Kahawa Sukari, streamed on YouTube and Facebook — and what it takes to keep them going out.",
-};
+  path: "/programs/digital",
+});
 
 /*
   The one photograph of the work itself rather than of what the work films. It
@@ -46,6 +51,18 @@ const streams = [
 
 export default async function DigitalPage() {
   const digital = await getContent("digital");
+
+  /*
+    What the kit comes to, and deliberately not what it is made of.
+
+    The lines are in the CMS and they are added up there (see lib/appeals.ts);
+    what this page prints is the total. A public list of a camera, a laptop and
+    a pair of radio microphones, with a price against each, is a shopping list
+    for somebody else — the same reason the playground's quote sits behind the
+    partner door. What a giver needs is the figure and a sentence saying what it
+    buys, and both are here.
+  */
+  const kit = await getAppeal("digital");
 
   /*
     The channel's own recent uploads, read from YouTube's public feed. Empty
@@ -77,7 +94,6 @@ export default async function DigitalPage() {
               title="Jepegomi Digital"
               className="h-20 w-auto text-white"
             />
-            <p className="eyebrow mt-8 text-white/45">{digital.eyebrow}</p>
             <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
               {digital.heading}
             </h1>
@@ -143,8 +159,7 @@ export default async function DigitalPage() {
       {/* Where to watch. */}
       <section className="bg-sand px-6 py-20">
         <div className="shell">
-          <Eyebrow>Where to watch</Eyebrow>
-          <SectionTitle className="mt-4">
+          <SectionTitle>
             The channel is called {digital.youtubeName}
           </SectionTitle>
 
@@ -217,8 +232,7 @@ export default async function DigitalPage() {
       {/* How to support. */}
       <section className="px-6 py-24">
         <div className="shell">
-          <Eyebrow>{digital.supportEyebrow}</Eyebrow>
-          <SectionTitle className="mt-4">{digital.supportHeading}</SectionTitle>
+          <SectionTitle>{digital.supportHeading}</SectionTitle>
           {paragraphs(digital.supportIntro).map((text) => (
             <p
               key={text}
@@ -247,9 +261,26 @@ export default async function DigitalPage() {
             ))}
           </ul>
 
+          {/* What the whole of it costs, as one figure and one ask. */}
+          {kit && (
+            <div className="mt-12 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-plum px-8 py-7 shadow-warm">
+              <div>
+                <p className="eyebrow text-white/70">{digital.kitHeading}</p>
+                {paragraphs(digital.kitBody).map((text) => (
+                  <p key={text} className="mt-3 max-w-xl leading-relaxed text-white/75">
+                    {text}
+                  </p>
+                ))}
+              </div>
+              <p className="font-display tabular text-4xl font-semibold text-marigold">
+                {usd(kit.costCents)}
+              </p>
+            </div>
+          )}
+
           <div className="mt-12 flex flex-wrap gap-4">
-            <ButtonLink href="/give" icon="give">
-              Give
+            <ButtonLink href="/give?for=digital#pledge" icon="give">
+              Give toward the kit
             </ButtonLink>
             <ButtonLink href="/church" variant="ghost" className="text-plum">
               The church behind it
@@ -257,6 +288,29 @@ export default async function DigitalPage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/about",
+            label: "About the ministry",
+            blurb:
+              "Pastor Simon & Joyce Nderitu, who give the teaching that goes out on the channels.",
+          },
+          {
+            href: "/church",
+            label: "The church",
+            blurb:
+              "The congregation in Kahawa Sukari the services are streamed from.",
+          },
+          {
+            href: "/needs",
+            label: "What's needed",
+            blurb:
+              "The costed asks across the whole ministry, including the kit the streaming still lacks.",
+          },
+        ]}
+      />
     </>
   );
 }

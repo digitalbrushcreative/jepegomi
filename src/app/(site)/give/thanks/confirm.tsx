@@ -26,7 +26,7 @@ const ATTEMPTS = 8;
 
 function Waiting() {
   return (
-    <div className="rounded-xl border-l-4 border-marigold bg-marigold/8 px-6 py-6">
+    <div className="rounded-xl border border-marigold/30 bg-marigold/8 px-6 py-6">
       <p className="font-display text-xl font-semibold">
         Checking with Pesapal…
       </p>
@@ -116,7 +116,7 @@ export function Confirm({ trackingId }: { trackingId: string }) {
 
   if (outcome.state === "failed") {
     return (
-      <div className="rounded-xl border-l-4 border-plum bg-plum/8 px-6 py-6">
+      <div className="rounded-xl border border-plum/30 bg-plum/8 px-6 py-6">
         <p className="font-display text-xl font-semibold">
           That payment didn&apos;t go through.
         </p>
@@ -154,7 +154,7 @@ export function Confirm({ trackingId }: { trackingId: string }) {
     you from here", and neither is a reason to alarm somebody about money.
   */
   return (
-    <div className="rounded-xl border-l-4 border-marigold bg-marigold/8 px-6 py-6">
+    <div className="rounded-xl border border-marigold/30 bg-marigold/8 px-6 py-6">
       <p className="font-display text-xl font-semibold">
         {givenUp ? "Still waiting to hear back." : "We can't find that payment."}
       </p>

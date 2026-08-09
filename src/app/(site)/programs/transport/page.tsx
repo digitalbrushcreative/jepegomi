@@ -7,12 +7,15 @@ import { SchoolBus } from "@/components/school-bus";
 import { ButtonLink, Eyebrow, SectionTitle } from "@/components/ui";
 import { getKitchenReport } from "@/lib/kitchen";
 import { busPrice, usd } from "@/lib/money";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "School Transport",
   description:
     "The Jepegomi Academy school van, the repair that is bringing it back, and the 26-seater bus the school is raising for.",
-};
+  path: "/programs/transport",
+});
 
 const vehicle = [
   {
@@ -23,8 +26,7 @@ const vehicle = [
   {
     src: "/photos/transport/van-off-road.jpg",
     alt: "The same yellow school van standing on grass at the edge of the school field, out of service",
-    caption:
-      "Standing since it broke down — the repair is what brings it back.",
+    caption: "Waiting on the repair that brings it back into service.",
   },
 ];
 
@@ -61,7 +63,6 @@ export default async function TransportPage() {
       <section className="bg-charcoal px-6 pt-28 pb-20">
         <div className="shell">
           <Icon name="bus" className="h-16 w-16 text-marigold" />
-          <p className="eyebrow mt-8 text-white/45">{transport.eyebrow}</p>
           <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
             {transport.heading}
           </h1>
@@ -161,8 +162,7 @@ export default async function TransportPage() {
       {/* How to support. */}
       <section className="px-6 py-24">
         <div className="shell">
-          <Eyebrow>{transport.supportEyebrow}</Eyebrow>
-          <SectionTitle className="mt-4">
+          <SectionTitle>
             {transport.supportHeading}
           </SectionTitle>
           {paragraphs(transport.supportIntro).map((text) => (
@@ -193,9 +193,14 @@ export default async function TransportPage() {
             ))}
           </ul>
 
+          {/*
+            `?for=` opens the giving form with the bus already chosen — this
+            page has spent two thousand words saying which vehicle, and the form
+            should not ask again. See `initialTowards` in give-form.tsx.
+          */}
           <div className="mt-12 flex flex-wrap gap-4">
-            <ButtonLink href="/give" icon="give">
-              Give
+            <ButtonLink href="/give?for=transport#pledge" icon="give">
+              Give toward the bus
             </ButtonLink>
             <ButtonLink href="/academy" variant="ghost" className="text-plum">
               The school it serves
@@ -203,6 +208,29 @@ export default async function TransportPage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/programs/food-at-school",
+            label: "Food at School",
+            blurb:
+              "The other thing that gets a child through a school day — porridge in the morning, a hot lunch at noon.",
+          },
+          {
+            href: "/needs",
+            label: "What's needed",
+            blurb:
+              "Everything the ministry is short of, costed, including what is open on the bus.",
+          },
+          {
+            href: "/give",
+            label: "How to give",
+            blurb:
+              "Ways to send a gift from Kenya or abroad, and what happens after you do.",
+          },
+        ]}
+      />
     </>
   );
 }

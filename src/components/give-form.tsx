@@ -31,6 +31,14 @@ import { parseUsd, usd } from "@/lib/money";
  * over only the parts that are ready to be worked on. What comes later is on
  * /needs, in order, rather than in a form asking for it today.
  *
+ * Above that list sit the projects themselves, each with what the whole job
+ * comes to — the playground, the bus, the streaming kit. Only the kitchen has
+ * ever been broken into lines, and a form that offers cement and nothing else
+ * turns away everybody who came to give towards a bus. The two kinds of choice
+ * behave differently in one respect and it runs all the way through this file:
+ * an item has a balance that a gift eats into, a project has a target that it
+ * does not. See `openCents` on GiveChoice.
+ *
  * The other thing it has to get right is that a giver does not have to take a
  * whole item. A need with $450 open and a single "Give $450" button quietly
  * turns away every church that could have given $100 — so the amount is a plain
@@ -51,7 +59,12 @@ import { parseUsd, usd } from "@/lib/money";
  */
 
 export type GiveChoice = {
-  slug: string;
+  /**
+   * What the radio submits: a need's slug, or `project:<area>` for a whole
+   * project. Built by the page — see `projectValue` in lib/giving.ts — and read
+   * back by the action, which is the only place either form is interpreted.
+   */
+  value: string;
   title: string;
   /** The project it belongs to — "The kitchen build". */
   areaLabel: string;
@@ -64,7 +77,18 @@ export type GiveChoice = {
   partTitle?: string;
   /** One line about the part, shown once under its heading. */
   partSummary?: string;
-  openCents: number;
+  /**
+   * What is left of a costed item, and the ceiling on a gift towards it.
+   *
+   * Absent on a whole project, and that absence is the difference between the
+   * two kinds of choice. An item has a balance — take it and it is gone — so
+   * the amount is checked against it here and again in the action. A project has
+   * a target: nothing is being held, nothing runs out, and no amount is too
+   * large.
+   */
+  openCents?: number;
+  /** What the whole job comes to. Set on a project choice, absent on an item. */
+  costCents?: number;
 };
 
 /** The form's word for "not one of the listed items". Matched in giveAction. */
@@ -176,8 +200,14 @@ function GroupHeading({
   part?: string;
   summary?: string;
 }) {
+  /*
+    Opaque, not bg-sand/95. The 5% let the rows scrolling underneath show
+    through the heading, which put the project name — the one word telling a
+    giver what they are about to fund — as low as 1.2:1 against whatever
+    happened to be passing behind it.
+  */
   return (
-    <div className="sticky top-0 z-10 border-b border-sand-deep bg-sand/95 px-4 py-2.5 backdrop-blur-sm">
+    <div className="sticky top-0 z-10 border-b border-sand-deep bg-sand px-4 py-2.5">
       <p className="eyebrow text-plum">{project}</p>
       {part && (
         <p className="mt-1 text-sm font-semibold text-charcoal">{part}</p>
@@ -193,6 +223,7 @@ function GroupHeading({
 export function GiveForm({
   choices,
   fixed = false,
+  initialTowards,
   contactEmail,
   canPay = false,
 }: {
@@ -200,6 +231,13 @@ export function GiveForm({
   choices: GiveChoice[];
   /** True when the item is already decided, so the picker is not shown at all. */
   fixed?: boolean;
+  /**
+   * What the picker starts on, for a giver who arrived from a project page
+   * having already chosen — "Give to the playground" should not open a form
+   * that asks which playground. Ignored if it names nothing in the list, so a
+   * stale or hand-typed link falls back to asking rather than to an error.
+   */
+  initialTowards?: string;
   contactEmail: string;
   /**
    * Whether Pesapal is set up, and so whether paying on the site is offered at
@@ -219,12 +257,21 @@ export function GiveForm({
   );
 
   /*
-    Nothing is pre-selected on /give. A radio already sitting on the first item
-    is a form that answers its own question, and the first item is not more
-    deserving than the ninth — it is just the one Simon happened to add first.
+    Nothing is pre-selected on /give unless the giver arrived having already
+    chosen. A radio sitting on the first item of its own accord is a form that
+    answers its own question, and the first item is not more deserving than the
+    ninth — it is just the one Simon happened to add first. A link that names
+    one is different: somebody pressed "Give to the playground", and asking them
+    again is asking them to repeat themselves.
   */
   const [towards, setTowards] = useState(
-    fixed && choices[0] ? choices[0].slug : choices.length === 0 ? OTHER : "",
+    fixed && choices[0]
+      ? choices[0].value
+      : initialTowards && choices.some((choice) => choice.value === initialTowards)
+        ? initialTowards
+        : choices.length === 0
+          ? OTHER
+          : "",
   );
 /*
   Two of the boxes below keep their text in the DOM and a copy in React, rather
@@ -264,8 +311,9 @@ export function GiveForm({
 
   if (state?.done) return <Thanks state={state.done} email={contactEmail} />;
 
-  const chosen = choices.find((choice) => choice.slug === towards);
-  const openCents = chosen?.openCents ?? 0;
+  const chosen = choices.find((choice) => choice.value === towards);
+  /** The balance on a costed item. Undefined on a whole project, which has none. */
+  const openCents = chosen?.openCents;
 
   /*
     The amount on the paying button, so it reads "Give $250 now" rather than
@@ -281,19 +329,23 @@ export function GiveForm({
     Against an item: a quarter, a half, all of it. Rounded to whole dollars
     because a suggestion of "$112.50" reads as a bill rather than an offer — and
     because the exact remainder is always available as the last chip anyway.
-    Against nothing in particular there is no balance to divide, so these are
-    just the amounts people give.
+
+    Against a whole project, or against nothing in particular, these are just
+    the amounts people give. A project is not divided the same way on purpose: a
+    quarter of a $15,500 bus is $3,875, and a row of chips starting there tells
+    somebody with $50 that this appeal is not for them.
   */
-  const suggestions = chosen
-    ? [
-        Math.round(openCents / 4 / 100) * 100,
-        Math.round(openCents / 2 / 100) * 100,
-        openCents,
-      ].filter(
-        (cents, index, all) =>
-          cents > 0 && cents <= openCents && all.indexOf(cents) === index,
-      )
-    : [5_000, 10_000, 25_000, 50_000];
+  const suggestions =
+    openCents !== undefined
+      ? [
+          Math.round(openCents / 4 / 100) * 100,
+          Math.round(openCents / 2 / 100) * 100,
+          openCents,
+        ].filter(
+          (cents, index, all) =>
+            cents > 0 && cents <= openCents && all.indexOf(cents) === index,
+        )
+      : [5_000, 10_000, 25_000, 50_000];
 
   return (
     <form action={formAction} className="relative space-y-7">
@@ -306,18 +358,18 @@ export function GiveForm({
         list. A picker offering one option is not a choice, so it is not drawn.
       */}
       {fixed && choices[0] ? (
-        <input type="hidden" name="towards" value={choices[0].slug} />
+        <input type="hidden" name="towards" value={choices[0].value} />
       ) : choices.length === 0 ? (
         <input type="hidden" name="towards" value={OTHER} />
       ) : (
         <fieldset>
-          <legend className="eyebrow text-smoke">
+          <legend className="block text-sm font-bold text-smoke">
             What would you like your gift to go to?
           </legend>
           <p className="mt-2 text-sm leading-relaxed text-smoke">
-            Every line is one real cost, in the order the work has to happen.
-            Take one of them, take part of one, or say what you would like to
-            support in your own words.
+            Take a whole project, take one of the costs inside a project, or take
+            part of either — and if none of it is what you had in mind, say so in
+            your own words.
           </p>
 
           {/*
@@ -325,8 +377,15 @@ export function GiveForm({
             the amount box — the thing the picker exists to lead to — off the
             bottom of the screen.
           */}
+          {/*
+            No `bg-white` of its own: on /give this list sits inside a white
+            card already, and a second white surface with its own border and
+            radius inside the first reads as a card stacked on a card. The
+            border is doing the only job needed here — marking where the
+            scrolling region starts and stops.
+          */}
           <div
-            className={`mt-3 overflow-hidden rounded-xl border border-black/12 bg-white ${
+            className={`mt-3 overflow-hidden rounded-xl border border-black/12 ${
               choices.length > 6 ? "max-h-[26rem] overflow-y-auto" : ""
             }`}
           >
@@ -351,7 +410,7 @@ export function GiveForm({
                 stack of nested divs for the sake of two headings.
               */
               return (
-                <Fragment key={choice.slug}>
+                <Fragment key={choice.value}>
                   {newPart && (
                     <GroupHeading
                       project={choice.areaLabel}
@@ -360,15 +419,25 @@ export function GiveForm({
                     />
                   )}
                   <Choice
-                    value={choice.slug}
-                    checked={towards === choice.slug}
+                    value={choice.value}
+                    checked={towards === choice.value}
                     onChoose={() => {
-                      setTowards(choice.slug);
+                      setTowards(choice.value);
                       setAmount("");
                     }}
                     title={choice.title}
-                    note="still open"
-                    figure={usd(choice.openCents)}
+                    /*
+                      "Still open" is a balance and only an item has one. A
+                      project's figure is what the job costs, and calling that
+                      open would say something about money in hand that this
+                      site deliberately does not say.
+                    */
+                    note={
+                      choice.openCents !== undefined
+                        ? "still open"
+                        : "the whole job — any part of it helps"
+                    }
+                    figure={usd(choice.openCents ?? choice.costCents ?? 0)}
                   />
                 </Fragment>
               );
@@ -434,11 +503,13 @@ export function GiveForm({
       <Field
         label="How much would you like to give?"
         hint={
-          chosen
+          openCents !== undefined
             ? `${usd(openCents)} of this is still open. Any part of it helps — the rest stays there for somebody else.`
-            : canPay
-              ? "Whatever you can. You choose below whether to pay it now or send it another way."
-              : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
+            : chosen
+              ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}, and nothing has to arrive at once. Give any part of it.`
+              : canPay
+                ? "Whatever you can. You choose below whether to pay it now or send it another way."
+                : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
         }
       >
         <div className="mt-2 flex items-center gap-2 rounded-md border border-black/15 bg-white px-4 py-3 focus-within:border-plum focus-within:ring-2 focus-within:ring-plum/20">
@@ -464,7 +535,7 @@ export function GiveForm({
               onClick={() => setAmount(String(cents / 100))}
               className="cursor-pointer rounded-full border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-green hover:text-green"
             >
-              {chosen && cents === openCents ? `All of it — ${usd(cents)}` : usd(cents)}
+              {cents === openCents ? `All of it — ${usd(cents)}` : usd(cents)}
             </button>
           ))}
         </span>
@@ -549,7 +620,7 @@ export function GiveForm({
             {amountLabel ? `Give ${amountLabel} now` : "Give now"}
           </Submit>
 
-          <p className="text-center text-xs leading-relaxed text-smoke">
+          <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
             By M-Pesa or card, through Pesapal. Your card details are entered on
             Pesapal&apos;s own page and never touch this site.
           </p>
@@ -564,7 +635,7 @@ export function GiveForm({
             </button>
           </p>
 
-          <p className="text-center text-xs leading-relaxed text-smoke">
+          <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
             Records what you intend to give and nothing else — Pastor Simon
             replies with the account details himself. Best for bank transfers
             and larger gifts from overseas.
@@ -578,10 +649,10 @@ export function GiveForm({
             tone="green"
             icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
           >
-            {chosen ? "Claim this amount" : "Record this gift"}
+            {openCents !== undefined ? "Claim this amount" : "Record this gift"}
           </Submit>
 
-          <p className="text-center text-xs leading-relaxed text-smoke">
+          <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
             No payment is taken here and no card details are asked for. This
             records what you intend to give; Pastor Simon replies with the
             account details himself.

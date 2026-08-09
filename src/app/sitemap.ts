@@ -33,6 +33,7 @@ const routes: {
   { path: "/programs/transport", changeFrequency: "monthly", priority: 0.6 },
   { path: "/projects", changeFrequency: "monthly", priority: 0.6 },
   { path: "/projects/kitchen", changeFrequency: "weekly", priority: 0.9 },
+  { path: "/projects/playground", changeFrequency: "monthly", priority: 0.7 },
   { path: "/needs", changeFrequency: "daily", priority: 0.9 },
   { path: "/give", changeFrequency: "monthly", priority: 0.9 },
   { path: "/contact", changeFrequency: "yearly", priority: 0.7 },

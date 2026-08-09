@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -15,7 +16,28 @@ import { getChildrenFed } from "@/lib/enrolment";
 import { getKitchenReport, kitchenStats } from "@/lib/kitchen";
 import { busPrice, usd } from "@/lib/money";
 import { getGivingSummary, getStillNeededCents } from "@/lib/needs";
+import { pageMeta } from "@/lib/seo";
 import { site } from "@/lib/site";
+
+/**
+ * The front page's own head.
+ *
+ * It had none, which was nearly harmless and not quite: the title and the
+ * description fell through to the root layout, which is what they should say
+ * anyway — but nothing declared a canonical, and this is the one address on the
+ * site people reach two ways. The apex redirects to www (see lib/site.ts), and
+ * every inbound link written on paper, in an email signature or on the side of
+ * the van says the bare domain.
+ *
+ * No `title`, deliberately. The root layout's default is "Jepegomi — Jesus
+ * People Gospel Ministries", untemplated, and the front page is the one page
+ * that wants exactly that rather than something with " · Jepegomi" bolted on
+ * the end.
+ */
+export const metadata: Metadata = pageMeta({
+  description: site.tagline,
+  path: "/",
+});
 
 /*
   The photograph each hero slide is built around. It fills the whole slide, and
@@ -60,18 +82,17 @@ const arms = [
   {
     src: "/photos/church/service.jpg",
     alt: "A man standing at a lectern reading to rows of seated children",
-    caption:
-      "The church — the pupils' service in the sanctuary at Kahawa Sukari.",
+    caption: "The pupils' service, in the sanctuary at Kahawa Sukari.",
   },
   {
     src: "/photos/academy/assembly.jpg",
     alt: "A long line of children in green uniform standing outdoors at assembly, a teacher reading to them",
-    caption: "The academy — morning assembly at the school in Kahawa Sukari.",
+    caption: "Morning assembly at the academy.",
   },
   {
     src: "/photos/school/lunch-queue-01.jpg",
     alt: "Children in green uniform queueing along a wall, plates in hand",
-    caption: "Food at School — the lunch queue, every school day.",
+    caption: "The Food at School lunch queue, every school day.",
   },
 ];
 
@@ -291,16 +312,23 @@ export default async function HomePage() {
       */}
       <section className="bg-cream px-6 py-16 text-center sm:py-24">
         <div className="shell">
-          <p className="eyebrow flex items-center justify-center gap-2.5 text-plum">
-            <Icon name="pin" className="h-4 w-4" />
-            {site.location}
-          </p>
-
           {/* A centred lead reads best on a tight measure — the frame is shared,
               the line length is not. */}
-          <h1 className="font-display mx-auto mt-5 max-w-3xl text-[2.4rem] leading-[1.05] font-semibold text-balance sm:text-[3.25rem]">
+          <h1 className="font-display mx-auto max-w-3xl text-[2.4rem] leading-[1.05] font-semibold text-balance sm:text-[3.25rem]">
             {home.heading}
           </h1>
+
+          {/*
+            Under the heading rather than over it. Where it is now is a place
+            line; where it was, it was a tracked uppercase label sitting on top
+            of an oversized headline, which is the one hero shape every
+            generated site arrives wearing. The words are worth keeping — a
+            reader wants to know where this is — the position was not.
+          */}
+          <p className="mt-4 flex items-center justify-center gap-2 text-sm text-smoke">
+            <Icon name="pin" className="h-4 w-4 text-plum" />
+            {site.location}
+          </p>
 
           {paragraphs(home.intro).map((text) => (
             <p
@@ -397,7 +425,6 @@ export default async function HomePage() {
           </div>
 
           <div>
-            <p className="eyebrow text-plum">The people</p>
             <SectionTitle className="mt-3">{site.leaders}</SectionTitle>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-smoke">
               {about.intro}
@@ -426,7 +453,6 @@ export default async function HomePage() {
             tight centred measure, the way a closing ask wants to read. */}
         <div className="shell">
           <div className="mx-auto max-w-2xl">
-            <p className="eyebrow text-plum">{home.closingEyebrow}</p>
             <h2 className="font-display mt-4 text-3xl leading-[1.15] font-semibold text-balance sm:text-[2.6rem]">
               {home.closingHeading}
             </h2>

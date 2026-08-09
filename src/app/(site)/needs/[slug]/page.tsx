@@ -13,6 +13,7 @@ import { usd } from "@/lib/money";
 import { areaOf } from "@/lib/giving";
 import { getNeedBySlug, getNeedUpdates } from "@/lib/needs";
 import { isPesapalConfigured } from "@/lib/pesapal";
+import { pageMeta } from "@/lib/seo";
 
 type Params = Promise<{ slug: string }>;
 
@@ -26,12 +27,13 @@ export async function generateMetadata({
 
   if (!need) return { title: "Not found" };
 
-  return {
+  return pageMeta({
     title: need.title,
     description:
       need.summary ||
       `${usd(need.ledger.openCents)} of ${usd(need.costCents)} is still open on this.`,
-  };
+    path: `/needs/${need.slug}`,
+  });
 }
 
 /**
@@ -91,7 +93,7 @@ function ClaimPanel({
               fixed
               choices={[
                 {
-                  slug: need.slug,
+                  value: need.slug,
                   title: need.title,
                   areaLabel: area.label,
                   openCents: need.ledger.openCents,
@@ -162,7 +164,6 @@ async function NeedBody({ params }: { params: Params }) {
             </p>
 
             <div className="mt-16">
-              <p className="eyebrow text-plum">Progress</p>
               <SectionTitle className="mt-3">What has happened so far</SectionTitle>
               <div className="mt-10">
                 <NeedUpdates updates={updates} />

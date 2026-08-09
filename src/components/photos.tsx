@@ -21,12 +21,19 @@ export type SitePhoto = {
 };
 
 /**
- * One photograph running the width of the page's shell, used to break between a
- * page's plum hero and its body.
+ * One photograph, used to break between a page's plum hero and its body.
  *
  * `aspect` is a prop rather than a constant because the photographs are crops
  * out of a slide deck and do not share a shape — forcing one ratio on all of
  * them would crop the wide ones to a slot and the tall ones to a slit.
+ *
+ * It sits inside the shell rather than filling it. At the full 72rem a barely
+ * cropped photo — the playground's yard, the college seminar — came out taller
+ * than the viewport, so the reader scrolled through a wall of picture to reach
+ * the argument it was introducing. Held to 56rem and centred, the same crop
+ * reads as a plate set into the page. The frame being narrower than the prose
+ * sections around it is the point: the photograph illustrates the page, it is
+ * not the page.
  */
 export function PhotoBand({
   photo,
@@ -39,7 +46,7 @@ export function PhotoBand({
 }) {
   return (
     <div className={`px-6 ${className}`}>
-      <div className="shell">
+      <div className="mx-auto max-w-4xl">
         <div
           className={`relative ${aspect} overflow-hidden rounded-2xl bg-sand shadow-warm`}
         >
@@ -47,12 +54,12 @@ export function PhotoBand({
             src={photo.src}
             alt={photo.alt}
             fill
-            sizes="(max-width: 768px) 100vw, 1100px"
+            sizes="(max-width: 768px) 100vw, 896px"
             className="object-cover"
           />
         </div>
         {photo.caption && (
-          <p className="mt-3 text-sm leading-relaxed text-smoke">
+          <p className="measure mt-3 text-sm leading-relaxed text-smoke">
             {photo.caption}
           </p>
         )}
