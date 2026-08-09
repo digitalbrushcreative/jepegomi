@@ -11,6 +11,8 @@ import {
   SectionTitle,
 } from "@/components/ui";
 import { site } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
 const sanctuary = {
   src: "/photos/church/sanctuary-wide.jpg",
@@ -59,11 +61,12 @@ const property = [
   },
 ];
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Church",
   description:
     "Sunday services at Jesus People Gospel Ministries — the church in Kahawa Sukari, Nairobi that the academy, the college and the feeding program all belong to.",
-};
+  path: "/church",
+});
 
 export default async function ChurchPage() {
   const church = await getContent("church");
@@ -82,7 +85,6 @@ export default async function ChurchPage() {
             title={site.longName}
             className="h-20 w-auto text-white"
           />
-          <p className="eyebrow mt-8 text-white/45">{church.eyebrow}</p>
           <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
             {church.heading}
           </h1>
@@ -102,9 +104,8 @@ export default async function ChurchPage() {
 
       <section className="px-6 py-24">
         <div className="shell">
-          <Eyebrow>{church.sectionEyebrow}</Eyebrow>
-          <SectionTitle className="mt-4">{church.sectionTitle}</SectionTitle>
-          <div className="mt-8 max-w-3xl space-y-6 text-lg leading-relaxed text-smoke">
+          <SectionTitle>{church.sectionTitle}</SectionTitle>
+          <div className="mt-8 measure space-y-6 text-lg leading-relaxed text-smoke">
             {paragraphs(church.body).map((text) => (
               <p key={text}>{text}</p>
             ))}
@@ -171,8 +172,7 @@ export default async function ChurchPage() {
             the person who can get the quote.
           */}
           <div className="mt-20">
-            <Eyebrow>The property</Eyebrow>
-            <SectionTitle className="mt-4">
+            <SectionTitle>
               A gate, a yard, and a plot waiting for a sanctuary
             </SectionTitle>
 
@@ -206,6 +206,29 @@ export default async function ChurchPage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/programs/digital",
+            label: "Jepegomi Digital",
+            blurb:
+              "Sunday services and weekday fellowships, streamed from this sanctuary on YouTube and Facebook.",
+          },
+          {
+            href: "/education",
+            label: "Education",
+            blurb:
+              "The academy and the Bible college — the two schools this congregation runs.",
+          },
+          {
+            href: "/needs",
+            label: "What's needed",
+            blurb:
+              "What the ministry is short of right now, itemised and costed, with what is still open on each.",
+          },
+        ]}
+      />
     </>
   );
 }

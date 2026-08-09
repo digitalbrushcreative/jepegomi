@@ -22,23 +22,23 @@ export const metadata: Metadata = {
 const promises: { icon: IconName; title: string; body: string }[] = [
   {
     icon: "globe",
-    title: "No account to make",
-    body: "If you have given, you are already here. The address on your gift is the account — we email a code to it, you type the code in, and that is the whole of it.",
+    title: "A code, not a password",
+    body: "We email a code to the address on your gift. Type it in — that is the whole of it.",
   },
   {
     icon: "give",
     title: "Everything you have given",
-    body: "Every item you have supported, what you put towards each one, and what has been marked received against it.",
+    body: "Every item you supported, what you put towards it, and what has been received against it.",
   },
   {
     icon: "trowel",
-    title: "The work you partnered with us for",
-    body: "Progress on the items you backed, posted from Nairobi with photographs as it happens.",
+    title: "The work you paid for",
+    body: "Progress on the items you backed, posted from Nairobi with photographs.",
   },
   {
     icon: "church",
     title: "Yours, and only yours",
-    body: "You see your own giving. You will never see another church's, and no other church will ever see yours.",
+    body: "Nobody else sees your giving, and you never see theirs.",
   },
 ];
 
@@ -79,18 +79,16 @@ async function PartnerEntrance() {
         <div className="mt-12 rounded-2xl border border-dashed border-smoke/30 bg-sand p-7">
           <p className="eyebrow text-plum">No code arriving?</p>
           <p className="mt-3 max-w-xl leading-relaxed text-smoke">
-            A code only goes to an address we already have a gift against, so if
-            you gave under a different one — a treasurer&apos;s address, or the
-            church office — try that. If you gave by bank transfer or M-Pesa and
-            were never asked for an address, write to{" "}
+            Try the address the gift was given under — a treasurer&apos;s, or the
+            church office. If you gave by bank transfer or M-Pesa and were never
+            asked for an address, write to{" "}
             <a
               href={`mailto:${site.email}?subject=${encodeURIComponent("Partner sign in")}`}
               className="font-medium text-plum underline underline-offset-4"
             >
               {site.email}
             </a>{" "}
-            and we will put it right. You do not need to sign in to give —
-            nothing on the giving pages is behind this door.
+            and we will put it right. You never need to sign in to give.
           </p>
           <ButtonLink href="/needs" variant="secondary" className="mt-6">
             See what&apos;s needed
@@ -143,9 +141,8 @@ export default function PartnersPage() {
   return (
     <>
       <PageHero
-        eyebrow="Partners"
         title="Your giving, in full"
-        intro="Sign in to see every item you have supported, what has arrived against each one, and how the work is going. If you have given, you already have an account — it is your email address."
+        intro="Every item you have supported, what has arrived against each one, and how the work is going."
       />
 
       <section className="px-6 py-20 sm:py-24">

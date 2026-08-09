@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { getContent } from "@/cms/content";
 import { PhotoBand } from "@/components/photos";
 import { HubCard, PageHero } from "@/components/ui";
+import { pageMeta } from "@/lib/seo";
 
 const pupils = {
   src: "/photos/academy/pupils.jpg",
@@ -8,11 +10,12 @@ const pupils = {
   caption: "Jepegomi Academy, Kahawa Sukari.",
 };
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Education",
   description:
     "The two ends of the ministry's teaching: Jepegomi Academy for children, and the Contextual Bible Training College for adults.",
-};
+  path: "/education",
+});
 
 /*
   Unlike the Programs and Projects hubs, this one's children do not live beneath
@@ -20,44 +23,32 @@ export const metadata: Metadata = {
   address is the thing people type and share, and it should not grow a prefix
   just because the nav learned to group it. The hub is a landing place, not a
   parent directory.
+
+  As on the other hubs, only the destination is fixed here; the words on each
+  card are edited in the CMS and paired with this list in order.
 */
-const education = [
-  {
-    href: "/academy",
-    eyebrow: "For children",
-    title: "Jepegomi Academy",
-    blurb:
-      "Quality education with values — the school in Kahawa Sukari, teaching children from kindergarten to Grade 6 in classrooms the ministry built itself.",
-    cta: "See the Academy",
-    icon: "child" as const,
-  },
-  {
-    href: "/college",
-    eyebrow: "For adults",
-    title: "Contextual Bible Training College",
-    blurb:
-      "The ministry's training arm, teaching the Scriptures in and for the community the church already serves — from certificate to doctorate, with the fees on the page.",
-    cta: "About the college",
-    icon: "book" as const,
-  },
+const links = [
+  { href: "/academy", icon: "child" as const },
+  { href: "/college", icon: "book" as const },
 ];
 
-export default function EducationPage() {
+export default async function EducationPage() {
+  const content = await getContent("education");
+
   return (
     <>
-      <PageHero
-        eyebrow="Education"
-        title="Teaching children, and teaching the people who teach them"
-        intro="One arm of the ministry with two ends — a school for the children of Kahawa Sukari, and a Bible college for the adults who will lead and teach in it."
-      />
+      <PageHero title={content.heading} intro={content.intro || undefined} />
 
       <PhotoBand photo={pupils} aspect="aspect-[21/9]" className="pt-4" />
 
       <section className="px-6 py-24">
         <div className="shell grid gap-6 md:grid-cols-2">
-          {education.map((entry) => (
-            <HubCard key={entry.href} {...entry} />
-          ))}
+          {links.map((link, index) => {
+            const card = content.cards[index];
+            if (!card) return null;
+
+            return <HubCard key={link.href} {...link} {...card} />;
+          })}
         </div>
       </section>
     </>

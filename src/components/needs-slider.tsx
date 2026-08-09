@@ -5,6 +5,7 @@ import { paragraphs } from "@/cms/prose";
 import { Icon, type IconName } from "@/components/icons";
 import { ClothEdge } from "@/components/pattern";
 import { ButtonLink, SectionTitle } from "@/components/ui";
+import { areaForHref } from "@/lib/giving";
 
 export type Need = {
   /** The short name on the button that switches to this need. */
@@ -33,6 +34,12 @@ export type NeedPanels = Record<string, ReactNode>;
   a picture is attached to them; a need pointing somewhere new simply gets no
   icon, which is quiet rather than broken.
 */
+/** Where the Give button goes, given what the panel links to. */
+function giveHref(href: string) {
+  const area = areaForHref(href);
+  return area ? `/give?for=${area.id}#pledge` : "/give";
+}
+
 const needIcons: Record<string, IconName> = {
   "/projects/kitchen": "trowel",
   "/programs/transport": "bus",
@@ -196,7 +203,15 @@ export function NeedsSlider({
                   )}
 
                   <div className="mt-9 flex flex-wrap items-center gap-4">
-                    <ButtonLink href="/give" icon="give">
+                    {/*
+                      "Give to the kitchen" landing on a form that asks what you
+                      would like to give to is a question already answered. The
+                      panel's link names the project — it is the same link the
+                      icon above is chosen by — so where it names one the button
+                      carries it into the form. Where it does not, the form opens
+                      as it always did.
+                    */}
+                    <ButtonLink href={giveHref(need.href)} icon="give">
                       {need.giveCta}
                     </ButtonLink>
                     <ButtonLink

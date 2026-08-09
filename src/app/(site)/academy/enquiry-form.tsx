@@ -93,7 +93,7 @@ export function EnrolmentEnquiryForm({ email }: { email: string }) {
 
       <Field
         label="Anything you would like to ask"
-        hint="Fees, the feeding programme, uniform, transport — whatever you need to know."
+        hint="Fees, the feeding programme, uniform, transport: whatever you need to know."
       >
         <textarea name="message" rows={4} className={inputClass} />
       </Field>
@@ -112,7 +112,7 @@ export function EnrolmentEnquiryForm({ email }: { email: string }) {
         and shown to nobody else — because a reassurance that has quietly
         stopped being accurate is worse than no reassurance at all.
       */}
-      <p className="text-center text-xs leading-relaxed text-smoke">
+      <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
         This goes to the school, and nowhere else. What you write is kept
         privately so we can be sure you get a reply — never published and never
         passed on. You can also write to {email}, and ask us there to delete it.

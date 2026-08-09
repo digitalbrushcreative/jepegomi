@@ -5,7 +5,8 @@ import { paragraphs } from "@/cms/prose";
 import { Icon } from "@/components/icons";
 import { NeedBar, NeedMeter } from "@/components/need-meter";
 import { ClothEdge } from "@/components/pattern";
-import { ButtonLink, PageHero, SectionTitle } from "@/components/ui";
+import { ButtonLink, PageHero, SectionTitle, Verse } from "@/components/ui";
+import { type Appeal, getAppeals } from "@/lib/appeals";
 import { usd } from "@/lib/money";
 import type { NeedWithLedger } from "@/lib/giving";
 import { getParts, getPublishedNeeds } from "@/lib/needs";
@@ -16,13 +17,15 @@ import {
   laterParts,
   readyParts,
 } from "@/lib/projects";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getContent("needs");
-  return {
+  return pageMeta({
     title: content.heading,
     description: paragraphs(content.intro)[0],
-  };
+    path: "/needs",
+  });
 }
 
 /**
@@ -176,6 +179,67 @@ function LaterSection({ groups }: { groups: PartGroup[] }) {
   );
 }
 
+/**
+ * The projects costed as one job rather than broken into lines.
+ *
+ * The kitchen is the only project anybody has itemised, and for years that made
+ * it the only one this page could ask for — the playground, the bus and the
+ * streaming kit were priced on their own pages, with no way to give to them
+ * except by writing their names into a box on a form. They are asks like any
+ * other and they belong on the page that lists what is needed.
+ *
+ * What each card carries is the price of the whole job and nothing else. There
+ * is no meter, because a meter here would be a running total of what this
+ * ministry is holding in the bank — see the note in lib/appeals.ts — and no
+ * "still open", because that is a balance and only an itemised project has one.
+ */
+function WholeProjects({ appeals }: { appeals: Appeal[] }) {
+  return (
+    <section className="mt-20 border-t border-sand-deep pt-14">
+      <SectionTitle>Or take on a whole project</SectionTitle>
+      <p className="mt-6 max-w-2xl leading-relaxed text-smoke">
+        These are costed as one job rather than line by line. The figure is what
+        finishing the whole thing comes to — a gift can be any part of it, and
+        the rest goes on being asked for.
+      </p>
+
+      <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {appeals.map((appeal) => (
+          <div
+            key={appeal.area.id}
+            className="flex flex-col rounded-2xl bg-white p-8 shadow-warm"
+          >
+            <Icon name={appeal.area.icon} className="h-9 w-9 text-plum" />
+            <h3 className="font-display mt-5 text-2xl leading-snug font-semibold">
+              {appeal.area.label}
+            </h3>
+            <p className="mt-3 flex-1 leading-relaxed text-smoke">
+              {appeal.summary}
+            </p>
+
+            <p className="eyebrow mt-7 text-smoke">The whole job</p>
+            <p className="font-display tabular mt-1 text-3xl font-semibold text-plum">
+              {usd(appeal.costCents)}
+            </p>
+
+            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <ButtonLink href={`/give?for=${appeal.area.id}#pledge`} icon="give">
+                Give to this
+              </ButtonLink>
+              <Link
+                href={appeal.area.href}
+                className="text-sm font-bold text-plum underline underline-offset-4"
+              >
+                See the work
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /** A project and everything under it, in the order the work happens. */
 function ProjectSection({ project }: { project: ProjectGroup }) {
   const ready = readyParts(project);
@@ -226,11 +290,12 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
 }
 
 export default async function NeedsPage() {
-  const [content, site, needs, parts] = await Promise.all([
+  const [content, site, needs, parts, appeals] = await Promise.all([
     getContent("needs"),
     getContent("site"),
     getPublishedNeeds(),
     getParts(),
+    getAppeals(),
   ]);
 
   /*
@@ -276,7 +341,6 @@ export default async function NeedsPage() {
   return (
     <>
       <PageHero
-        eyebrow={content.eyebrow}
         title={content.heading}
         intro={paragraphs(content.intro)[0]}
       >
@@ -285,22 +349,41 @@ export default async function NeedsPage() {
           whether somebody reads any further — and because a list of nine items
           with no sum at the top makes a reader do the arithmetic themselves.
         */}
-        {readyCount > 0 && (
+        {(readyCount > 0 || appeals.length > 0) && (
           <dl className="mt-12 flex flex-wrap gap-x-14 gap-y-6">
-            <div>
-              <dt className="eyebrow text-white/50">Open right now</dt>
-              <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-marigold">
-                {usd(stillNeeded)}
-              </dd>
-            </div>
-            <div>
-              <dt className="eyebrow text-white/50">
-                {readyCount === 1 ? "Item" : "Items"} waiting
-              </dt>
-              <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
-                {readyCount}
-              </dd>
-            </div>
+            {readyCount > 0 && (
+              <>
+                <div>
+                  <dt className="eyebrow text-white/50">Open right now</dt>
+                  <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-marigold">
+                    {usd(stillNeeded)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="eyebrow text-white/50">
+                    {readyCount === 1 ? "Item" : "Items"} waiting
+                  </dt>
+                  <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
+                    {readyCount}
+                  </dd>
+                </div>
+              </>
+            )}
+            {/*
+              Counted, not summed. The figure beside "open right now" is a
+              balance — money nobody has claimed — and adding the price of a bus
+              to it would make one number out of two different kinds of thing.
+            */}
+            {appeals.length > 0 && (
+              <div>
+                <dt className="eyebrow text-white/50">
+                  {appeals.length === 1 ? "Whole project" : "Whole projects"}
+                </dt>
+                <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
+                  {appeals.length}
+                </dd>
+              </div>
+            )}
             {covered.length > 0 && (
               <div>
                 <dt className="eyebrow text-white/50">Fully covered</dt>
@@ -323,7 +406,14 @@ export default async function NeedsPage() {
               </p>
             ))}
 
-          {needs.length === 0 ? (
+          {/*
+            The empty note is for a page with nothing on it at all. The itemised
+            ledger and the whole projects fail independently — the first needs a
+            database, the second needs only the CMS — so it is shown when both
+            are empty and not merely when one is, or it would sit above three
+            costed projects saying nothing has been costed.
+          */}
+          {needs.length === 0 && appeals.length === 0 ? (
             /*
               Not an error state. The database being empty and the database
               being unreachable look the same from here, and in both cases the
@@ -343,27 +433,34 @@ export default async function NeedsPage() {
             <>
               {covered.length > 0 && (
                 <p className="mt-6 max-w-2xl leading-relaxed text-smoke">
-                  Items already paid for stay on the list, greyed, under the part
-                  of the work they belong to — the point of showing you the
-                  ledger is showing you all of it.
+                  Items already paid for stay on the list, greyed out, under the
+                  part of the work they belong to.
                 </p>
               )}
 
               {projects.map((project) => (
                 <ProjectSection key={project.area.id} project={project} />
               ))}
+
+              {appeals.length > 0 && <WholeProjects appeals={appeals} />}
             </>
           )}
         </div>
       </section>
+
+      {/*
+        After the list rather than before it. The verse is about what giving to
+        the poor amounts to, and it lands differently once you have just read
+        the itemised list of what is short and what each thing costs.
+      */}
+      <Verse text={content.verse} reference={content.verseRef} />
 
       <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
         <div className="grain-layer" />
         <ClothEdge className="text-plum-deep" />
 
         <div className="shell relative">
-          <p className="eyebrow text-marigold">{content.howEyebrow}</p>
-          <SectionTitle className="mt-3 text-white">
+          <SectionTitle className="text-white">
             {content.howHeading}
           </SectionTitle>
 
@@ -387,7 +484,7 @@ export default async function NeedsPage() {
 
           <div className="mt-14 flex flex-wrap items-center gap-x-10 gap-y-6 border-t border-white/15 pt-10">
             <div className="max-w-xl">
-              <p className="eyebrow text-marigold">For partner churches</p>
+              <p className="eyebrow text-marigold">Given before?</p>
               {paragraphs(content.partnerNote).map((text) => (
                 <p key={text} className="mt-3 leading-relaxed text-white/65">
                   {text}
@@ -395,7 +492,7 @@ export default async function NeedsPage() {
               ))}
             </div>
             <ButtonLink href="/partners" variant="ghost" className="text-white">
-              Partner sign in
+              See your giving
             </ButtonLink>
           </div>
 

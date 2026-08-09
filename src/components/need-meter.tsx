@@ -19,18 +19,25 @@ import { usd } from "@/lib/money";
 
 type Tone = "light" | "dark";
 
-const tones: Record<Tone, { track: string; label: string; figure: string; muted: string }> = {
+const tones: Record<
+  Tone,
+  { track: string; label: string; figure: string; muted: string; emphasis: string }
+> = {
   light: {
     track: "bg-sand-deep",
     label: "text-smoke",
     figure: "text-charcoal",
     muted: "text-smoke",
+    // Marigold at brand value is 2.0:1 on a white card — the open figure is
+    // the one number here worth acting on, so it cannot be the unreadable one.
+    emphasis: "text-marigold-ink",
   },
   dark: {
     track: "bg-white/15",
     label: "text-white/50",
     figure: "text-white",
     muted: "text-white/60",
+    emphasis: "text-marigold",
   },
 };
 
@@ -44,7 +51,6 @@ export function NeedBar({
   className?: string;
 }) {
   const { percentReceived, percentClaimed } = ledger;
-  const promisedWidth = Math.max(0, percentClaimed - percentReceived);
 
   return (
     <div
@@ -56,14 +62,22 @@ export function NeedBar({
         `, of ${usd(ledger.costCents)}. ${usd(ledger.openCents)} still open.`
       }
     >
-      <div className="flex h-full">
+      {/*
+        Layered rather than sat side by side, and scaled rather than widened.
+        Animating `width` relayouts the bar on every frame of the 700ms; a
+        scaleX on a composited layer does not. Promised is drawn underneath at
+        its full extent and received sits on top of it, which reads identically
+        — claimed is always >= received — without the second segment having to
+        know the width of the first.
+      */}
+      <div className="relative h-full">
         <div
-          className="h-full bg-green transition-[width] duration-700"
-          style={{ width: `${percentReceived}%` }}
+          className="absolute inset-y-0 left-0 w-full origin-left bg-green/40 transition-transform duration-700"
+          style={{ transform: `scaleX(${percentClaimed / 100})` }}
         />
         <div
-          className="h-full bg-green/40 transition-[width] duration-700"
-          style={{ width: `${promisedWidth}%` }}
+          className="absolute inset-y-0 left-0 w-full origin-left bg-green transition-transform duration-700"
+          style={{ transform: `scaleX(${percentReceived / 100})` }}
         />
       </div>
     </div>
@@ -87,7 +101,7 @@ function Figure({
       <dt className={`eyebrow ${colours.label}`}>{label}</dt>
       <dd
         className={`font-display tabular mt-1 text-2xl font-semibold ${
-          emphasis ? "text-marigold" : colours.figure
+          emphasis ? colours.emphasis : colours.figure
         }`}
       >
         {value}

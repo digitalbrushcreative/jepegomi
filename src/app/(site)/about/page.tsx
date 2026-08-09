@@ -4,6 +4,8 @@ import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { ClothEdge } from "@/components/pattern";
 import { ButtonLink } from "@/components/ui";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [about, site] = await Promise.all([
@@ -11,10 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
     getContent("site"),
   ]);
 
-  return {
+  return pageMeta({
     title: about.heading,
     description: `${site.longName} — a church and academy in Nairobi led by ${site.leaders}.`,
-  };
+    path: "/about",
+  });
 }
 
 export default async function AboutPage() {
@@ -33,7 +36,6 @@ export default async function AboutPage() {
 
         <div className="shell relative flex flex-col items-center gap-10 px-6 pt-28 sm:flex-row sm:items-end sm:gap-12">
           <div className="flex-1 pb-20">
-            <p className="eyebrow text-marigold">{about.eyebrow}</p>
             <h1 className="font-display mt-4 text-4xl leading-[1.1] font-semibold text-balance text-white sm:text-[3.25rem]">
               {about.heading}
             </h1>
@@ -70,7 +72,7 @@ export default async function AboutPage() {
 
       <section className="px-6 py-24">
         <div className="shell">
-          <div className="max-w-3xl space-y-6 text-lg leading-relaxed text-smoke">
+          <div className="measure space-y-6 text-lg leading-relaxed text-smoke">
             {paragraphs(about.body).map((text) => (
               <p key={text}>{text}</p>
             ))}
@@ -95,6 +97,29 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/church",
+            label: "The church",
+            blurb:
+              "The congregation in Kahawa Sukari, and the oldest thing the ministry does.",
+          },
+          {
+            href: "/education",
+            label: "Education",
+            blurb:
+              "The academy for children and the Bible college for adults — one teaching arm with two ends.",
+          },
+          {
+            href: "/needs",
+            label: "What's needed",
+            blurb:
+              "What the ministry is short of right now, costed and open to anyone who wants to take part of it.",
+          },
+        ]}
+      />
     </>
   );
 }

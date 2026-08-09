@@ -28,6 +28,24 @@ export const site = {
   */
   email: "support@jepegomi.org",
   location: "Kahawa Sukari, Nairobi, Kenya",
+  /*
+    The same place as `location` above, broken into the fields a search engine
+    and a map want it in. It is deliberately a restatement rather than something
+    parsed out of that string: splitting "Kahawa Sukari, Nairobi, Kenya" on
+    commas works until the day somebody writes the address with an estate name
+    or a postal code in it, and then the country silently becomes "Nairobi".
+
+    No `streetAddress` here, and that is the point — nobody has confirmed one.
+    The CMS has a church address field that is blank on purpose (see the note on
+    it in cms/schema.ts), and the structured data picks it up if it is ever
+    filled in. A guessed street on a map listing sends somebody to a stranger's
+    gate.
+  */
+  address: {
+    locality: "Kahawa Sukari",
+    region: "Nairobi",
+    country: "KE",
+  },
   leaders: "Pastor Simon & Joyce Nderitu",
   tagline:
     "A church, a school and a Bible college in Nairobi — teaching children, training adults, and building what they learn in.",
@@ -49,6 +67,21 @@ export const giving = {
 export type NavLink = {
   label: string;
   href: string;
+  /**
+   * One line saying what is behind the link.
+   *
+   * The dropdowns have carried these from the start, for a reader deciding
+   * which of two pages they want. The top-level entries have them now for the
+   * same reason plus a second one: the footer prints the whole tree with its
+   * blurbs on every page, so these are the words that describe this site's
+   * pages to anything reading it — a person skimming the bottom of the page, a
+   * search engine weighing what /programs is *about*, an assistant summarising
+   * the ministry. A link labelled "Programs" says nothing on its own.
+   *
+   * Optional only because Home does not need one: it is the page the footer is
+   * already sitting on, and "the front page" is not a description.
+   */
+  blurb?: string;
   children?: { label: string; href: string; blurb: string }[];
 };
 
@@ -65,11 +98,23 @@ export type NavLink = {
 */
 export const navLinks: NavLink[] = [
   { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Church", href: "/church" },
+  {
+    label: "About",
+    href: "/about",
+    blurb:
+      "Who Jepegomi is, and the family who started it — Pastor Simon & Joyce Nderitu.",
+  },
+  {
+    label: "Church",
+    href: "/church",
+    blurb:
+      "The congregation in Kahawa Sukari, and the oldest thing the ministry does.",
+  },
   {
     label: "Education",
     href: "/education",
+    blurb:
+      "Two schools under one ministry: an academy for children, a Bible college for adults.",
     children: [
       {
         label: "Jepegomi Academy",
@@ -87,6 +132,8 @@ export const navLinks: NavLink[] = [
   {
     label: "Programs",
     href: "/programs",
+    blurb:
+      "What the ministry runs week by week — feeding, streaming and school transport.",
     children: [
       {
         label: "Food at School",
@@ -108,6 +155,8 @@ export const navLinks: NavLink[] = [
   {
     label: "Projects",
     href: "/projects",
+    blurb:
+      "The things being built — the kitchen that cooks the meals, and the playground that needs replacing.",
     children: [
       {
         label: "Kitchen Build",
@@ -121,5 +170,36 @@ export const navLinks: NavLink[] = [
       },
     ],
   },
-  { label: "Contact", href: "/contact" },
+  {
+    label: "Contact",
+    href: "/contact",
+    blurb: "How to reach the ministry, visit, or ask a question.",
+  },
+];
+
+/*
+  The two giving pages, kept out of `navLinks` because they are not part of the
+  bar — it is already at seven items plus the Give button — but they belong in
+  any list of this site's pages that is meant to be complete. The footer prints
+  them, and they are the two most valuable pages here to anybody arriving from a
+  search: one says what is needed, the other says how to send it.
+
+  /partners is deliberately absent. It is a door for the handful of churches who
+  have been given a code, and a blurb advertising a room almost every visitor
+  cannot open is noise on every page of the site. The footer links it plainly,
+  without a description, the way it always has.
+*/
+export const givingLinks: { label: string; href: string; blurb: string }[] = [
+  {
+    label: "What's needed",
+    href: "/needs",
+    blurb:
+      "The open ledger — every costed item, what it comes to, and how much is still short.",
+  },
+  {
+    label: "How to give",
+    href: "/give",
+    blurb:
+      "Ways to send a gift to the ministry from Kenya or abroad, and what happens next.",
+  },
 ];

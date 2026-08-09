@@ -1,25 +1,30 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { Icon, type IconName } from "@/components/icons";
 import { ClothEdge } from "@/components/pattern";
 import { GivingDetailsForm } from "@/app/(site)/give/details-form";
-import { GiveForm } from "@/components/give-form";
-import { ButtonLink, PageHero, SectionTitle } from "@/components/ui";
+import { GiveForm, type GiveChoice } from "@/components/give-form";
+import { ButtonLink, PageHero, SectionTitle, Verse } from "@/components/ui";
+import { getAppeals } from "@/lib/appeals";
 import { usd } from "@/lib/money";
+import { isNeedArea, projectValue } from "@/lib/giving";
 import { getGivingSummary, getParts, getPublishedNeeds } from "@/lib/needs";
 import { buildProjects, readyParts } from "@/lib/projects";
 import { isPesapalConfigured } from "@/lib/pesapal";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [content, details] = await Promise.all([
     getContent("giving"),
     getContent("site"),
   ]);
-  return {
+  return pageMeta({
     title: "Give",
     description: `Support ${details.longName} in ${details.location} — ${paragraphs(content.intro)[0]}`,
-  };
+    path: "/give",
+  });
 }
 
 /*
@@ -29,13 +34,48 @@ export async function generateMetadata(): Promise<Metadata> {
 */
 const wayIcons: IconName[] = ["church", "book", "child", "trowel"];
 
-export default async function GivePage() {
-  const [giving, site, ledger, needs, parts] = await Promise.all([
+/**
+ * The form, once the address bar has been read.
+ *
+ * `?for=` is how a project page hands its own project over — "Give to the
+ * playground" should not open a form that asks which. Reading a search
+ * parameter makes this part of the page dynamic, so it streams in behind a
+ * boundary and the case for giving above it stays prerendered; the same shape
+ * /needs/[slug] uses for its slug.
+ */
+async function Pledge({
+  searchParams,
+  choices,
+  contactEmail,
+  canPay,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  choices: GiveChoice[];
+  contactEmail: string;
+  canPay: boolean;
+}) {
+  const asked = (await searchParams).for;
+  const project =
+    typeof asked === "string" && isNeedArea(asked) ? projectValue(asked) : "";
+
+  return (
+    <GiveForm
+      choices={choices}
+      initialTowards={project}
+      contactEmail={contactEmail}
+      canPay={canPay}
+    />
+  );
+}
+
+export default async function GivePage(props: PageProps<"/give">) {
+  const [giving, site, ledger, needs, parts, appeals] = await Promise.all([
     getContent("giving"),
     getContent("site"),
     getGivingSummary(),
     getPublishedNeeds(),
     getParts(),
+    getAppeals(),
   ]);
 
   /*
@@ -61,12 +101,12 @@ export default async function GivePage() {
     Flattened in project-then-part order because the picker draws its headings
     off the seams in this list; see the note in the form.
   */
-  const choices = buildProjects(needs, parts).flatMap((project) =>
+  const items: GiveChoice[] = buildProjects(needs, parts).flatMap((project) =>
     readyParts(project).flatMap((group) =>
       group.needs
         .filter((need) => !need.closed && need.ledger.openCents > 0)
         .map((need) => ({
-          slug: need.slug,
+          value: need.slug,
           title: need.title,
           areaLabel: project.area.label,
           partTitle: group.part?.title,
@@ -76,18 +116,42 @@ export default async function GivePage() {
     ),
   );
 
+  /*
+    The whole projects, first, under a heading of their own.
+
+    First because the itemised list is the kitchen and only the kitchen — every
+    other project on this site is costed as one job — and a picker that opens
+    on cement and sand tells somebody who came for the bus that they are in the
+    wrong place. Underneath them the kitchen's own lines, where a giver can be
+    as specific as they like.
+  */
+  const wholeProjects: GiveChoice[] = appeals.map((appeal) => ({
+    value: projectValue(appeal.area.id),
+    title: appeal.area.label,
+    areaLabel: "A whole project",
+    partSummary: "What the whole job costs. Any part of it is a real answer.",
+    costCents: appeal.costCents,
+  }));
+
+  const choices = [...wholeProjects, ...items];
+
   return (
     <>
       <PageHero
-        eyebrow={giving.eyebrow}
         title={giving.heading}
         intro={giving.intro}
       />
 
+      {/*
+        Here, and deliberately not above the pledge form further down. A verse
+        about the cheerful giver placed directly over a payment field reads as
+        leverage; placed at the top it frames the page, which is what it is for.
+      */}
+      <Verse text={giving.verse} reference={giving.verseRef} />
+
       <section className="px-6 py-20 sm:py-24">
         <div className="shell">
-          <p className="eyebrow text-plum">{giving.waysEyebrow}</p>
-          <SectionTitle className="mt-3">{giving.waysHeading}</SectionTitle>
+          <SectionTitle>{giving.waysHeading}</SectionTitle>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             {giving.ways.map((way, index) => (
@@ -130,15 +194,13 @@ export default async function GivePage() {
           <div className="shell">
             <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
               <div>
-                <p className="eyebrow text-plum">Transparent giving</p>
                 <SectionTitle className="mt-3">
                   Or pick something, and see it through
                 </SectionTitle>
                 <p className="mt-6 max-w-xl leading-relaxed text-smoke">
-                  Every item on the list is one thing the ministry is short of,
-                  with the price on it and the ledger beside it. Take all of one
-                  or part of one — whatever you leave stays open for somebody
-                  else — and then watch the work it paid for, in photographs.
+                  Every item is one thing the ministry is short of, with the
+                  price on it. Take all of one or part of one, and watch the work
+                  it pays for.
                 </p>
                 <ButtonLink href="/needs" icon="give" className="mt-8">
                   See what&apos;s needed
@@ -189,17 +251,16 @@ export default async function GivePage() {
       <section id="pledge" className="px-6 py-20 sm:py-24">
         <div className="shell grid items-start gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
           <div className="lg:sticky lg:top-8">
-            <p className="eyebrow text-plum">Tell us what you would like to do</p>
             <SectionTitle className="mt-3">
               Put your name to something
             </SectionTitle>
 
             <p className="mt-6 leading-relaxed text-smoke">
               {choices.length > 0
-                ? `Choose one of the costed items and take all of it or part of it, or tell us in your own words what you would like to support. ${
+                ? `Choose a project or one of the costs inside it, take all of it or part of it, or tell us in your own words what you would like to support. ${
                     canPay
-                      ? "Then pay it now by M-Pesa or card, or ask for the account details and send it another way."
-                      : "Either way it goes on the ledger straight away, so the ministry knows to expect it."
+                      ? "Then pay by M-Pesa or card, or ask for the account details."
+                      : "It goes on the ledger straight away, so the ministry knows to expect it."
                   }`
                 : /*
                     True of an empty ledger and of a full one whose next step is
@@ -220,22 +281,20 @@ export default async function GivePage() {
                   {canPay ? (
                     <>
                       <strong className="font-medium text-charcoal">
-                        Two ways, and both are fine.
+                        Pay now, or send it later.
                       </strong>{" "}
-                      Pay now by M-Pesa or card and it is done in a minute — your
-                      card details are entered on Pesapal&apos;s own page, never
-                      here. Or record what you intend to give and Pastor Simon
-                      sends you the account details for wherever you are giving
-                      from, which suits a bank transfer better.
+                      M-Pesa or card takes a minute — card details go to
+                      Pesapal&apos;s own page, never here. Or record what you
+                      intend to give and Pastor Simon sends you the account
+                      details.
                     </>
                   ) : (
                     <>
                       <strong className="font-medium text-charcoal">
                         Nothing is taken here.
                       </strong>{" "}
-                      No card details are asked for. This records what you intend
-                      to give and sends you the account details for wherever you
-                      are giving from.
+                      This records what you intend to give, and sends you the
+                      account details.
                     </>
                   )}
                 </span>
@@ -246,8 +305,7 @@ export default async function GivePage() {
                   <strong className="font-medium text-charcoal">
                     A part is a real answer.
                   </strong>{" "}
-                  Whatever you leave on an item stays open for somebody else, and
-                  the page says so honestly.
+                  Whatever you leave stays open for somebody else.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -256,19 +314,25 @@ export default async function GivePage() {
                   <strong className="font-medium text-charcoal">
                     You will see what it did.
                   </strong>{" "}
-                  Gifts against an item are followed up with progress and
-                  photographs as the work goes on.
+                  Progress and photographs follow, as the work goes on.
                 </span>
               </li>
             </ul>
           </div>
 
           <div className="rounded-2xl bg-white p-7 shadow-warm-lg sm:p-9">
-            <GiveForm
-              choices={choices}
-              contactEmail={site.email}
-              canPay={canPay}
-            />
+            <Suspense
+              fallback={
+                <p className="py-10 text-center text-smoke">Loading the form…</p>
+              }
+            >
+              <Pledge
+                searchParams={props.searchParams}
+                choices={choices}
+                contactEmail={site.email}
+                canPay={canPay}
+              />
+            </Suspense>
           </div>
         </div>
       </section>
@@ -283,7 +347,6 @@ export default async function GivePage() {
 
         <div className="shell relative">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="eyebrow text-marigold">{giving.howEyebrow}</p>
             <h2 className="font-display mt-4 text-3xl leading-[1.15] font-semibold text-balance text-white sm:text-[2.6rem]">
               {giving.howHeading}
             </h2>
@@ -303,7 +366,7 @@ export default async function GivePage() {
             */}
             <GivingDetailsForm email={site.email} />
 
-            <p className="mt-10 border-t border-white/15 pt-8 text-sm leading-relaxed text-white/55">
+            <p className="measure mt-10 border-t border-white/15 pt-8 text-sm leading-relaxed text-white/55">
               {giving.designationNote}
             </p>
           </div>

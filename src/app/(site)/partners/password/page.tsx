@@ -55,7 +55,6 @@ export default function PartnerPasswordPage() {
   return (
     <>
       <PageHero
-        eyebrow="Partner Churches"
         title="Sign in"
         intro="For the churches we set a password up for."
       />

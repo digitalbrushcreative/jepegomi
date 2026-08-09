@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { documents } from "../src/cms/schema";
+import { site } from "../src/lib/site";
 
 /**
  * The public site, as a visitor meets it.
@@ -23,6 +25,7 @@ const pages = [
   { path: "/programs/transport", name: "Transport" },
   { path: "/projects", name: "Projects" },
   { path: "/projects/kitchen", name: "Kitchen" },
+  { path: "/projects/playground", name: "Playground" },
   { path: "/needs", name: "Needs" },
   { path: "/give", name: "Give" },
   { path: "/contact", name: "Contact" },
@@ -52,6 +55,48 @@ test.describe("the public site", () => {
   test("a 404 is a 404", async ({ page }) => {
     const response = await page.goto("/no-such-page");
     expect(response?.status()).toBe(404);
+  });
+
+  /*
+    The sitemap is a hand-written list in app/sitemap.ts, and it is defended
+    there on good grounds: it says what *exists*, which is a different question
+    from what the nav should offer, and deriving one from the other would drop
+    /needs — a page reachable from no menu and among the most important here.
+
+    The cost of writing it by hand is that a page can be built and never added,
+    which is exactly what happened: /projects/playground shipped, went into the
+    nav, and stayed out of the sitemap. Nothing failed, because nothing was
+    looking.
+
+    So this looks — against the CMS schema rather than against the nav. Every
+    document there with a `path` is a page somebody can edit and therefore a
+    page that exists, which makes it the closest thing to an inventory the code
+    has. The exception list is short and each entry has a reason.
+  */
+  test("the sitemap knows about every page", async ({ request }) => {
+    const response = await request.get("/sitemap.xml");
+    expect(response.status()).toBe(200);
+    const xml = await response.text();
+
+    /* A receipt. It is reached from the giving flow, not searched for, and
+       carries its own `robots: { index: false }` for the same reason. */
+    const unlisted = new Set(["/give/thanks"]);
+
+    const paths = new Set(
+      Object.values(documents)
+        .map((document) => document.path)
+        .filter((path): path is string => path !== null && !unlisted.has(path)),
+    );
+
+    for (const path of paths) {
+      /*
+        The live host, not the one under test. The sitemap is built from
+        site.url by design — a sitemap has to name the addresses it is claiming,
+        and localhost is not one of them.
+      */
+      const url = `${site.url}${path === "/" ? "" : path}`;
+      expect(xml, `${path} should be in the sitemap`).toContain(`<loc>${url}</loc>`);
+    }
   });
 
   /*

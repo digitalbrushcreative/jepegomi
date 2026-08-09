@@ -96,22 +96,11 @@ export function PlaygroundEstimate({ quote }: { quote: Playground }) {
       />
 
       <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
-        <p className="eyebrow text-white/70">
-          {quote.isQuoted ? "The whole job" : "Estimated total"}
-        </p>
+        <p className="eyebrow text-white/70">Estimated total</p>
         <p className="font-display tabular text-4xl font-semibold text-marigold">
           {usd(quote.totalUsd)}
         </p>
       </div>
-
-      {!quote.isQuoted && (
-        <div className="rounded-2xl border-2 border-dashed border-clay/35 bg-clay/5 p-8">
-          <p className="eyebrow text-clay">Estimated, not quoted</p>
-          <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
-            {quote.estimateNote}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

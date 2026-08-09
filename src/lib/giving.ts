@@ -22,6 +22,9 @@ import type { IconName } from "@/components/icons";
 */
 export const NEED_AREAS = [
   { id: "kitchen", label: "The kitchen build", icon: "trowel", href: "/projects/kitchen" },
+  { id: "playground", label: "The playground", icon: "child", href: "/projects/playground" },
+  { id: "transport", label: "School transport", icon: "bus", href: "/programs/transport" },
+  { id: "digital", label: "Jepegomi Digital", icon: "globe", href: "/programs/digital" },
   { id: "food", label: "Food at School", icon: "pot", href: "/programs/food-at-school" },
   { id: "academy", label: "Jepegomi Academy", icon: "book", href: "/academy" },
   { id: "church", label: "The church", icon: "church", href: "/church" },
@@ -40,6 +43,45 @@ export type Area = (typeof NEED_AREAS)[number];
 /** Falls back to "across the ministry" rather than throwing on an unknown area. */
 export function areaOf(id: string) {
   return NEED_AREAS.find((area) => area.id === id) ?? NEED_AREAS[NEED_AREAS.length - 1];
+}
+
+/**
+ * The project a link on this site points at, where it points at one.
+ *
+ * Used by the front page, whose appeal panels are written in the CMS: an editor
+ * types a link to /programs/transport and the Give button beside it can then
+ * carry the bus with it, without anybody having to know that a giving form has
+ * a query string. Anything that is not a project's own page comes back null and
+ * the button goes to the form unaddressed, which is what it always did.
+ */
+export function areaForHref(href: string): Area | null {
+  return NEED_AREAS.find((area) => area.href === href) ?? null;
+}
+
+/*
+  A gift towards a whole project rather than towards a costed line inside one.
+
+  The picker submits one field, `towards`, and it has always held either a
+  need's slug or the word "other". A project is the third answer and it is
+  prefixed rather than bare, so a need whose slug happened to be "playground"
+  can never be mistaken for one — the same reasoning that has "other" checked
+  before the slug lookup in giveAction.
+*/
+const PROJECT_PREFIX = "project:";
+
+export function isNeedArea(value: string): value is NeedArea {
+  return NEED_AREAS.some((area) => area.id === value);
+}
+
+export function projectValue(id: NeedArea) {
+  return `${PROJECT_PREFIX}${id}`;
+}
+
+/** The project a submitted `towards` names, or null if it names none. */
+export function areaForValue(value: string): Area | null {
+  if (!value.startsWith(PROJECT_PREFIX)) return null;
+  const id = value.slice(PROJECT_PREFIX.length);
+  return NEED_AREAS.find((area) => area.id === id) ?? null;
 }
 
 /**

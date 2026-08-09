@@ -81,8 +81,15 @@ export const ACCOUNT_SETS = [
     help: "Pastor Simon's reconciliation of the build, line by line: what each thing was estimated at, what it actually cost, and the three items the money never reached.",
   },
   {
+    /*
+      Filed under the playground itself, now that the playground is a project a
+      gift can name. It used to be filed under the academy — the yard is the
+      academy's — which was the closest available answer while "playground" was
+      not one of the arms of the ministry. It is one now, so the people who open
+      these costings are the people who paid toward this yard.
+    */
     id: "playground",
-    area: "academy",
+    area: "playground",
     label: "The playground costings",
     help: "What each frame and each stretch of surfacing is estimated at, behind the total the page prints. These are things due to be delivered to the school yard.",
   },

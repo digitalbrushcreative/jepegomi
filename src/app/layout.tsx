@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Karla } from "next/font/google";
+import { shareImage } from "@/lib/seo";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -27,6 +28,13 @@ export const metadata: Metadata = {
     template: `%s · ${site.name}`,
   },
   description: site.tagline,
+  /*
+    The fallback card, for anything that does not build its own with pageMeta().
+    Public pages all do — see lib/seo.ts, and the reason they have to: metadata
+    merges shallowly, so a page that sets `openGraph` replaces this object whole
+    rather than adding to it. What is left inheriting this is /app, which nobody
+    shares, and it may as well unfurl as the ministry.
+  */
   openGraph: {
     title: `${site.name} — ${site.longName}`,
     description: site.tagline,
@@ -34,6 +42,13 @@ export const metadata: Metadata = {
     siteName: site.name,
     locale: "en_KE",
     type: "website",
+    images: [shareImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${site.name} — ${site.longName}`,
+    description: site.tagline,
+    images: [shareImage.url],
   },
 };
 

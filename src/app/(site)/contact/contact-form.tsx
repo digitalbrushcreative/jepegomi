@@ -86,7 +86,7 @@ export function ContactForm({ email }: { email: string }) {
         Send message
       </Submit>
 
-      <p className="text-center text-xs leading-relaxed text-smoke">
+      <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
         We reply from {email}. Nothing you write here is published, sold or added
         to a mailing list.
       </p>

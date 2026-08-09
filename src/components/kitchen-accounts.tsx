@@ -143,7 +143,7 @@ export function KitchenAccounts({
           </table>
         </div>
 
-        <div className="mt-6 rounded-xl border-l-4 border-marigold bg-marigold/10 px-6 py-5">
+        <div className="mt-6 rounded-xl border border-marigold/30 bg-marigold/10 px-6 py-5">
           <p className="text-sm leading-relaxed text-charcoal">
             Costs ran over on almost every line — cement, sand, drainage and
             ballast all cost more than planned, and the drainage work had to grow

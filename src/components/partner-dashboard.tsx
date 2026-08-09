@@ -184,7 +184,6 @@ export async function PartnerDashboard({
 
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="eyebrow text-marigold">Partner</p>
               <h1 className="font-display mt-3 text-4xl font-bold text-balance text-white sm:text-5xl">
                 {partner.name}
               </h1>
@@ -246,8 +245,7 @@ export async function PartnerDashboard({
         <>
           {projects.length > 0 && (
             <div className="mt-16">
-              <p className="eyebrow text-plum">Your giving</p>
-              <SectionTitle className="mt-3">What you have built</SectionTitle>
+              <SectionTitle>What you have built</SectionTitle>
               <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
                 Gathered under the work you have partnered with us for. Where an
                 item is still being funded, your share is on the left of the bar
@@ -279,8 +277,7 @@ export async function PartnerDashboard({
           */}
           {shows("kitchen") && (
             <div className="mt-20">
-              <p className="eyebrow text-plum">The accounts</p>
-              <SectionTitle className="mt-3">
+              <SectionTitle>
                 Where the kitchen money went
               </SectionTitle>
               <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
@@ -303,19 +300,19 @@ export async function PartnerDashboard({
             the school yard, with what each one is worth. The public page argues
             the case and gives the total; the lines are here.
 
-            Filed under the academy, because the yard is the academy's.
+            Filed under the playground itself, which is a project a gift can
+            name now rather than a corner of the academy's page.
           */}
           {shows("playground") && (
             <div className="mt-20">
-              <p className="eyebrow text-plum">The estimate</p>
-              <SectionTitle className="mt-3">
+              <SectionTitle>
                 The playground, line by line
               </SectionTitle>
               <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
                 What replacing the yard would take, item by item, in shillings
-                and dollars. Nobody in Nairobi has priced it yet, so every figure
-                here is an estimate and says so — the page will read differently
-                the day a real quote arrives.
+                and dollars. These are our own figures, built from ordinary
+                Nairobi supplier rates and sized to the yard, and a quote from a
+                supplier will move some of them.
               </p>
 
               <div className="mt-10">
@@ -375,8 +372,7 @@ export async function PartnerDashboard({
             </div>
 
             <div>
-              <p className="eyebrow text-plum">Your record</p>
-              <SectionTitle className="mt-3">Every claim</SectionTitle>
+              <SectionTitle>Every claim</SectionTitle>
 
               <ul className="mt-10 divide-y divide-sand-deep overflow-hidden rounded-2xl bg-white shadow-warm">
                 {pledges.map((pledge) => (
@@ -435,8 +431,7 @@ export async function PartnerDashboard({
 
           {open.length > 0 && (
             <div className="mt-24 border-t border-sand-deep pt-16">
-              <p className="eyebrow text-plum">Still open</p>
-              <SectionTitle className="mt-3">
+              <SectionTitle>
                 {continuing.length > 0
                   ? "More of what you started"
                   : "New ways to partner"}

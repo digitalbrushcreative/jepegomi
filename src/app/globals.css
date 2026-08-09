@@ -23,6 +23,16 @@
   --color-marigold-light: #f6c877;
   --color-clay: #c05f3c;
 
+  /*
+    The same two warm colours, taken down to where they can carry *text* on
+    paper. At their brand values they cannot: marigold on cream is 2.0:1 and
+    clay is 4.1:1, both under AA. The brand values are still the right ones for
+    fills, borders, icons and text on plum or green — this pair is only for
+    type on a light surface, and both clear 4.5:1 on cream, white and sand.
+  */
+  --color-marigold-ink: #8f5e14;
+  --color-clay-ink: #a84e30;
+
   /* Paper. The site sits on cloth and paper, never on flat white. */
   --color-cream: #fdfaf3;
   --color-sand: #f5ecdd;
@@ -110,6 +120,21 @@ body {
 @utility shell {
   max-width: 72rem;
   margin-inline: auto;
+}
+
+/*
+  The narrower reading measure `shell` leaves room for. `shell` decides how wide
+  a *section* is; this decides how far a line of prose inside it may run before
+  the eye stops finding the start of the next one — the run-ons were up at 134
+  and 165 characters, roughly double what is comfortable.
+
+  Set in `ch` rather than rem so it tracks the font size instead of fighting it:
+  an 18px intro and a 12px footnote both come out at the same character count,
+  which a fixed max-w-3xl does not do (at 18px it is 85 characters, at 12px it
+  is 128).
+*/
+@utility measure {
+  max-width: 68ch;
 }
 
 /*

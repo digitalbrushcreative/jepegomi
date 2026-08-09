@@ -4,6 +4,8 @@ import { paragraphs } from "@/cms/prose";
 import { FoodAtSchoolLogo } from "@/components/logos";
 import { PhotoBand, PhotoStrip } from "@/components/photos";
 import { ButtonLink, Eyebrow, SectionTitle } from "@/components/ui";
+import { pageMeta } from "@/lib/seo";
+import { RelatedLinks } from "@/components/related-links";
 
 const meal = {
   src: "/photos/meals/lunch.jpg",
@@ -35,11 +37,12 @@ const day = [
   },
 ];
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Food at School",
   description:
     "Morning porridge and a hot lunch, every school day, for children at Jepegomi Academy — a balanced diet that keeps a classroom alert and learning.",
-};
+  path: "/programs/food-at-school",
+});
 
 export default async function FoodAtSchoolPage() {
   const program = await getContent("foodAtSchool");
@@ -53,7 +56,6 @@ export default async function FoodAtSchoolPage() {
             title="Food at School"
             className="h-24 w-auto text-white"
           />
-          <p className="eyebrow mt-8 text-white/45">{program.eyebrow}</p>
           <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
             {program.heading}
           </h1>
@@ -100,7 +102,6 @@ export default async function FoodAtSchoolPage() {
       <section className="bg-green px-6 py-24">
         <div className="shell text-center">
           <div className="mx-auto max-w-2xl">
-            <p className="eyebrow text-white/50">{program.closingEyebrow}</p>
             <h2 className="font-display mt-4 text-3xl leading-tight font-bold text-white sm:text-4xl">
               {program.closingHeading}
             </h2>
@@ -130,6 +131,29 @@ export default async function FoodAtSchoolPage() {
           </div>
         </div>
       </section>
+
+      <RelatedLinks
+        links={[
+          {
+            href: "/academy",
+            label: "Jepegomi Academy",
+            blurb:
+              "The school these meals are cooked for — kindergarten to Grade 6, in classrooms the ministry built itself.",
+          },
+          {
+            href: "/needs",
+            label: "What's needed",
+            blurb:
+              "The open ledger: what finishing the dining area costs, line by line, and how much is still short.",
+          },
+          {
+            href: "/church",
+            label: "The church",
+            blurb:
+              "The congregation in Kahawa Sukari that runs the school and the feeding program.",
+          },
+        ]}
+      />
     </>
   );
 }

@@ -532,7 +532,19 @@ test.describe("a refused gift", () => {
         document.querySelectorAll("form").forEach((f) => f.setAttribute("novalidate", "")),
       );
 
-      await page.locator('form input[name="towards"]').first().check();
+      /*
+        A costed item, specifically — not a whole project and not "something
+        else". This test is about the balance on an item being enforced by the
+        server, and those other two have no balance to exceed: a gift towards
+        the playground, or towards words a giver typed, is refused by nothing
+        because there is nothing there to run out.
+      */
+      await page
+        .locator(
+          'form input[name="towards"]:not([value^="project:"]):not([value="other"])',
+        )
+        .first()
+        .check();
       await page.locator('form input[name="amount"]').first().fill("999999999");
       await page.locator('form input[name="name"]').first().fill("Refused Probe");
       await page

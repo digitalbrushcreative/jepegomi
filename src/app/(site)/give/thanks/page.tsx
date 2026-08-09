@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Confirm } from "@/app/(site)/give/thanks/confirm";
+import { getContent } from "@/cms/content";
 import { PageHero } from "@/components/ui";
 
 /**
@@ -21,9 +22,9 @@ export const metadata: Metadata = {
 
 /**
  * Reading the query string is what makes this dynamic, so it sits inside its
- * own Suspense boundary — the hero above it is static and is sent immediately,
- * while this waits for the request. Pesapal returns the giver with
- * `OrderTrackingId`, capitalised exactly like that.
+ * own Suspense boundary — the hero above it comes out of the content cache and
+ * is sent immediately, while this waits for the request. Pesapal returns the
+ * giver with `OrderTrackingId`, capitalised exactly like that.
  */
 async function Outcome({
   searchParams,
@@ -37,24 +38,22 @@ async function Outcome({
   return <Confirm trackingId={trackingId} />;
 }
 
-export default function ThanksPage({
+export default async function ThanksPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const content = await getContent("thanks");
+
   return (
     <>
-      <PageHero
-        eyebrow="Your gift"
-        title="Thank you"
-        intro="One moment while we confirm this with Pesapal."
-      />
+      <PageHero title={content.heading} intro={content.intro} />
 
       <section className="px-6 py-20 sm:py-24">
         <div className="shell max-w-2xl">
           <Suspense
             fallback={
-              <div className="rounded-xl border-l-4 border-marigold bg-marigold/8 px-6 py-6">
+              <div className="rounded-xl border border-marigold/30 bg-marigold/8 px-6 py-6">
                 <p className="font-display text-xl font-semibold">
                   Checking with Pesapal…
                 </p>
