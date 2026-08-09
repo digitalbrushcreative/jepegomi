@@ -418,8 +418,10 @@ export function SeedKitchenButton() {
       type="button"
       disabled={pending}
       onClick={() => {
-        start(() => {
-          void seedKitchenNeedsAction();
+        start(async () => {
+          await seedKitchenNeedsAction();
+          // A real page load — see the note on the action.
+          window.location.assign("/app/needs");
         });
       }}
       className={primaryButton}

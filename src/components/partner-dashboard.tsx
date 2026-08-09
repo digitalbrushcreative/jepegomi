@@ -8,15 +8,18 @@ import { ButtonLink, SectionTitle } from "@/components/ui";
 import { formatDay } from "@/lib/dates";
 import {
   PLEDGE_LABELS,
+  type NeedWithLedger,
   type Partner,
   type PartnerProject,
   type PledgeStatus,
+  areaOf,
   groupByProject,
   pledgeTowards,
 } from "@/lib/giving";
 import { usd } from "@/lib/money";
 import { getGalleryPhotos } from "@/lib/photos";
 import {
+  getPublishedNeeds,
   listAreaGiftsForPartner,
   listNeedsForPartner,
   listPledgesForPartner,
@@ -54,15 +57,35 @@ export async function PartnerDashboard({
   /** A strip above the name, inside the plum. Used by the /app preview. */
   notice?: ReactNode;
 }) {
-  const [needs, areaGifts, pledges, updates, site] = await Promise.all([
+  const [needs, areaGifts, pledges, updates, published, site] = await Promise.all([
     listNeedsForPartner(partner.id),
     listAreaGiftsForPartner(partner.id),
     listPledgesForPartner(partner.id),
     listUpdatesForPartner(partner.id),
+    getPublishedNeeds(),
     getContent("site"),
   ]);
 
   const projects = groupByProject(needs, areaGifts);
+
+  /*
+    What is still short, split by whether they have a stake in it already.
+
+    A church that built the kitchen and does not know three of its items were
+    never reached is not being asked; it is being kept in the dark by a page
+    that had room to say so. So the gap in their own project comes first, named
+    as the same project they already gave to, and everything else follows under
+    its own heading — an invitation rather than a bill.
+
+    Read from the public list, so nothing appears here that is not already being
+    asked for openly on /needs.
+  */
+  const open = published.filter(
+    (need) => !need.closed && need.ledger.openCents > 0,
+  );
+  const theirAreas = new Set(projects.map((project) => project.area.id));
+  const continuing = open.filter((need) => theirAreas.has(areaOf(need.area).id));
+  const elsewhere = open.filter((need) => !theirAreas.has(areaOf(need.area).id));
 
   /*
     Photographs to stand in for progress notes nobody has written yet — see the
@@ -299,10 +322,115 @@ export async function PartnerDashboard({
               </p>
             </div>
           </div>
+
+          {open.length > 0 && (
+            <div className="mt-24 border-t border-sand-deep pt-16">
+              <p className="eyebrow text-plum">Still open</p>
+              <SectionTitle className="mt-3">
+                {continuing.length > 0
+                  ? "More of what you started"
+                  : "New ways to partner"}
+              </SectionTitle>
+
+              {continuing.length > 0 && (
+                <>
+                  <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
+                    {continuing.length === 1
+                      ? "One item"
+                      : `${continuing.length} items`}{" "}
+                    in the work you have already partnered with us for{" "}
+                    {continuing.length === 1 ? "is" : "are"} still short —{" "}
+                    <strong className="font-semibold text-charcoal">
+                      {usd(
+                        continuing.reduce(
+                          (sum, need) => sum + need.ledger.openCents,
+                          0,
+                        ),
+                      )}
+                    </strong>{" "}
+                    between them. No obligation whatever; you have done a great
+                    deal already. It is here because you of all people should not
+                    have to go looking for it.
+                  </p>
+
+                  <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+                    {continuing.map((need) => (
+                      <OpenNeed key={need.id} need={need} />
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {elsewhere.length > 0 && (
+                <>
+                  <h3 className="font-display mt-14 text-xl font-semibold">
+                    {continuing.length > 0
+                      ? "Elsewhere in the ministry"
+                      : "What is needed just now"}
+                  </h3>
+                  <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
+                    Everything else currently being asked for, with what is left
+                    on each.
+                  </p>
+
+                  <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+                    {elsewhere.slice(0, 6).map((need) => (
+                      <OpenNeed key={need.id} need={need} />
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              <ButtonLink href="/needs" className="mt-12">
+                See everything that&apos;s needed
+              </ButtonLink>
+            </div>
+          )}
         </>
       )}
       </div>
     </>
+  );
+}
+
+/**
+ * One thing still short, offered to a partner who is already signed in.
+ *
+ * The link goes to the item's own page rather than to /give, because that page
+ * carries a giving form already locked to this item — so "engage with this"
+ * is one tap and no dropdown to get wrong.
+ */
+function OpenNeed({ need }: { need: NeedWithLedger }) {
+  return (
+    <li className="rounded-2xl bg-white p-6 shadow-warm">
+      <p className="eyebrow text-smoke">{areaOf(need.area).label}</p>
+      <h4 className="font-display mt-2 text-lg font-semibold">
+        <Link href={`/needs/${need.slug}`} className="hover:text-plum">
+          {need.title}
+        </Link>
+      </h4>
+
+      {need.summary && (
+        <p className="mt-2 text-sm leading-relaxed text-smoke">{need.summary}</p>
+      )}
+
+      <NeedBar ledger={need.ledger} className="mt-5" />
+
+      <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3">
+        <p className="text-sm text-smoke">
+          <span className="font-display tabular text-lg font-semibold text-charcoal">
+            {usd(need.ledger.openCents)}
+          </span>{" "}
+          of {usd(need.costCents)} still open
+        </p>
+        <Link
+          href={`/needs/${need.slug}`}
+          className="text-sm font-bold text-plum underline underline-offset-4 hover:text-green"
+        >
+          Partner with this
+        </Link>
+      </div>
+    </li>
   );
 }
 
