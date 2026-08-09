@@ -150,10 +150,10 @@ export async function PartnerDashboard({
               <p className="eyebrow text-plum">Your giving</p>
               <SectionTitle className="mt-3">What you have built</SectionTitle>
               <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
-                Gathered under the work it paid for. Where an item is still being
-                funded, your share is on the left of the bar and the rest is
-                everybody else&apos;s, shown only as a total — nobody else can
-                see your figures either.
+                Gathered under the work you have partnered with us for. Where an
+                item is still being funded, your share is on the left of the bar
+                and the rest is everybody else&apos;s, shown only as a total —
+                nobody else can see your figures either.
               </p>
 
               <ul className="mt-10 grid gap-5">
@@ -167,17 +167,22 @@ export async function PartnerDashboard({
           <div className="mt-20 grid gap-14 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
             <div>
               <p className="eyebrow text-plum">Updates</p>
+              {/*
+                Partnered with, not paid for. These churches are not customers
+                who bought a kitchen; the money is one part of a thing they are
+                in with the ministry, and the page they read should say so.
+              */}
               <SectionTitle className="mt-3">
-                The work you have paid for
+                The work you have partnered with us for
               </SectionTitle>
               <div className="mt-10">
                 {/*
-                  With nothing posted, a church that paid for the kitchen should
-                  not be shown an empty box — the kitchen is built, and there are
-                  photographs of it. They are offered as what they are: the work
-                  as it stands today, not dated progress notes somebody wrote.
-                  Saying which is the difference between showing them their
-                  kitchen and inventing a history for it.
+                  With nothing posted, a church that partnered with us on the
+                  kitchen should not be shown an empty box — the kitchen is
+                  built, and there are photographs of it. They are offered as
+                  what they are: the work as it stands today, not dated progress
+                  notes somebody wrote. Saying which is the difference between
+                  showing them their kitchen and inventing a history for it.
 
                   Only for the kitchen, and only when they gave towards it. A
                   church whose money went to school fees has no business being
@@ -187,7 +192,7 @@ export async function PartnerDashboard({
                   <>
                     <p className="mb-8 max-w-xl leading-relaxed text-smoke">
                       No progress notes have been posted yet. This is the kitchen
-                      as it stands — the building your giving paid for.
+                      as it stands — the building you partnered with us to raise.
                     </p>
                     <PhotoStrip photos={kitchenPhotos} />
                     <p className="mt-6 text-sm text-smoke">

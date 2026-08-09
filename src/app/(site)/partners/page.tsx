@@ -25,7 +25,7 @@ const promises: { icon: IconName; title: string; body: string }[] = [
   },
   {
     icon: "trowel",
-    title: "The work it paid for",
+    title: "The work you partnered with us for",
     body: "Progress on the items you backed, posted from Nairobi with photographs as it happens.",
   },
   {
