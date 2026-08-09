@@ -220,6 +220,13 @@ export async function seedKitchenNeedsAction() {
     });
   }
 
+  /*
+    The caller navigates. Seeding these three makes the panel this button lives
+    in disappear — it is offered only while the ledger is empty — and a redirect
+    or a revalidate re-renders the page without the component still waiting on
+    the result, so the button sits on "Adding…" over three needs that already
+    exist. The same shape was chased out of every control on /app/partners; see
+    the note there.
+  */
   refresh();
-  redirect("/app/needs");
 }
