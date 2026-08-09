@@ -11,11 +11,10 @@ import { PhotoStrip } from "@/components/photos";
 import { ProgressPot } from "@/components/progress-pot";
 import { SchoolBus } from "@/components/school-bus";
 import { ButtonLink, SectionTitle } from "@/components/ui";
-import { budgetTotals, donation, progress, statsFor } from "@/content/kitchen";
-import { bus, busCostUsdCents, busGapUsdCents } from "@/content/transport";
 import { getChildrenFed } from "@/lib/enrolment";
-import { percentOf, usd } from "@/lib/money";
-import { getGivingSummary } from "@/lib/needs";
+import { getKitchenReport, kitchenStats } from "@/lib/kitchen";
+import { busPrice, usd } from "@/lib/money";
+import { getGivingSummary, getStillNeededCents } from "@/lib/needs";
 import { site } from "@/lib/site";
 
 /*
@@ -61,12 +60,13 @@ const arms = [
   {
     src: "/photos/church/service.jpg",
     alt: "A man standing at a lectern reading to rows of seated children",
-    caption: "The church — the pupils' service in the sanctuary at Kahawa.",
+    caption:
+      "The church — the pupils' service in the sanctuary at Kahawa Sukari.",
   },
   {
     src: "/photos/academy/assembly.jpg",
     alt: "A long line of children in green uniform standing outdoors at assembly, a teacher reading to them",
-    caption: "The academy — morning assembly at the school in Kahawa.",
+    caption: "The academy — morning assembly at the school in Kahawa Sukari.",
   },
   {
     src: "/photos/school/lunch-queue-01.jpg",
@@ -171,15 +171,30 @@ const cardIcons: Record<string, IconName> = {
   its own instead of leaking into every other one.
 */
 export default async function HomePage() {
-  const [home, about, giving, childrenFed] = await Promise.all([
-    getContent("home"),
-    getContent("about"),
-    getGivingSummary(),
-    getChildrenFed(),
-  ]);
+  const [
+    home,
+    about,
+    siteContent,
+    transport,
+    giving,
+    childrenFed,
+    kitchenStillNeeded,
+    kitchen,
+  ] =
+    await Promise.all([
+      getContent("home"),
+      getContent("about"),
+      getContent("site"),
+      getContent("transport"),
+      getGivingSummary(),
+      getChildrenFed(),
+      getStillNeededCents("kitchen"),
+      getKitchenReport(),
+    ]);
 
-  const stats = statsFor(childrenFed);
-  const busRaised = percentOf(bus.heldUsdCents, busCostUsdCents);
+  const bus = busPrice(transport.busPriceKes, siteContent.kesPerUsd);
+
+  const stats = kitchenStats(kitchen, childrenFed);
 
   /*
     What the kitchen brings to the needs slider that the CMS cannot: figures and
@@ -189,24 +204,25 @@ export default async function HomePage() {
     need that has not been costed yet has to do.
   */
   const needFigures = {
-    /* "Held in the bank" only while something is held — see the figure row on
-       /programs/transport for why a nil balance is left out rather than shown. */
+    /* What a bus costs, and nothing about what is banked against it. The tile
+       used to carry "Held in the bank" alongside — see the bus fields in
+       cms/schema.ts. */
     "/programs/transport": [
-      { label: `A ${bus.seats}-seater bus`, value: usd(busCostUsdCents) },
-      ...(bus.heldUsdCents > 0
-        ? [{ label: "Held in the bank", value: usd(bus.heldUsdCents) }]
-        : []),
-      { label: "Still needed", value: usd(busGapUsdCents) },
+      { label: `A ${transport.busSeats}-seater bus`, value: usd(bus.usdCents) },
     ],
+    /*
+      The middle tile was the size of the gift that built it. What a partner
+      church gave is that church's business and the ministry's, not a figure for
+      the front page to advertise — so the tile says what the kitchen does, and
+      the accounts themselves are behind the partner door. See
+      lib/disclosure.ts, and the note on the gift field in cms/schema.ts.
+    */
     "/projects/kitchen": [
       { label: stats[0].label, value: stats[0].value },
-      {
-        label: `Given by ${donation.donor}`,
-        value: `$${donation.amountUsd.toLocaleString("en-US")}`,
-      },
+      { label: stats[1].label, value: stats[1].value },
       {
         label: "Still needed to finish",
-        value: `$${budgetTotals.stillNeeded.toLocaleString("en-US")}`,
+        value: usd(kitchenStillNeeded),
       },
     ],
   };
@@ -224,12 +240,7 @@ export default async function HomePage() {
       <ul className="grid w-full grid-cols-2 gap-3">
         <PhotoTile {...transportCollage[0]} />
         <StatTile>
-          <SchoolBus percent={busRaised} className="w-full" />
-          {busRaised > 0 && (
-            <p className="font-display mt-2 text-[2rem] leading-none font-semibold">
-              {busRaised}%
-            </p>
-          )}
+          <SchoolBus percent={0} className="w-full" />
         </StatTile>
         <PhotoTile {...transportCollage[1]} />
         <PhotoTile {...transportCollage[2]} />
@@ -248,11 +259,11 @@ export default async function HomePage() {
       <ul className="grid w-full grid-cols-2 gap-3">
         <StatTile>
           <ProgressPot
-            percent={progress.percentComplete}
+            percent={kitchen.percentComplete}
             className="h-[4.5rem] w-auto"
           />
           <p className="font-display mt-2.5 text-[2rem] leading-none font-semibold">
-            {progress.percentComplete}%
+            {kitchen.percentComplete}%
           </p>
         </StatTile>
         {kitchenCollage.map((photo) => (
@@ -391,7 +402,11 @@ export default async function HomePage() {
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-smoke">
               {about.intro}
             </p>
-            <ButtonLink href="/about" variant="ghost" className="mt-7 text-plum">
+            <ButtonLink
+              href="/about"
+              variant="ghost"
+              className="mt-7 text-plum"
+            >
               Meet them
             </ButtonLink>
           </div>

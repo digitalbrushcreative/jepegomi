@@ -2,6 +2,7 @@
 
 import { isEmail, looksAutomated, text } from "@/lib/forms";
 import { givingDetails, isMailConfigured, publicInbox, queue } from "@/lib/mail";
+import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 
 /**
  * "Send me the details."
@@ -49,6 +50,23 @@ export async function requestGivingDetailsAction(
     follow — there is nothing here worth relaying.
   */
   if (looksAutomated(formData)) return { done: { email } };
+
+  /*
+    This is the one form on the site that mails *an address of the caller's
+    choosing* — which is the exact shape a script points at a list, and the
+    reason the comment above says what it does about there being nothing here
+    worth relaying. A limit is the other half of that answer: harmless content
+    sent ten thousand times is still ten thousand messages from this domain.
+  */
+  const limit = await consume(
+    `form:giving-details:${await callerKey()}`,
+    RATES.contactForm,
+  );
+  if (!limit.ok) {
+    return {
+      error: `That is several requests in a short time. Try again ${retryWording(limit.retryAfterSeconds)}, or write to ${publicInbox()}.`,
+    };
+  }
 
   if (!isMailConfigured()) {
     return {

@@ -2,19 +2,26 @@
 
 import { useActionState, useTransition } from "react";
 import { usd } from "@/lib/money";
+import { MAX_LABEL } from "@/lib/photo-rules";
 import {
   NEED_AREAS,
+  NEED_ICONS,
   type NeedWithLedger,
   type PledgeStatus,
+  areaOf,
 } from "@/lib/giving";
+import type { NeedPart } from "@/lib/projects";
 import {
   createNeedAction,
+  createPartAction,
   deleteNeedAction,
+  deletePartAction,
   deleteUpdateAction,
   postUpdateAction,
   seedKitchenNeedsAction,
   setPledgeStatusAction,
   updateNeedAction,
+  updatePartAction,
 } from "./actions";
 
 const inputClass =
@@ -74,7 +81,13 @@ function Notice({ error, saved }: { error?: string; saved?: boolean }) {
  * whose editor showed a field its creator did not is how a cost ends up saved
  * without the summary that explains it.
  */
-function NeedFields({ need }: { need?: NeedWithLedger }) {
+function NeedFields({
+  need,
+  parts,
+}: {
+  need?: NeedWithLedger;
+  parts: NeedPart[];
+}) {
   return (
     <>
       <Field label="What is needed">
@@ -106,7 +119,67 @@ function NeedFields({ need }: { need?: NeedWithLedger }) {
           />
         </Field>
 
-        <Field label="Part of the ministry">
+        {/*
+          The two fields that turn a list of items into a set of accounts.
+
+          Both are ordinarily left alone — most items cost what they were going
+          to cost and need no explanation. They exist for the ones that did not:
+          Pastor Simon's letter reconciles cement estimated at $900 against
+          $1,550 actually spent, and until these columns existed that letter had
+          to live in a TypeScript file because the ledger had nowhere to put it.
+
+          They show only in a project's accounts, behind the partner door — never
+          on a public page. See lib/disclosure.ts.
+        */}
+        <Field
+          label="Estimated, if that was different"
+          hint="What it was expected to cost, when the final figure differs. Leave blank for anything that came in at its price — most things do."
+        >
+          <input
+            name="estimated"
+            inputMode="decimal"
+            defaultValue={
+              need?.estimatedCents ? String(need.estimatedCents / 100) : ""
+            }
+            placeholder="900"
+            className={`${inputClass} tabular`}
+          />
+        </Field>
+
+        <Field
+          label="Picture"
+          hint="Shown beside the item on the project page. Leave it on the project's own icon unless a different one says something — a tank, a floor, a light."
+        >
+          <select
+            name="icon"
+            defaultValue={need?.icon ?? ""}
+            className={inputClass}
+          >
+            <option value="">The project&apos;s own icon</option>
+            {NEED_ICONS.map((icon) => (
+              <option key={icon} value={icon}>
+                {icon}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field
+          label="Why the two differ"
+          hint="One line, for the accounts — “price rose, and the job grew”. Shown beside the item to the partners who paid for it."
+        >
+          <input
+            name="note"
+            defaultValue={need?.note ?? ""}
+            placeholder="More needed for drainage work"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field
+          label="Part of the ministry"
+          hint="Ignored when the item is inside a part — the part decides which project it belongs to."
+        >
           <select
             name="area"
             defaultValue={need?.area ?? "other"}
@@ -120,7 +193,7 @@ function NeedFields({ need }: { need?: NeedWithLedger }) {
           </select>
         </Field>
 
-        <Field label="Order" hint="Lower numbers come first on the page.">
+        <Field label="Order" hint="Lower numbers come first within its part.">
           <input
             name="position"
             type="number"
@@ -129,6 +202,36 @@ function NeedFields({ need }: { need?: NeedWithLedger }) {
           />
         </Field>
       </div>
+
+      {/*
+        Which step of the work this cost belongs to — and so, in the end,
+        whether anybody is asked for it yet. An item left out of a part is
+        offered from the moment it is published, which is right for the things
+        that are not steps in anything: a term of a teacher's pay does not wait
+        for a wall.
+      */}
+      <Field
+        label="Which part of the work"
+        hint={
+          parts.length === 0
+            ? "No parts yet. Add one further down the page if this project has an order to it — walls before roof, roof before paint."
+            : "Items inside a part are only offered once the parts before it are fully claimed."
+        }
+        className="mt-5"
+      >
+        <select
+          name="partId"
+          defaultValue={need?.partId ?? ""}
+          className={inputClass}
+        >
+          <option value="">Not in a part — offer it straight away</option>
+          {parts.map((part) => (
+            <option key={part.id} value={part.id}>
+              {areaOf(part.area).label} · {part.sequence}. {part.title}
+            </option>
+          ))}
+        </select>
+      </Field>
 
       <Field
         label="One line about it"
@@ -191,12 +294,12 @@ function NeedFields({ need }: { need?: NeedWithLedger }) {
   );
 }
 
-export function NewNeedForm() {
+export function NewNeedForm({ parts }: { parts: NeedPart[] }) {
   const [state, formAction, pending] = useActionState(createNeedAction, undefined);
 
   return (
     <form action={formAction} className="mt-6">
-      <NeedFields />
+      <NeedFields parts={parts} />
       <Notice error={state?.error} saved={state?.saved} />
       <button type="submit" disabled={pending} className={`${primaryButton} mt-6`}>
         {pending ? "Adding…" : "Add this item"}
@@ -205,17 +308,180 @@ export function NewNeedForm() {
   );
 }
 
-export function EditNeedForm({ need }: { need: NeedWithLedger }) {
+export function EditNeedForm({
+  need,
+  parts,
+}: {
+  need: NeedWithLedger;
+  parts: NeedPart[];
+}) {
   const [state, formAction, pending] = useActionState(updateNeedAction, undefined);
 
   return (
     <form action={formAction} className="mt-6">
       <input type="hidden" name="id" value={need.id} />
-      <NeedFields need={need} />
+      <NeedFields need={need} parts={parts} />
       <Notice error={state?.error} saved={state?.saved} />
       <button type="submit" disabled={pending} className={`${primaryButton} mt-6`}>
         {pending ? "Saving…" : "Save changes"}
       </button>
+    </form>
+  );
+}
+
+/* ------------------------------------------------------- parts of a project */
+
+/**
+ * The fields of a part, shared by the add form and the row editors, for the
+ * same reason NeedFields is shared.
+ *
+ * The number is the whole feature and so it is the field with the explanation
+ * on it. Everything else here is a label.
+ */
+function PartFields({ part }: { part?: NeedPart }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-[1fr_1fr_6rem]">
+      <Field label="Which project">
+        <select
+          name="area"
+          defaultValue={part?.area ?? "kitchen"}
+          className={inputClass}
+        >
+          {NEED_AREAS.map((area) => (
+            <option key={area.id} value={area.id}>
+              {area.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <Field label="What this step is">
+        <input
+          name="title"
+          required
+          defaultValue={part?.title}
+          placeholder="Walls up"
+          className={inputClass}
+        />
+      </Field>
+
+      <Field label="Order">
+        <input
+          name="sequence"
+          type="number"
+          defaultValue={part?.sequence ?? 0}
+          className={`${inputClass} tabular`}
+        />
+      </Field>
+    </div>
+  );
+}
+
+/**
+ * Adding a step of the work.
+ *
+ * Nothing about this appears on the site until costs are put inside it, which
+ * is deliberate — planning the order of a build is something Simon should be
+ * able to do in /app on a Tuesday without publishing a half-thought-through
+ * budget to every partner church.
+ */
+export function NewPartForm() {
+  const [state, formAction, pending] = useActionState(createPartAction, undefined);
+
+  return (
+    <form action={formAction} className="mt-6">
+      <PartFields />
+
+      <Field
+        label="One line about it"
+        hint="Shown once above the items in this step, on /needs and in the giving form."
+        className="mt-4"
+      >
+        <input
+          name="summary"
+          placeholder="The block walls, up to roof height."
+          className={inputClass}
+        />
+      </Field>
+
+      <Notice error={state?.error} saved={state?.saved} />
+      <button type="submit" disabled={pending} className={`${primaryButton} mt-6`}>
+        {pending ? "Adding…" : "Add this part"}
+      </button>
+    </form>
+  );
+}
+
+/**
+ * One part, editable where it sits.
+ *
+ * Inline rather than on a page of its own because the thing being edited is
+ * almost always the number, and a number that decides an ordering is impossible
+ * to set sensibly without the rest of the ordering in front of you.
+ */
+export function EditPartForm({
+  part,
+  itemCount,
+}: {
+  part: NeedPart;
+  itemCount: number;
+}) {
+  const [state, formAction, pending] = useActionState(updatePartAction, undefined);
+  const [deleting, startDelete] = useTransition();
+
+  return (
+    <form action={formAction} className="p-6">
+      <input type="hidden" name="id" value={part.id} />
+      <PartFields part={part} />
+
+      <Field label="One line about it" className="mt-4">
+        <input name="summary" defaultValue={part.summary} className={inputClass} />
+      </Field>
+
+      <Notice error={state?.error} saved={state?.saved} />
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending} className={quietButton}>
+          {pending ? "Saving…" : "Save this part"}
+        </button>
+
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={() => {
+            /*
+              Always allowed, whatever is claimed against the items — deleting a
+              part deletes a heading and nothing else. The items come loose and
+              go on sitting under the project with their ledgers untouched, and
+              the message says so, because "delete" next to a list of funded
+              costs should never be a leap of faith.
+            */
+            if (
+              !confirm(
+                itemCount === 0
+                  ? `Delete “${part.title}”? Nothing is in it.`
+                  : `Delete “${part.title}”? Its ${itemCount} ${
+                      itemCount === 1 ? "item stays" : "items stay"
+                    } on the site, with everything given to them, but will no longer wait their turn.`,
+              )
+            ) {
+              return;
+            }
+            startDelete(() => {
+              void deletePartAction(part.id);
+            });
+          }}
+          className={quietButton}
+        >
+          {deleting ? "Deleting…" : "Delete"}
+        </button>
+
+        <p className="text-sm text-smoke">
+          {itemCount === 0
+            ? "Nothing costed in it yet."
+            : `${itemCount} ${itemCount === 1 ? "item" : "items"}`}
+        </p>
+      </div>
     </form>
   );
 }
@@ -350,7 +616,7 @@ export function PostUpdateForm({ needId }: { needId: string }) {
       </Field>
 
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
-        <Field label="A photo" hint="Optional. JPEG, PNG, WebP or AVIF, up to 15 MB.">
+        <Field label="A photo" hint={`Optional. JPEG, PNG, WebP or AVIF, up to ${MAX_LABEL}.`}>
           <input
             name="photo"
             type="file"

@@ -176,6 +176,25 @@ function Rail({
   active: string;
   onNavigate: () => void;
 }) {
+  /*
+    Whether a top-level link is itself the page we are on.
+
+    One destination is in this rail twice on purpose: Site details is a document
+    like any other, so it appears in the Pages drawer, and it is also the thing
+    people come to Settings looking for. At /app/pages/site both of them matched
+    and both lit up — two current pages in one rail, which is wrong for anybody
+    reading it and worse for a screen reader, which is simply told there are two.
+
+    So the rule is that the top-level link wins. It is the one with a section
+    heading above it saying where you are, and the one still on screen when the
+    drawer is shut.
+  */
+  const ownedByTopLevel = sections.some((section) =>
+    section.items.some((item) => item.href === active),
+  );
+
+  const childLit = (href: string) => !ownedByTopLevel && active === href;
+
   return (
     <nav aria-label="Manage" className="flex-1 overflow-y-auto px-3 py-5">
       {sections.map((section, index) => (
@@ -236,10 +255,10 @@ function Rail({
                               href={child.href}
                               onClick={onNavigate}
                               aria-current={
-                                active === child.href ? "page" : undefined
+                                childLit(child.href) ? "page" : undefined
                               }
                               className={`block truncate rounded px-2 py-1.5 text-[13px] transition-colors ${
-                                active === child.href
+                                childLit(child.href)
                                   ? "bg-white/10 font-semibold text-white"
                                   : "text-cream/55 hover:bg-white/6 hover:text-white"
                               }`}

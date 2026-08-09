@@ -27,10 +27,10 @@ export const site = {
     see lib/mail/inboxes.ts, and MAIL.md for the DNS behind it.
   */
   email: "support@jepegomi.org",
-  location: "Kahawa, Nairobi, Kenya",
+  location: "Kahawa Sukari, Nairobi, Kenya",
   leaders: "Pastor Simon & Joyce Nderitu",
   tagline:
-    "A church and academy in Nairobi, feeding children and building futures.",
+    "A church, a school and a Bible college in Nairobi — teaching children, training adults, and building what they learn in.",
 } as const;
 
 /*
@@ -74,12 +74,13 @@ export const navLinks: NavLink[] = [
       {
         label: "Jepegomi Academy",
         href: "/academy",
-        blurb: "Quality education with values — the school in Kahawa.",
+        blurb: "Quality education with values — the school in Kahawa Sukari.",
       },
       {
         label: "Bible College",
         href: "/college",
-        blurb: "The Contextual Bible Training College — the ministry's training arm.",
+        blurb:
+          "The Contextual Bible Training College — the ministry's training arm.",
       },
     ],
   },
@@ -95,7 +96,7 @@ export const navLinks: NavLink[] = [
       {
         label: "Jepegomi Digital",
         href: "/programs/digital",
-        blurb: "Services streamed from Kahawa on YouTube and Facebook.",
+        blurb: "Services streamed from Kahawa Sukari on YouTube and Facebook.",
       },
       {
         label: "School Transport",
@@ -111,7 +112,12 @@ export const navLinks: NavLink[] = [
       {
         label: "Kitchen Build",
         href: "/projects/kitchen",
-        blurb: "From open fires to a proper kitchen. Follow the progress.",
+        blurb: "From open fires to a proper kitchen. See what is left.",
+      },
+      {
+        label: "The Playground",
+        href: "/projects/playground",
+        blurb: "Welded on site, standing on bare earth. What replacing it costs.",
       },
     ],
   },

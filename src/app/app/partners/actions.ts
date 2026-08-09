@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath, updateTag } from "next/cache";
-import { budget, donation } from "@/content/kitchen";
 import { requireUser } from "@/lib/auth";
+import { getKitchenReport } from "@/lib/kitchen";
 import {
   type NeedArea,
   type PledgeStatus,
@@ -127,15 +127,94 @@ export async function addPartnerAction(input: {
 
 /* ------------------------------------------------ the church that built it */
 
+/* ------------------------------------------------ one-time installation data */
+
+/*
+  Pastor Simon's letter to the donor, transcribed once.
+
+  This is not the site's copy of the reconciliation — that is in the `needs`
+  table, where Simon can correct it, and `getProjectBudget` reads it back. This
+  is the *installer*: the figures typed in from the letter so the ledger could be
+  populated without anybody re-keying ten rows into a form. It ran, and the rows
+  it wrote are the accounts now.
+
+  It stays because a seeder whose data has been deleted is a seeder that cannot
+  be re-run against a fresh database, and because the letter is the provenance of
+  every figure in that table. Nothing on the site reads it.
+*/
+
+type LetterLine = {
+  item: string;
+  estimatedUsd: number;
+  /** null = never bought/done, because the money ran out. */
+  actualUsd: number | null;
+  note: string;
+};
+
+/**
+ * The estimated-vs-actual reconciliation from Simon's letter to the donor.
+ *
+ * Both columns balance to the $8,000 gift exactly: the estimates sum to $8,000,
+ * and the six actual figures sum to $8,000. Transport is the one line the letter
+ * marks "Used" without giving a figure, so it stays null rather than guessed.
+ *
+ * Lines 1–6 came in over estimate; the roofing-and-labour line came in *under*
+ * because Pastor Simon did the building he knew how to do himself, as his own
+ * giving to the ministry, and put the saved labour into materials.
+ */
+const letter: LetterLine[] = [
+  {
+    item: "Cement",
+    estimatedUsd: 900,
+    actualUsd: 1550,
+    note: "More needed for drainage work",
+  },
+  {
+    item: "Sand",
+    estimatedUsd: 1200,
+    actualUsd: 1650,
+    note: "Price rose, and the job grew",
+  },
+  {
+    item: "Drainage",
+    estimatedUsd: 900,
+    actualUsd: 1450,
+    note: "Larger area required under NEEMA regulations",
+  },
+  {
+    item: "Ballast",
+    estimatedUsd: 700,
+    actualUsd: 1175,
+    note: "More area to cover",
+  },
+  {
+    item: "Jiko — wood-burning stoves",
+    estimatedUsd: 656,
+    actualUsd: 1055,
+    note: "Better quality and a bigger size than planned",
+  },
+  {
+    item: "Roofing & labour",
+    estimatedUsd: 1554,
+    actualUsd: 1120,
+    note: "Came in under — Pastor Simon did the building he could himself, as his giving to the ministry",
+  },
+  {
+    item: "Transport",
+    estimatedUsd: 240,
+    actualUsd: null,
+    note: "Used",
+  },
+];
+
 /**
  * Encounter Church, and the $8,000 that built the kitchen.
  *
  * The largest gift this ministry has received is the one the ledger knew
  * nothing about. It arrived years before this site did, by transfer, and was
  * reconciled in a letter — which is where every figure below comes from, read
- * out of src/content/kitchen.ts rather than retyped, so the ledger and the
- * budget panel on /projects/kitchen cannot come to disagree about what the
- * cement cost.
+ * out of the transcription below rather than retyped, so the ledger and the
+ * letter cannot come to disagree about what the cement cost.
  *
  * The six lines go in as needs, closed and unpublished. Closed because the work
  * is done; unpublished because a site that goes on asking for cement somebody
@@ -150,7 +229,7 @@ export async function addPartnerAction(input: {
  * out from the page that has always been careful not to.
  *
  * Nothing about the public site changes. The kitchen page names no donor, on
- * purpose (see the note in src/content/kitchen.ts), and none of these rows is
+ * purpose (see the donor fields under Giving → Kitchen Build report), and none of these rows is
  * published.
  */
 export async function seedEncounterChurchAction(rawEmail: string) {
@@ -168,18 +247,19 @@ export async function seedEncounterChurchAction(rawEmail: string) {
     };
   }
 
-  const lines = budget.filter((line) => line.actualUsd !== null);
-  const totalUsd = lines.reduce((sum, line) => sum + (line.actualUsd ?? 0), 0);
+  const report = await getKitchenReport();
+  const giftUsd = report.giftCents / 100;
+  const totalUsd = letter.reduce((sum, line) => sum + (line.actualUsd ?? 0), 0);
 
   /*
-    A guard against this file and the kitchen content drifting apart. If somebody
-    corrects a figure in the letter and the six no longer come to the gift, the
+    A guard against the transcription above and the gift disagreeing. If somebody
+    corrects a figure in the letter and the lines no longer come to the gift, the
     right outcome is a refusal to write a ledger that does not balance — not
     eight thousand dollars of rows that are quietly $150 out.
   */
-  if (totalUsd !== donation.amountUsd) {
+  if (totalUsd !== giftUsd) {
     return {
-      error: `The budget lines come to $${totalUsd}, not the $${donation.amountUsd} gift. Fix src/content/kitchen.ts before seeding.`,
+      error: `The budget lines come to $${totalUsd}, not the $${giftUsd} gift recorded under Giving → Kitchen Build report. Fix whichever of the two is wrong before seeding.`,
     };
   }
 
@@ -190,9 +270,9 @@ export async function seedEncounterChurchAction(rawEmail: string) {
       name: "Encounter Church",
       email,
       kind: "church",
-      location: donation.donorLocation,
+      location: report.donorLocation,
       contactName: "",
-      note: `Gave the $${donation.amountUsd.toLocaleString("en-US")} that built the kitchen, reconciled in Pastor Simon's letter. Not named on the public site.`,
+      note: `Gave the $${giftUsd.toLocaleString("en-US")} that built the kitchen, reconciled in Pastor Simon's letter. Not named on the public site.`,
       verified: true,
     });
 
@@ -201,16 +281,36 @@ export async function seedEncounterChurchAction(rawEmail: string) {
     }
     partnerId = created.id;
 
-    for (const [index, line] of lines.entries()) {
+    /*
+      Every line of the letter, including the transport it marks "Used" with no
+      figure against it. That one goes in at zero, which is how a closed row says
+      "spent, amount unknown" — see `getProjectBudget`. It was left out entirely
+      while the accounts lived in a source file and the ledger only had one money
+      column; leaving it out now would quietly drop a line from Simon's letter.
+    */
+    for (const [index, line] of letter.entries()) {
       const need = await createNeed({
         title: line.item,
         summary: line.note,
-        detail: [
-          `One of the six lines the $${donation.amountUsd.toLocaleString("en-US")} kitchen gift was spent on, as reconciled in Pastor Simon's letter.`,
-          `Estimated $${line.estimatedUsd.toLocaleString("en-US")}, actually $${(line.actualUsd ?? 0).toLocaleString("en-US")} — ${line.note.toLowerCase()}.`,
-        ].join("\n\n"),
+        /*
+          The figures used to be written out in this paragraph as well, because
+          the row had nowhere else to hold them. It has now: `estimatedCents` and
+          `note` are columns, and a project's accounts are rebuilt from them by
+          `getProjectBudget`. Repeating them in prose here would be the same two
+          numbers in two places again, free to disagree the first time Simon
+          corrects one in /app.
+        */
+        detail: `One of the lines the $${giftUsd.toLocaleString("en-US")} kitchen gift was spent on, as reconciled in Pastor Simon's letter.`,
         area: "kitchen",
+        // Work that was finished before the ledger existed, so it is a record
+        // rather than a step in anything still to come.
+        partId: null,
         costCents: (line.actualUsd ?? 0) * 100,
+        estimatedCents: line.estimatedUsd * 100,
+        note: line.note,
+        // Finished work, filed under the kitchen — the project's own icon says
+        // as much as any per-item picture would.
+        icon: "",
         published: false,
         closed: true,
         position: index,
@@ -224,10 +324,17 @@ export async function seedEncounterChurchAction(rawEmail: string) {
         it cannot fail here: the need was created a moment ago, for exactly this
         amount, from the same figure.
       */
+      /*
+        No pledge against the line with no figure. A pledge is an amount somebody
+        put their name to, the column refuses zero, and Encounter's total must
+        come to the gift — which it does from the lines that carry figures.
+      */
+      if (line.actualUsd === null) continue;
+
       const claim = await recordNeedPledge({
         needId: need.id,
         partnerId,
-        amountCents: (line.actualUsd ?? 0) * 100,
+        amountCents: line.actualUsd * 100,
         message: "",
       });
 

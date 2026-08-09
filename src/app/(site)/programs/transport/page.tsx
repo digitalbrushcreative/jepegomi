@@ -5,15 +5,8 @@ import { Icon } from "@/components/icons";
 import { PhotoStrip } from "@/components/photos";
 import { SchoolBus } from "@/components/school-bus";
 import { ButtonLink, Eyebrow, SectionTitle } from "@/components/ui";
-import { donation } from "@/content/kitchen";
-import {
-  bus,
-  busCostUsdCents,
-  busGapUsdCents,
-  priceInShillings,
-  van,
-} from "@/content/transport";
-import { percentOf, usd } from "@/lib/money";
+import { getKitchenReport } from "@/lib/kitchen";
+import { busPrice, usd } from "@/lib/money";
 
 export const metadata: Metadata = {
   title: "School Transport",
@@ -30,47 +23,36 @@ const vehicle = [
   {
     src: "/photos/transport/van-off-road.jpg",
     alt: "The same yellow school van standing on grass at the edge of the school field, out of service",
-    caption: "Standing since it broke down — the repair is what brings it back.",
+    caption:
+      "Standing since it broke down — the repair is what brings it back.",
   },
 ];
 
 export default async function TransportPage() {
-  const transport = await getContent("transport");
+  const [transport, site, kitchen] = await Promise.all([
+    getContent("transport"),
+    getContent("site"),
+    getKitchenReport(),
+  ]);
 
-  const raised = percentOf(bus.heldUsdCents, busCostUsdCents);
+  const bus = busPrice(transport.busPriceKes, site.kesPerUsd);
 
   /*
-    The order is the argument: what the bus costs, what is already held against
-    it, and what is left. The last one is the only number a reader can do
-    anything about, so it is the one the page ends on.
+    One figure, because there is only one a stranger has any business reading:
+    what a bus costs. A dealer's price is public and it is the thing the page is
+    asking for.
 
-    The middle figure appears only once there is something in it. Nothing is
-    held toward the bus today — the $5,000 given for a vehicle bought the van —
-    and a "$0 held" cell would be a number pretending to be progress. The two
-    figures that remain read the same, which is the point: the cost is the ask.
+    What used to sit beside it was "Held in the bank" and a percentage meter
+    reading off it — a running statement of the cash this ministry had on hand,
+    updating itself as gifts arrived. See the note on the bus fields in
+    cms/schema.ts. A partner who has given toward the bus sees what has come in
+    on their own dashboard, where the answer belongs.
   */
   const figures = [
     {
-      value: usd(busCostUsdCents),
-      label: `A ${bus.seats}-seater bus`,
-      detail: `${priceInShillings} — converted at today's rate, rounded`,
-    },
-    ...(bus.heldUsdCents > 0
-      ? [
-          {
-            value: usd(bus.heldUsdCents),
-            label: "Held in the bank",
-            detail: "Given toward a vehicle, unspent",
-          },
-        ]
-      : []),
-    {
-      value: usd(busGapUsdCents),
-      label: "Still needed",
-      detail:
-        bus.heldUsdCents > 0
-          ? "The gap between the two"
-          : "The whole cost — nothing is banked against it yet",
+      value: usd(bus.usdCents),
+      label: `A ${transport.busSeats}-seater bus`,
+      detail: `${bus.shillings} — converted at today's rate, rounded`,
     },
   ];
 
@@ -106,17 +88,16 @@ export default async function TransportPage() {
             progress toward the bus.
           */}
           <p className="mt-6 max-w-2xl leading-relaxed text-smoke">
-            This van was bought with{" "}
+            This van was bought with money{" "}
             <strong className="font-semibold text-charcoal">
-              {usd(van.purchaseGiftUsdCents)}
-            </strong>{" "}
-            given toward a school vehicle, and {donation.donorTitled} has since
-            given{" "}
+              given toward a school vehicle
+            </strong>
+            , and {kitchen.donorTitled} has since given toward{" "}
             <strong className="font-semibold text-charcoal">
-              {usd(van.repairGiftUsdCents)}
-            </strong>{" "}
-            toward repairing it and returning it to the road. Both gifts are for
-            the van, not the bus, and neither is counted in the figures below.
+              repairing it and returning it to the road
+            </strong>
+            . Both gifts are for the van, not the bus, and neither is counted in
+            the figure below.
           </p>
         </div>
       </section>
@@ -152,27 +133,16 @@ export default async function TransportPage() {
             in front — the two read as one object rather than a picture next to
             a table. Side-by-side only; stacked, there is nothing to tuck under.
           */}
+          {/*
+            An empty bus, and it stays empty. The meter used to fill as money
+            came in, which is a picture of a bank balance — see the note in
+            the bus fields in cms/schema.ts.
+          */}
           <div className="relative z-0 mx-auto w-full max-w-sm text-center lg:mr-[-5rem] lg:max-w-md">
-            <SchoolBus percent={raised} className="w-full" />
-            {/* Nothing sits under the picture while there is nothing to report:
-                a bus and the words "nothing raised toward it yet" say the same
-                thing twice, and the figure row beside it says it a third time.
-                The percentage comes back on its own the moment there is one. */}
-            {raised > 0 && (
-              <>
-                <p className="font-display mt-6 text-5xl leading-none font-semibold text-plum">
-                  {raised}%
-                </p>
-                <p className="eyebrow mt-3 text-smoke">Of the bus, raised</p>
-              </>
-            )}
+            <SchoolBus percent={0} className="w-full" />
           </div>
 
-          <dl
-            className={`relative z-10 grid gap-px overflow-hidden rounded-2xl bg-black/8 shadow-warm ${
-              figures.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2"
-            }`}
-          >
+          <dl className="relative z-10 grid gap-px overflow-hidden rounded-2xl bg-black/8 shadow-warm">
             {figures.map((figure) => (
               <div key={figure.label} className="bg-white p-7">
                 <dt className="eyebrow text-plum">{figure.label}</dt>

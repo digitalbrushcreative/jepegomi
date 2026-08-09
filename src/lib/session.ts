@@ -68,12 +68,49 @@ export function session(scope: string, cookieName: string): Session {
     },
 
     async read() {
-      const raw = (await cookies()).get(cookieName)?.value;
+      /*
+        Reading the cookie jar can throw, and the one case that matters is not
+        hypothetical: when a `useActionState` form's action returns instead of
+        redirecting, Next re-renders the page as part of the action's response,
+        and `cookies()` inside that render pass raises an InvariantError —
+        "Received an underlying cookies object that does not match either
+        `cookies` or `mutableCookies`".
+
+        That is what made a partner who mistyped their password watch the sign-
+        in form vanish and sit on "Loading…" for ever: /partners asks
+        `currentPartner()` while it renders, so it could redirect somebody who
+        is already signed in, and the throw took the whole Suspense boundary
+        down with it. The error was on the server; the screen just stopped.
+
+        So the answer to "we could not read a session" is the same as the answer
+        to "there is no session", which is what a signed-out visitor gets — the
+        sign-in form, with whatever the action wanted to say on it. That is the
+        safe direction in both places this is used: on a door it shows the door,
+        and on a page behind one it redirects out. Nothing is ever let in by
+        failing to read a cookie.
+      */
+      let raw: string | undefined;
+      try {
+        raw = (await cookies()).get(cookieName)?.value;
+      } catch {
+        return null;
+      }
+
       if (!raw) return null;
 
       const [id, expiresAt, signature] = raw.split(".");
       if (!id || !expiresAt || !signature) return null;
-      if (Number(expiresAt) < Date.now()) return null;
+
+      /*
+        `Number("")` is 0 and `Number("nonsense")` is NaN, and NaN fails every
+        comparison — so a garbled expiry has to be rejected on its own rather
+        than left to the line below, which NaN would sail straight past. The
+        signature check would catch it a moment later either way; this just
+        means the reason it was refused is the true one.
+      */
+      const expiry = Number(expiresAt);
+      if (!Number.isFinite(expiry) || expiry < Date.now()) return null;
+
       if (!safeEqual(signature, sign(scope, `${id}.${expiresAt}`))) return null;
 
       return id;

@@ -38,7 +38,7 @@ export type GiftTarget = {
  * Their email is asked for rather than assumed, because it is the address they
  * would sign in with and it is not something this repository has any business
  * guessing. Everything else — the six budget lines, the figures, the $8,000 — is
- * read out of the reconciliation in src/content/kitchen.ts.
+ * read out of the reconciliation in the ledger.
  */
 export function SeedEncounterForm() {
   /*
@@ -234,8 +234,9 @@ export function AddPartnerForm() {
           className="mt-0.5 h-4 w-4 accent-green"
         />
         <span>
-          I know who this is — mark them verified. Untick it if their details
-          came to you second-hand.
+          I know who this is — mark them verified. For a church or an
+          organisation this also opens the project accounts to them, so untick it
+          if their details came to you second-hand.
         </span>
       </label>
 
@@ -459,7 +460,7 @@ export function VerifyButton({
         if (
           verified &&
           !confirm(
-            `Un-verify ${name}? Their login stops working immediately and their password is cleared.`,
+            `Un-verify ${name}? The project accounts close to them immediately, and any password they were given is cleared. They can still sign in with a code and see their own giving.`,
           )
         ) {
           return;

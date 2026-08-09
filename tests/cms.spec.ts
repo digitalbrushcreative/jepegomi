@@ -147,8 +147,16 @@ test.describe("payments", () => {
   test("is read-only — Pesapal's word, not ours", async ({ page }) => {
     await page.goto("/app/payments");
 
-    // No way to alter a payment from here: the merchant statement is the record.
-    await expect(page.getByRole("button")).toHaveCount(0);
+    /*
+      No way to alter a payment from here: the merchant statement is the record.
+
+      Scoped to the screen rather than the document, because the chrome around
+      it has buttons of its own — Sign out, and the menu toggle on a narrow
+      window — and neither of those is a way to edit a payment. Unscoped, this
+      asserted something nobody meant and that no version of the page could
+      satisfy.
+    */
+    await expect(page.locator("#main").getByRole("button")).toHaveCount(0);
   });
 });
 
@@ -156,15 +164,23 @@ test.describe("pages", () => {
   test("files every document under its own group", async ({ page }) => {
     await page.goto("/app/pages");
 
+    /*
+      The screen, not the document. Standing on /app/pages opens the Pages
+      drawer in the rail, which lists every document by the same title this
+      screen does — so an unscoped lookup finds each of them twice and fails on
+      the ambiguity rather than on anything being wrong.
+    */
+    const screen = page.locator("#main");
+
     for (const group of documentGroups) {
       await expect(
-        page.getByRole("heading", { name: group.label, exact: true }),
+        screen.getByRole("heading", { name: group.label, exact: true }),
       ).toBeVisible();
     }
 
     for (const key of documentKeys()) {
       await expect(
-        page.getByRole("link", { name: documents[key].title, exact: true }),
+        screen.getByRole("link", { name: documents[key].title, exact: true }),
       ).toBeVisible();
     }
   });
@@ -195,6 +211,40 @@ test.describe("pages", () => {
 
     for (const field of Object.values(documents.contact.fields)) {
       await expect(page.getByText(field.label, { exact: true }).first()).toBeVisible();
+    }
+  });
+
+  test("draws a choice field as radios, with the saved one selected", async ({
+    page,
+  }) => {
+    /*
+      The newest field type, and the one it matters most to see rendered: these
+      are the switches that decide who may read a project's accounts, so an
+      editor has to be able to tell at a glance which position each is in.
+      Radios rather than a dropdown for exactly that reason — a select shows one
+      option and hides the two you are choosing against.
+    */
+    await page.goto("/app/pages/projectAccounts");
+
+    const radios = page.getByRole("radio");
+    await expect(radios.first()).toBeVisible();
+
+    // The default is the middle rung, and nothing has been saved over it.
+    await expect(
+      page.getByRole("radio", { name: /people who paid for it/i }).first(),
+    ).toBeChecked();
+  });
+
+  test("every document opens without falling over", async ({ page }) => {
+    /*
+      A document added to the schema with a field type the editor cannot draw is
+      a page that 500s, and the only way to find out is to open it. Cheap, and it
+      is the one test that grows by itself as documents are added.
+    */
+    for (const key of Object.keys(documents)) {
+      const response = await page.goto(`/app/pages/${key}`);
+      expect(response?.status(), `${key} should render`).toBeLessThan(400);
+      await expect(page.getByRole("button", { name: "Save" })).toBeVisible();
     }
   });
 });

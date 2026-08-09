@@ -245,7 +245,24 @@ export function HeroSlider({
                   />
 
                   {/* Keeps the controls off whatever the photo does at the foot. */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/15" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+
+                  {/*
+                    The header is transparent and sits on this, and on wide
+                    screens the torn split hands the right of the slide over to
+                    the photograph at full strength — so the nav's outer links,
+                    and on narrow screens the Give pill and the menu button,
+                    have nothing but the picture behind them. This is the band
+                    that gives them one.
+
+                    It is its own element rather than a stronger stop on the
+                    gradient above, because that one runs the whole height: any
+                    top stop dark enough to carry white nav type also greys the
+                    top half of every photograph. Eight rems clears the 4rem
+                    header and fades out well above the eyebrow, which starts
+                    around 11rem.
+                  */}
+                  <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/60 via-black/30 to-transparent" />
                 </div>
               )}
 

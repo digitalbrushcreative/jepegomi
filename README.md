@@ -1,7 +1,7 @@
 # jepegomi.org
 
 The website for **Jepegomi** — Jesus People Gospel Ministries, a church and
-academy in Kahawa, Nairobi, led by Pastor Simon & Joyce Nderitu.
+academy in Kahawa Sukari, Nairobi, led by Pastor Simon & Joyce Nderitu.
 
 It holds four things: the public marketing site, the **Kitchen Build** progress
 report, the **transparent giving ledger** where churches claim costed items and
@@ -25,8 +25,9 @@ See [SETUP.md](SETUP.md) to run, configure, and deploy it.
 | `/projects/kitchen`        | **The report** — photos, before/after, budget, give |
 | `/needs`                   | **The giving ledger** — costed items, and what is left on each |
 | `/needs/[slug]`            | One item: its figures, its progress, and the claim form |
-| `/partners`                | Partner church sign-in                              |
-| `/partners/dashboard`      | A church's own giving, and updates on what it paid for |
+| `/partners`                | Partner sign-in — an emailed code, no password       |
+| `/partners/dashboard`      | A giver's own giving, and updates on what it paid for |
+| `/partners/password`       | The older door, for churches issued a password by hand |
 | `/app`                     | The CMS (sign-in)                                   |
 | `/give`                    | Where gifts go, and how to ask for the details      |
 | `/contact`                 | Contact + map                                       |
@@ -72,13 +73,60 @@ marks the money received in `/app` when it lands. Every figure on the site is on
 that has been reconciled by hand — which is slower, and is the only version of
 these pages where the numbers mean what they say.
 
-A partner church can be given a **login**, which shows its own giving in full
-and the progress on the items it backed, with photographs. It shows that church's
-figures and nothing else's; there is no query behind the dashboard that returns
-another partner's row.
+**Anybody who has given can sign in**, and there is no account to make: the
+email address on a gift *is* the account, because that is already what the ledger
+keys on. `/partners` emails a six-digit code to an address it has a gift against,
+and typing it back starts the session — no password to issue, to remember, or to
+reset. Proving you control the address is exactly the claim being made, which is
+"the gifts filed under it are mine". The code lives in `src/lib/partner-codes.ts`;
+the door it opens is in `src/lib/partners.ts`. A handful of churches were issued a
+password before this existed and it still works, at `/partners/password`.
+
+A dashboard shows that giver's figures and nothing else's; there is no query
+behind it that returns another partner's row.
+
+**How far into the books somebody can see** is a separate question from whether
+they can get in, and `src/lib/disclosure.ts` answers it. Everyone sees their own
+giving; somebody who paid for a costed item reads that project's accounts; a
+church or organisation Simon has **verified**, or anybody whose received giving
+passes the threshold, reads all of them. Every input to that rule is something
+only Simon can set — money marked *received*, and the verified tick — because
+`kind` and the amount *claimed* are both typed in by the giver on a public form,
+and a rule that trusted them would put the ministry's reconciliation four clicks
+from the open web.
+
+There is no `src/content` directory. There was, and it held the figures the site
+prints — the kitchen reconciliation, the playground quote, the bus price, the
+exchange rate — in TypeScript, so changing any of them meant a deploy. All of it
+is in Postgres now: the reconciliation as ledger rows, the rest as CMS documents.
+**What stayed in code is the arithmetic** — totals, conversions, percentages —
+because a total typed into a text box is a total free to stop equalling the lines
+above it. Simon types the facts; the site works out what they come to.
+
+A project's **accounts** — Pastor Simon's line-by-line reconciliation of the
+kitchen gift, estimated against actual — are rows in `needs` like everything
+else, not a table in a source file. `estimated_cents` and `note` are the two
+columns that make a need able to hold a line of a letter, `closed` is what sorts
+spent work from work the money never reached, and `getProjectBudget` reads the
+letter back out. Simon corrects a figure in `/app` → Needs and the accounts, the
+kitchen page and the front page all move together, because there is only one copy
+of it now.
+
+Over the top of that rule sits a **switch per project**, in `/app` → Giving →
+**Project accounts**, with three positions: *anyone* publishes the figures on the
+project page, *the people who paid for it* hands the decision to the rule above
+(the default), and *nobody* closes them while numbers are being corrected. The
+projects that have such a set of papers are listed in
+`src/lib/project-accounts.ts`, and everything downstream — the CMS fields, their
+defaults, the saved document's type — is generated from that list, so a future
+project gets its switch by being added to it. `showsAccounts` in
+`src/lib/disclosure.ts` asks both questions in order, and is the only place that
+does, so the public page and the partner dashboard cannot disagree about who
+"anyone" is.
 
 Run by `/app` → **Needs** (the items, the claims, the updates) and **Partners**
-(verifying a church, and issuing it a login — two separate acts, on purpose).
+(verifying a church — which is now what opens the accounts to it — and issuing a
+password, two separate acts, on purpose).
 `src/lib/giving.ts` holds the shapes and labels, `src/lib/needs.ts` and
 `src/lib/partners.ts` do the talking to Postgres, and what counts as "claimed" is
 defined once as a database view in `src/lib/db.ts` so no two pages can disagree

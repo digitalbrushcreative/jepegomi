@@ -1,6 +1,7 @@
 "use server";
 
 import { isEmail, looksAutomated, text } from "@/lib/forms";
+import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import {
   contactAcknowledgement,
   contactNotification,
@@ -50,6 +51,26 @@ export async function sendContactAction(
     that comes back without the honeypot; a bot told "thank you" goes away.
   */
   if (looksAutomated(formData)) return { done: true };
+
+  /*
+    The honeypot above catches a script that fills every field it finds. It does
+    nothing about somebody who has looked at this page once and written a loop,
+    and this form puts a message in a real inbox and an acknowledgement in a
+    stranger's — so the ministry's sending reputation is what pays for that.
+
+    Told plainly rather than silently swallowed, unlike the honeypot: a person
+    who has genuinely written twice in ten minutes because they forgot something
+    needs to know the third one did not go, and be given the address to write to.
+  */
+  const limit = await consume(
+    `form:contact:${await callerKey()}`,
+    RATES.contactForm,
+  );
+  if (!limit.ok) {
+    return {
+      error: `That is several messages in a short time. Try again ${retryWording(limit.retryAfterSeconds)}, or write straight to ${publicInbox()}.`,
+    };
+  }
 
   if (!isContactSubject(enquiry.subject)) enquiry.subject = "Something else";
 

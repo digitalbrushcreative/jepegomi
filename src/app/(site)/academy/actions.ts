@@ -2,6 +2,7 @@
 
 import { recordEnrolmentEnquiry } from "@/lib/enquiries";
 import { isEmail, looksAutomated, text } from "@/lib/forms";
+import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import {
   enrolmentAcknowledgement,
   enrolmentNotification,
@@ -56,6 +57,22 @@ export async function sendEnrolmentEnquiryAction(
   }
 
   if (looksAutomated(formData)) return { done: true };
+
+  /*
+    Same reasoning as the contact form, and one more besides: this one writes a
+    row about a child. A form that can be posted in a loop is a table that can
+    be filled with them, and the thinness of that table (see lib/db.ts) is only
+    a privacy answer while it holds enquiries somebody actually sent.
+  */
+  const limit = await consume(
+    `form:enrolment:${await callerKey()}`,
+    RATES.contactForm,
+  );
+  if (!limit.ok) {
+    return {
+      error: `That is several enquiries in a short time. Try again ${retryWording(limit.retryAfterSeconds)}, or write straight to ${publicInbox()}.`,
+    };
+  }
 
   /*
     Written down before anything is sent, and never allowed to fail the action:

@@ -6,9 +6,9 @@ import { ClothEdge } from "@/components/pattern";
 import { GivingDetailsForm } from "@/app/(site)/give/details-form";
 import { GiveForm } from "@/components/give-form";
 import { ButtonLink, PageHero, SectionTitle } from "@/components/ui";
-import { areaOf } from "@/lib/giving";
 import { usd } from "@/lib/money";
-import { getGivingSummary, getPublishedNeeds } from "@/lib/needs";
+import { getGivingSummary, getParts, getPublishedNeeds } from "@/lib/needs";
+import { buildProjects, readyParts } from "@/lib/projects";
 import { isPesapalConfigured } from "@/lib/pesapal";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,11 +30,12 @@ export async function generateMetadata(): Promise<Metadata> {
 const wayIcons: IconName[] = ["church", "book", "child", "trowel"];
 
 export default async function GivePage() {
-  const [giving, site, ledger, needs] = await Promise.all([
+  const [giving, site, ledger, needs, parts] = await Promise.all([
     getContent("giving"),
     getContent("site"),
     getGivingSummary(),
     getPublishedNeeds(),
+    getParts(),
   ]);
 
   /*
@@ -45,18 +46,35 @@ export default async function GivePage() {
   const canPay = isPesapalConfigured();
 
   /*
-    Only what somebody can actually still give to. A closed item, or one that is
-    already fully claimed, is worth showing on /needs — that is a record of work
-    being paid for — but on a form it is a door that does not open.
+    Only what somebody can actually still give to, in the order the work has to
+    be done in.
+
+    Three filters, and each one is a door that does not open. A closed item or a
+    fully claimed one is worth showing on /needs — that is the record of work
+    being paid for — but on a form it is a dead radio button. And a part of the
+    build that is waiting on an earlier part is not an ask yet: offering the
+    paint while the walls are still an open line takes real money for something
+    that cannot be bought for months. Those stay on /needs too, listed under
+    what they are waiting for, so nothing is hidden — it is simply not being
+    asked for today. The rule itself lives in lib/projects.ts.
+
+    Flattened in project-then-part order because the picker draws its headings
+    off the seams in this list; see the note in the form.
   */
-  const choices = needs
-    .filter((need) => !need.closed && need.ledger.openCents > 0)
-    .map((need) => ({
-      slug: need.slug,
-      title: need.title,
-      areaLabel: areaOf(need.area).label,
-      openCents: need.ledger.openCents,
-    }));
+  const choices = buildProjects(needs, parts).flatMap((project) =>
+    readyParts(project).flatMap((group) =>
+      group.needs
+        .filter((need) => !need.closed && need.ledger.openCents > 0)
+        .map((need) => ({
+          slug: need.slug,
+          title: need.title,
+          areaLabel: project.area.label,
+          partTitle: group.part?.title,
+          partSummary: group.part?.summary || undefined,
+          openCents: need.ledger.openCents,
+        })),
+    ),
+  );
 
   return (
     <>
@@ -183,7 +201,12 @@ export default async function GivePage() {
                       ? "Then pay it now by M-Pesa or card, or ask for the account details and send it another way."
                       : "Either way it goes on the ledger straight away, so the ministry knows to expect it."
                   }`
-                : `There is nothing costed on the list at the moment, so tell us in your own words what you would like to support. ${
+                : /*
+                    True of an empty ledger and of a full one whose next step is
+                    still waiting on the one before it — both end up here, and
+                    "there is nothing costed" would be a lie in the second case.
+                  */
+                  `Nothing on the list is ready to be picked up just now, so tell us in your own words what you would like to support. ${
                     canPay
                       ? "You can pay it now by M-Pesa or card, or ask for the account details and send it another way."
                       : "It goes on the ledger straight away, so the ministry knows to expect it."

@@ -1,13 +1,9 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { cacheLife, cacheTag } from "next/cache";
-import { photos as slots, type Photo } from "@/content/kitchen";
-import {
-  ACCEPTED_EXTENSIONS,
-  ACCEPTED_MIME,
-  MAX_BYTES,
-  type SlotId,
-} from "@/lib/photo-rules";
+import { getContent } from "@/cms/content";
+import { readImageUpload } from "@/lib/image-upload";
+import { ACCEPTED_EXTENSIONS, type SlotId } from "@/lib/photo-rules";
 import { getPhotoWriter } from "@/lib/photo-writer";
 
 /**
@@ -23,13 +19,31 @@ const PUBLIC_BASE = "/photos/kitchen";
 
 export type { SlotId };
 
+/**
+ * How many numbered slots the grid has.
+ *
+ * A constant rather than the length of the caption list, and that is the point
+ * of it: the slots are files on disk, and if somebody removed a row in the CMS
+ * the upload for that slot would stop being reachable and the file would be
+ * stranded. The captions describe the slots; they do not decide how many there
+ * are.
+ */
+export const GALLERY_SLOTS = 23;
+
+export type GalleryPhoto = {
+  id: number;
+  category: string;
+  caption: string;
+  src: string;
+};
+
 export function isSlotId(value: unknown): value is SlotId {
   if (value === "before" || value === "after") return true;
   return (
     typeof value === "number" &&
     Number.isInteger(value) &&
     value >= 1 &&
-    value <= slots.length
+    value <= GALLERY_SLOTS
   );
 }
 
@@ -77,17 +91,53 @@ export async function readPhotoFiles(): Promise<Map<string, string>> {
   return found;
 }
 
-/** The 23 gallery slots with any uploaded photo resolved onto them. */
-export async function getGalleryPhotos(): Promise<Photo[]> {
+/**
+ * Every gallery slot, with its caption from the CMS and any uploaded photo
+ * resolved onto it.
+ *
+ * Driven by the slot count rather than by the caption rows, so a caption
+ * somebody deleted leaves a photograph with no words under it rather than a
+ * photograph nobody can see. The two are joined on the slot number, which is
+ * also the filename — see the note on the gallery document in cms/schema.ts.
+ *
+ * Not tagged with the content tag on purpose: it is already tagged with the
+ * photos one, and a caption edited in /app shows up when that expires or on the
+ * next deploy. A photograph appearing is the urgent half; a caption is not.
+ */
+export async function getGalleryPhotos(): Promise<GalleryPhoto[]> {
   "use cache";
   cacheTag(PHOTOS_TAG);
   cacheLife("max");
 
-  const files = await readPhotoFiles();
-  return slots.map((photo) => ({
-    ...photo,
-    src: files.get(String(photo.id)) ?? "",
-  }));
+  const [files, content] = await Promise.all([
+    readPhotoFiles(),
+    getContent("gallery"),
+  ]);
+
+  const captions = new Map(
+    content.photos.map((row) => [String(row.slot).trim(), row]),
+  );
+
+  return Array.from({ length: GALLERY_SLOTS }, (_, index) => {
+    const id = index + 1;
+    const row = captions.get(String(id));
+    return {
+      id,
+      category: row?.category ?? "",
+      caption: row?.caption ?? "",
+      src: files.get(String(id)) ?? "",
+    };
+  });
+}
+
+/** The tabs above the gallery, as the CMS has them. */
+export async function getGalleryCategories() {
+  "use cache";
+  cacheTag(PHOTOS_TAG);
+  cacheLife("max");
+
+  const content = await getContent("gallery");
+  return content.categories.filter((category) => category.id && category.label);
 }
 
 export async function getBeforeAfterSources() {
@@ -120,20 +170,21 @@ function slotFilename(slot: SlotId, mime: string) {
 }
 
 export async function savePhoto(slot: SlotId, file: File) {
-  if (!ACCEPTED_MIME.includes(file.type)) {
-    throw new Error("That file is not a JPEG, PNG, WebP or AVIF image.");
-  }
-  if (file.size > MAX_BYTES) {
-    throw new Error("That image is larger than 15 MB.");
-  }
+  /*
+    The type comes back from the bytes, not from what the browser called the
+    file — see lib/image-upload.ts. It decides the extension this is written
+    under and therefore the Content-Type it is later served with, so it is not
+    a thing to take anybody's word for.
+  */
+  const { bytes, mime } = await readImageUpload(file);
 
   // Replacing a .png with a .jpg would otherwise leave both files fighting over
   // the slot, so the old one goes first.
   await clearSlot(slot);
 
-  const filename = slotFilename(slot, file.type);
+  const filename = slotFilename(slot, mime);
   const writer = getPhotoWriter(PHOTO_DIR, REPO_DIR, "kitchen photo");
-  await writer.write(filename, Buffer.from(await file.arrayBuffer()));
+  await writer.write(filename, bytes);
 
   return {
     src: `${PUBLIC_BASE}/${filename}`,

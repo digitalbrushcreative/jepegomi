@@ -1,0 +1,121 @@
+import { getContent } from "@/cms/content";
+import { kesPerUsd, usdFromKes } from "@/lib/money";
+
+/**
+ * The playground appeal, priced.
+ *
+ * Everything here used to be src/content/playground.ts — eight quote lines, two
+ * totals and a boolean, in a file, with a comment at the top explaining that a
+ * real quote from a Nairobi supplier would mean editing it. It is a CMS document
+ * now, and this is where the numbers are read out of it and added up.
+ *
+ * The arithmetic stayed in code, which is the whole distinction: Simon types the
+ * things that are facts about the world — what a swing set costs in shillings,
+ * whether anybody has actually quoted for it — and the site works out what that
+ * comes to in dollars. A total typed into a box is a total free to stop equalling
+ * the lines above it the moment one of them is edited.
+ */
+
+export type QuoteLine = {
+  item: string;
+  note: string;
+  priceKes: number;
+  /** Converted at the site's one rate, rounded — see `usdFromKes`. */
+  priceUsd: number;
+};
+
+export type Playground = {
+  /**
+   * Whether a supplier has actually priced the job. While this is false the page
+   * marks every figure as an estimate and asks for a quote rather than for the
+   * money; when it is true the same figures read as a price, because by then
+   * they are one.
+   */
+  isQuoted: boolean;
+  equipmentHeading: string;
+  equipmentBody: string;
+  equipment: QuoteLine[];
+  groundHeading: string;
+  groundBody: string;
+  ground: QuoteLine[];
+  equipmentUsd: number;
+  groundUsd: number;
+  totalUsd: number;
+  asItStands: string[];
+  photo: { src: string; alt: string; caption: string };
+  estimateNote: string;
+};
+
+/**
+ * Shillings out of a text box.
+ *
+ * The CMS stores every leaf field as a string, which is the right trade for a
+ * form somebody types into — but it means "150,000", "150000 " and "" all arrive
+ * here and only one of them is a number. Anything that is not one reads as zero
+ * rather than as NaN, because a zero drops a line quietly out of a total and a
+ * NaN turns the whole page into "$NaN".
+ */
+function kes(raw: unknown): number {
+  const digits = String(raw ?? "").replace(/[^\d]/g, "");
+  const value = Number(digits);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function lines(
+  rows: readonly { item: string; note: string; priceKes: string }[],
+  rate: number,
+): QuoteLine[] {
+  return rows.map((row) => {
+    const priceKes = kes(row.priceKes);
+    return {
+      item: row.item,
+      note: row.note,
+      priceKes,
+      priceUsd: usdFromKes(priceKes, rate),
+    };
+  });
+}
+
+export async function getPlayground(): Promise<Playground> {
+  const [content, site] = await Promise.all([
+    getContent("playground"),
+    getContent("site"),
+  ]);
+
+  const rate = kesPerUsd(site.kesPerUsd);
+  const equipment = lines(content.equipment, rate);
+  const ground = lines(content.ground, rate);
+
+  /*
+    Summed from the rounded per-line dollars rather than from the shillings, so
+    the column a reader adds up themselves comes to the same total the page
+    prints. Adding first and rounding once is more accurate and looks like an
+    error on the page, which is the wrong way round for a figure whose whole job
+    is to be checkable.
+  */
+  const total = (rows: QuoteLine[]) =>
+    rows.reduce((sum, row) => sum + row.priceUsd, 0);
+
+  const equipmentUsd = total(equipment);
+  const groundUsd = total(ground);
+
+  return {
+    isQuoted: content.quoted === "quoted",
+    equipmentHeading: content.equipmentHeading,
+    equipmentBody: content.equipmentBody,
+    equipment,
+    groundHeading: content.groundHeading,
+    groundBody: content.groundBody,
+    ground,
+    equipmentUsd,
+    groundUsd,
+    totalUsd: equipmentUsd + groundUsd,
+    asItStands: content.asItStands.map((row) => row.text).filter(Boolean),
+    photo: {
+      src: content.photo,
+      alt: content.photoAlt,
+      caption: content.photoCaption,
+    },
+    estimateNote: content.estimateNote,
+  };
+}

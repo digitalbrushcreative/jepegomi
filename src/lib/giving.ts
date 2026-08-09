@@ -65,6 +65,26 @@ export function areaForDesignation(designation: string): NeedArea | null {
   return match ? match.id : null;
 }
 
+/**
+ * The icons an item may be given, beyond the one its project already carries.
+ *
+ * A short list on purpose. This is not "every icon in the set" — it is the
+ * handful that mean something on a costed item: a water tank, a floor, a light,
+ * a meal. Somebody choosing from four sensible pictures picks a good one;
+ * somebody choosing from thirty picks whichever is nearest the top.
+ */
+export const NEED_ICONS = [
+  "water",
+  "paving",
+  "light",
+  "pot",
+  "book",
+  "child",
+  "trowel",
+  "bus",
+  "church",
+] as const satisfies readonly IconName[];
+
 export const PARTNER_KINDS = [
   { id: "church", label: "Church" },
   { id: "person", label: "Person" },
@@ -82,7 +102,30 @@ export type Need = {
   summary: string;
   detail: string;
   area: string;
+  /**
+   * The part of the project this item belongs to, or null for one that belongs
+   * to the project as a whole. What a part is, and why an item's place in the
+   * running order matters, is in lib/projects.ts.
+   */
+  partId: string | null;
   costCents: number;
+  /**
+   * What it was expected to cost, when that is a different figure from what it
+   * did. Null on nearly every row — see the column note in lib/db.ts. An item
+   * with no separate estimate reads back as `costCents` in the accounts.
+   */
+  estimatedCents: number | null;
+  /**
+   * One line on why the two differ: "price rose, and the job grew". Appears in
+   * a project's accounts beside the item, and nowhere on the public pages.
+   */
+  note: string;
+  /**
+   * An `IconName`, or empty for "use the project's own icon". Stored as free
+   * text and read through `areaOf` when blank — an unknown name renders as the
+   * project's icon rather than as a hole in the page.
+   */
+  icon: string;
   published: boolean;
   closed: boolean;
   position: number;
@@ -114,6 +157,44 @@ export type Ledger = {
 };
 
 export type NeedWithLedger = Need & { ledger: Ledger };
+
+/* ----------------------------------------- one project's books, reconciled */
+
+/**
+ * A project's accounts, as Pastor Simon's letter sets them out: what was spent,
+ * what was never reached, and the two totals underneath.
+ *
+ * Built from the needs of one area and nothing else. `closed` is what separates
+ * the two lists, because that is already what it means — a closed item is work
+ * that is finished, an open one is work still being asked for — so the
+ * reconciliation needs no state of its own and cannot fall out of step with the
+ * ledger the rest of the site reads.
+ */
+export type BudgetLine = {
+  id: string;
+  item: string;
+  estimatedCents: number;
+  /** What it came to. Null for a line that was never reached, or never priced. */
+  actualCents: number | null;
+  note: string;
+};
+
+export type ProjectBudget = {
+  /** Finished work, in the order it is listed in /app. */
+  spent: BudgetLine[];
+  /** Never reached — the money ran out, or the work has not started. */
+  outstanding: BudgetLine[];
+  /** What the finished lines actually came to. */
+  spentCents: number;
+  /**
+   * What finishing the rest would cost. The one figure here a stranger may read:
+   * a page that invites you to finish a building without saying what finishing
+   * it costs is asking for a blank cheque.
+   */
+  stillNeededCents: number;
+  /** What the finished lines were originally estimated at. */
+  estimatedCents: number;
+};
 
 export type NeedUpdate = {
   id: string;

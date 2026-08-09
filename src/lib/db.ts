@@ -87,6 +87,12 @@ export function sql(): SqlQuery {
  * Called from the /app setup path only, never from a public page render, so a
  * visitor's request never runs DDL. It's memoised per process: the statements
  * are IF NOT EXISTS, but there's no reason to send them twice.
+ *
+ * One table is deliberately not here: `rate_limits`, which lib/rate-limit.ts
+ * creates itself. The paths that need it are public ones — the sign-ins and the
+ * four forms — and putting two dozen statements and a view rebuild on the front
+ * of a stranger's form post is not a trade worth making for tidiness. The note
+ * in that file explains it from the other side.
  */
 let schemaReady: Promise<void> | null = null;
 
@@ -135,6 +141,123 @@ export function ensureSchema() {
         position   INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
+    `;
+
+    /*
+      A part of a project: the middle rung between "the kitchen build" and "two
+      tonnes of cement".
+
+      The reason it exists is sequence. A budget is not a flat list of things
+      that can be bought in any order — the walls go up before the roof goes on
+      and the paint goes on last — and a giving page that offers paint while
+      the walls are still open is asking for money that cannot be spent yet.
+      Grouping the items into parts and giving each part a number is the whole
+      mechanism: a part opens for giving once every part before it is fully
+      claimed. Nothing else in the system needs to know about builders.
+
+      `area` is which project it belongs to, matching the ids in lib/giving.ts.
+      Not a foreign key, because the projects are arms of the ministry with
+      their own pages and their own copy — they live in code, not in a table.
+
+      There is no `published` column on purpose. A part is a heading; it shows
+      up where its items do, and an item is what carries the decision about
+      whether the public can see it.
+    */
+    await db`
+      CREATE TABLE IF NOT EXISTS need_parts (
+        id         TEXT PRIMARY KEY,
+        area       TEXT NOT NULL,
+        title      TEXT NOT NULL,
+        summary    TEXT NOT NULL DEFAULT '',
+        sequence   INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `;
+
+    await db`
+      CREATE INDEX IF NOT EXISTS need_parts_area_idx ON need_parts (area, sequence)
+    `;
+
+    /*
+      Which part an item sits in, or null for one that belongs to the project as
+      a whole. Null is a perfectly good answer and always will be: plenty of
+      needs — a term of a teacher's pay — are not a step in anything.
+
+      ON DELETE SET NULL, not CASCADE. Deleting a part is deleting a heading,
+      and a heading is not worth the items underneath it, still less the money
+      claimed against them. The items simply come loose and sit under the
+      project instead.
+    */
+    await db`
+      ALTER TABLE needs ADD COLUMN IF NOT EXISTS part_id TEXT
+        REFERENCES need_parts(id) ON DELETE SET NULL
+    `;
+
+    await db`
+      CREATE INDEX IF NOT EXISTS needs_part_idx ON needs (part_id)
+    `;
+
+    /*
+      The other half of a reconciliation: what a thing was expected to cost, and
+      the line of explanation that goes with it.
+
+      `cost_cents` has always carried two meanings depending on the row. On an
+      open item it is the ask — what finishing this costs. On a closed one it is
+      the record — what it actually came to. That was enough while the site only
+      ever asked for money, and not enough to hold Pastor Simon's letter to the
+      donor, which is *both* columns side by side: cement estimated $900 and cost
+      $1,550, roofing estimated $1,554 and came in at $1,120 because he did the
+      building himself.
+
+      Those two figures used to live in src/content/kitchen.ts, and the database
+      held a hand-seeded copy of the row with the estimate flattened into a
+      sentence in `detail`. So the accounts could not be rebuilt from the ledger,
+      the two could drift, and correcting a figure Simon had reported meant a
+      deploy. These two columns are what let the ledger hold the letter.
+
+      Nullable, and null on nearly every row: most needs were never estimated at
+      anything other than what they cost. Null means "no separate estimate", not
+      zero, and the accounts fall back to `cost_cents` for those.
+    */
+    await db`ALTER TABLE needs ADD COLUMN IF NOT EXISTS estimated_cents INTEGER`;
+    await db`
+      ALTER TABLE needs ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT ''
+    `;
+
+    /*
+      Zero is allowed, but only on work that is finished.
+
+      The table shipped with `CHECK (cost_cents > 0)`, which is exactly right for
+      an item the site is asking for: a published need costing nothing is an
+      appeal for nothing. It is wrong for a line of a reconciliation. Simon's
+      letter records transport as "Used" — spent, with no figure ever put against
+      it — and a ledger that cannot write that down sends the letter back to a
+      TypeScript file, which is where it has just come from.
+
+      So the rule becomes the sentence it always meant: an open item must have a
+      price, a closed one may have none. `getProjectBudget` reads zero on a
+      closed row back as "we do not know", never as "it cost nothing".
+
+      Dropped by name and re-added, the same way `pledges_towards_check` is:
+      naming it makes the drop safe, and validating a table this size costs
+      nothing.
+    */
+    /*
+      The picture that goes with an item.
+
+      Small, and the last thing keeping the "still to complete" cards on the
+      kitchen page reading out of a source file: the three of them are already
+      rows in this table, but a water tank and a floor and a light fitting were
+      only distinguishable because a TypeScript array said which icon each one
+      got. Empty means "use the project's icon", which is what almost everything
+      wants.
+    */
+    await db`ALTER TABLE needs ADD COLUMN IF NOT EXISTS icon TEXT NOT NULL DEFAULT ''`;
+
+    await db`ALTER TABLE needs DROP CONSTRAINT IF EXISTS needs_cost_cents_check`;
+    await db`
+      ALTER TABLE needs ADD CONSTRAINT needs_cost_cents_check
+        CHECK (cost_cents >= 0 AND (cost_cents > 0 OR closed))
     `;
 
     /*

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getContent } from "@/cms/content";
+import { KitchenAccounts } from "@/components/kitchen-accounts";
 import { NeedBar } from "@/components/need-meter";
 import { NeedUpdates } from "@/components/need-updates";
+import { PlaygroundEstimate } from "@/components/playground-estimate";
 import { PhotoStrip, type SitePhoto } from "@/components/photos";
 import { ButtonLink, SectionTitle } from "@/components/ui";
 import { formatDay } from "@/lib/dates";
@@ -16,9 +18,18 @@ import {
   groupByProject,
   pledgeTowards,
 } from "@/lib/giving";
+import { disclosureFor, showsAccounts } from "@/lib/disclosure";
 import { usd } from "@/lib/money";
+import { getKitchenReport } from "@/lib/kitchen";
+import { getPlayground } from "@/lib/playground";
+import {
+  type AccountSetId,
+  accountSet,
+  visibilityOf,
+} from "@/lib/project-accounts";
 import { getGalleryPhotos } from "@/lib/photos";
 import {
+  getProjectBudget,
   getPublishedNeeds,
   listAreaGiftsForPartner,
   listNeedsForPartner,
@@ -57,13 +68,27 @@ export async function PartnerDashboard({
   /** A strip above the name, inside the plum. Used by the /app preview. */
   notice?: ReactNode;
 }) {
-  const [needs, areaGifts, pledges, updates, published, site] = await Promise.all([
-    listNeedsForPartner(partner.id),
-    listAreaGiftsForPartner(partner.id),
-    listPledgesForPartner(partner.id),
-    listUpdatesForPartner(partner.id),
-    getPublishedNeeds(),
-    getContent("site"),
+  const [needs, areaGifts, pledges, updates, published, site, accounts] =
+    await Promise.all([
+      listNeedsForPartner(partner.id),
+      listAreaGiftsForPartner(partner.id),
+      listPledgesForPartner(partner.id),
+      listUpdatesForPartner(partner.id),
+      getPublishedNeeds(),
+      getContent("site"),
+      getContent("projectAccounts"),
+    ]);
+
+  /*
+    The two sets of private figures this page may draw: the kitchen's
+    reconciliation, read back out of the ledger by `getProjectBudget`, and the
+    playground's costings, read out of the CMS by `getPlayground`. Neither is in
+    a source file any more.
+  */
+  const [kitchenBudget, kitchenReport, playgroundQuote] = await Promise.all([
+    getProjectBudget(accountSet("kitchen").area),
+    getKitchenReport(),
+    getPlayground(),
   ]);
 
   const projects = groupByProject(needs, areaGifts);
@@ -114,6 +139,30 @@ export async function PartnerDashboard({
     .filter((pledge) => pledge.status === "received")
     .reduce((sum, pledge) => sum + pledge.amountCents, 0);
   const awaiting = totalClaimed - totalReceived;
+
+  /*
+    How far into the books this partner can see, worked out from what has
+    actually arrived rather than from what anybody has put their name to. The
+    rule, and why the accounts are not simply public any more, is in
+    lib/disclosure.ts.
+  */
+  const disclosure = disclosureFor({
+    partner,
+    projects,
+    receivedCents: totalReceived,
+  });
+
+  /*
+    …and, over the top of it, what Simon has said each set of papers is for. The
+    switch is in /app under Giving → Project accounts; the two questions and the
+    order they are asked in are in lib/disclosure.ts.
+  */
+  const shows = (id: AccountSetId) =>
+    showsAccounts({
+      visibility: visibilityOf(accounts, id),
+      disclosure,
+      areaId: accountSet(id).area,
+    });
 
   return (
     <>
@@ -211,6 +260,67 @@ export async function PartnerDashboard({
                   <Project key={project.area.id} project={project} />
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/*
+            The reconciliation, for the partners it was written for.
+
+            This is the whole reason the tiers in lib/disclosure.ts exist. It
+            used to sit on the open web behind a button; a set of accounts
+            naming what a ministry in Nairobi bought, what it paid, and what it
+            is still short of is not a thing to leave lying about, however
+            proud of it everyone is entitled to be.
+
+            Only the kitchen has an account like this — it is the one project
+            whose money came as a single gift and was reconciled in a letter.
+            Everything else is the ledger, and a partner's own share of that is
+            already on this page above.
+          */}
+          {shows("kitchen") && (
+            <div className="mt-20">
+              <p className="eyebrow text-plum">The accounts</p>
+              <SectionTitle className="mt-3">
+                Where the kitchen money went
+              </SectionTitle>
+              <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
+                Pastor Simon&apos;s own reconciliation, line by line: what each
+                thing was estimated at, what it actually cost, and the three
+                items the money never reached. It is not published on the site —
+                it is here because you have a stake in it.
+              </p>
+
+              <div className="mt-10">
+                <KitchenAccounts budget={kitchenBudget} report={kitchenReport} />
+              </div>
+            </div>
+          )}
+
+          {/*
+            The playground, costed. Not an account of money spent — nothing has
+            been bought yet — but the same judgement applies to it and for a
+            sharper reason: it is a list of steel frames due to be delivered to
+            the school yard, with what each one is worth. The public page argues
+            the case and gives the total; the lines are here.
+
+            Filed under the academy, because the yard is the academy's.
+          */}
+          {shows("playground") && (
+            <div className="mt-20">
+              <p className="eyebrow text-plum">The estimate</p>
+              <SectionTitle className="mt-3">
+                The playground, line by line
+              </SectionTitle>
+              <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
+                What replacing the yard would take, item by item, in shillings
+                and dollars. Nobody in Nairobi has priced it yet, so every figure
+                here is an estimate and says so — the page will read differently
+                the day a real quote arrives.
+              </p>
+
+              <div className="mt-10">
+                <PlaygroundEstimate quote={playgroundQuote} />
+              </div>
             </div>
           )}
 

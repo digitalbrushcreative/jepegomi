@@ -28,6 +28,26 @@ setup("sign in to the CMS", async ({ page }) => {
     return;
   }
 
+  /*
+    Arrive as a caller the rate limiter has not seen before.
+
+    Signing in is counted twice — against the address and against the caller
+    (lib/rate-limit.ts). A success clears the first, so that one never builds up;
+    the second is not cleared, because an attacker walking a list of addresses
+    would otherwise wipe their own counter with every lucky guess. On a local dev
+    server there is no forwarded header, so every run of the suite lands in the
+    same "unknown" bucket — and after enough runs in a quarter of an hour, this
+    file stops being able to sign in and takes every CMS test down with it.
+
+    That is an artefact of running without a proxy in front, not something a real
+    person hits: in production the platform sets this header to the actual client
+    before the application sees it. The limiter itself is still proved, by the
+    test in security.spec.ts written to trip it on purpose.
+  */
+  await page.setExtraHTTPHeaders({
+    "x-forwarded-for": `test-setup-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  });
+
   await page.goto("/app");
 
   // getByLabel, not getByRole: a password input has no implicit ARIA role.

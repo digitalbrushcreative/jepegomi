@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { donation } from "@/content/kitchen";
 import { currentUser } from "@/lib/auth";
 import { formatDay } from "@/lib/dates";
 import { ensureSchema } from "@/lib/db";
 import { usd } from "@/lib/money";
 import { PARTNER_KINDS, areaOf } from "@/lib/giving";
+import { getKitchenReport } from "@/lib/kitchen";
 import { listNeeds } from "@/lib/needs";
 import { listPartners } from "@/lib/partners";
 import { PageHeader } from "../ui";
@@ -36,7 +36,11 @@ export default async function AdminPartnersPage() {
   if (!user) redirect("/app");
 
   await ensureSchema();
-  const [partners, needs] = await Promise.all([listPartners(), listNeeds()]);
+  const [partners, needs, kitchen] = await Promise.all([
+    listPartners(),
+    listNeeds(),
+    getKitchenReport(),
+  ]);
 
   const unverified = partners.filter((partner) => !partner.verified);
 
@@ -92,7 +96,7 @@ export default async function AdminPartnersPage() {
             Encounter Church is not on this page yet
           </h2>
           <p className="mt-3 max-w-prose text-sm leading-relaxed text-smoke">
-            They gave the {usd(donation.amountUsd * 100)}{" "}
+            They gave the {usd(kitchen.giftCents)}{" "}
             that built the kitchen, years before this ledger existed. This adds
             them, enters the six
             budget lines from Pastor Simon&apos;s reconciliation letter as
@@ -124,9 +128,12 @@ export default async function AdminPartnersPage() {
             {unverified.length} still to verify.
           </strong>{" "}
           <span className="text-smoke">
-            Their claims count against the items either way — verifying is about
-            whether you know who they are, and it is what lets you give them a
-            login.
+            Their claims count against the items either way, and they can already
+            sign in to see their own giving — anybody can, with a code we email
+            to the address their gift came from. What verifying does is open the
+            project accounts to a church or an organisation: the costings, the
+            over-runs, what each part actually came to. Tick it when you know who
+            they are, not to be polite.
           </span>
         </p>
       )}
