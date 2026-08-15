@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { toIso } from "@/lib/dates";
 import { isDatabaseConfigured, sql } from "@/lib/db";
-import type { Partner, PartnerWithTotals } from "@/lib/giving";
+import type { Partner, PartnerReader, PartnerWithTotals } from "@/lib/giving";
 import { claimCode, forgetCode, issueCode } from "@/lib/partner-codes";
+import { getReader, readerByEmail } from "@/lib/partner-readers";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { hasSessionSecret, session } from "@/lib/session";
 
@@ -42,8 +43,38 @@ import { hasSessionSecret, session } from "@/lib/session";
  *
  * The password door is kept for the churches already given one — it is a second
  * way in, not a different level of access.
+ *
+ * ## Who is on the other side of the door
+ *
+ * Not always the partner. Simon can add other addresses to a church's giving —
+ * a treasurer, a missions pastor — and those people come through the same code
+ * door to the same page. See lib/partner-readers.ts for why that list is typed
+ * in by hand and never inferred.
+ *
+ * It matters to this file in exactly two places. `resolveSignIn` decides which
+ * partner an address opens, and the session remembers which of the two kinds of
+ * person is holding it, so the page can say whose giving is on the screen.
+ * Nothing else changes: a reader gets the partner's dashboard, at the partner's
+ * disclosure tier, read-only, and no gift is ever filed against them.
  */
 const partnerSession = session("partner", "jepegomi_partner");
+
+/**
+ * What the partner cookie carries.
+ *
+ * A partner id on its own for the church itself, and `partnerId:readerId` for
+ * somebody reading on their behalf. Two values in one cookie rather than two
+ * cookies, so there is one thing to sign, one thing to clear, and no way to hold
+ * half a session.
+ *
+ * Joined with a colon and not a dot, because `session.read` splits the cookie on
+ * dots to find the expiry and the signature. Not an address, for the same reason
+ * and a better one: an address in a cookie is an address in every log and proxy
+ * the response passes, and the id is enough to look it up.
+ */
+function sessionValue(partnerId: string, readerId?: string) {
+  return readerId ? `${partnerId}:${readerId}` : partnerId;
+}
 
 type Row = Record<string, unknown>;
 
@@ -215,11 +246,49 @@ export async function signInPartner(email: string, password: string) {
  */
 export async function issueSignInCode(
   email: string,
-): Promise<{ partner: Partner; code: string } | null> {
-  const partner = await getPartnerByEmail(email);
-  if (!partner) return null;
+): Promise<{ partner: Partner; reader: PartnerReader | null; code: string } | null> {
+  const resolved = await resolveSignIn(email);
+  if (!resolved) return null;
 
-  return { partner, code: await issueCode(partner.id) };
+  return {
+    ...resolved,
+    code: await issueCode(email.trim().toLowerCase(), resolved.partner.id),
+  };
+}
+
+/**
+ * Whose giving an address opens, and in what capacity.
+ *
+ * The partner table is asked first and its answer is final. An address that
+ * gives in its own right reads its own giving, always — that is the one thing at
+ * this door nobody administrative should be able to take away or point somewhere
+ * else, so it is decided before the list Simon maintains is even consulted.
+ *
+ * In practice the two can never both match: `addReader` refuses an address that
+ * already belongs to a partner. The order here is what makes that a tidiness
+ * rule rather than a load-bearing one — if a reader's address later gives on its
+ * own through /give, `findOrCreatePartner` mints them a partner row, and from
+ * that moment this returns their own giving instead of the church's. They lose
+ * a view they had, which is worth knowing about; they do not lose their own.
+ */
+async function resolveSignIn(
+  email: string,
+): Promise<{ partner: Partner; reader: PartnerReader | null } | null> {
+  const address = email.trim().toLowerCase();
+
+  const partner = await getPartnerByEmail(address);
+  if (partner) return { partner, reader: null };
+
+  const reader = await readerByEmail(address);
+  if (!reader) return null;
+
+  /*
+    The partner is re-read rather than joined in, so a reader pointing at a row
+    that has since gone is a closed door and not a crash. The cascade should make
+    that impossible; a door is not the place to rely on should.
+  */
+  const readable = await getPartner(reader.partnerId);
+  return readable ? { partner: readable, reader } : null;
 }
 
 /**
@@ -232,25 +301,40 @@ export async function issueSignInCode(
  * the tick — that rule is in lib/disclosure.ts, applied on every render.
  */
 export async function signInPartnerWithCode(email: string, code: string) {
-  const partner = await getPartnerByEmail(email);
-  if (!partner) return false;
+  const address = email.trim().toLowerCase();
 
-  if (!(await claimCode(partner.id, code))) return false;
+  /*
+    Resolved again here rather than trusted from the code row. Between the code
+    being sent and being typed, Simon may have taken this reader off the partner
+    — and the answer to "may this address read that giving" has to be the one
+    that is true now, not the one that was true when the email went out.
+    `claimCode` is given the fresh answer and will miss if the code was issued
+    against a different one.
+  */
+  const resolved = await resolveSignIn(address);
+  if (!resolved) return false;
 
-  await partnerSession.start(partner.id);
+  if (!(await claimCode(address, resolved.partner.id, code))) return false;
+
+  await partnerSession.start(
+    sessionValue(resolved.partner.id, resolved.reader?.id),
+  );
   return true;
 }
 
 export async function signOutPartner() {
-  const partnerId = await partnerSession.read();
+  const view = await currentPartnerView();
   await partnerSession.clear();
 
   /*
     Any code still live is thrown away on the way out. Somebody signing out of a
     borrowed machine has usually just typed a code into it, and leaving the rest
     of its quarter of an hour on the table costs nothing to close.
+
+    Keyed on the address that asked, so a treasurer signing out closes their own
+    code and not the one the church office asked for a minute ago.
   */
-  if (partnerId) await forgetCode(partnerId);
+  if (view) await forgetCode(view.reader?.email ?? view.partner.email);
 }
 
 /**
@@ -263,10 +347,19 @@ export async function signOutPartner() {
  * note at the top of this file — and it closes here, because every screen works
  * out what it may show from the `Partner` this function returns.
  */
-export async function currentPartner(): Promise<Partner | null> {
+export type PartnerView = {
+  partner: Partner;
+  /** Set when somebody Simon added is reading on the partner's behalf. */
+  reader: PartnerReader | null;
+};
+
+export async function currentPartnerView(): Promise<PartnerView | null> {
   if (!isPartnerAreaConfigured()) return null;
 
-  const partnerId = await partnerSession.read();
+  const value = await partnerSession.read();
+  if (!value) return null;
+
+  const [partnerId, readerId] = value.split(":");
   if (!partnerId) return null;
 
   try {
@@ -276,10 +369,30 @@ export async function currentPartner(): Promise<Partner | null> {
       FROM partners
       WHERE id = ${partnerId}
     `;
-    return rows[0] ? toPartner(rows[0]) : null;
+    if (!rows[0]) return null;
+
+    const partner = toPartner(rows[0]);
+    if (!readerId) return { partner, reader: null };
+
+    /*
+      The reader row is re-read too, and for the sharper version of the reason
+      the partner is: this is the permission itself. Simon taking a treasurer off
+      a church has to shut their page on the next load, not in thirty days when
+      the cookie runs out — and a reader whose row has gone, or has been moved to
+      another partner since, is somebody holding a cookie for a door that is no
+      longer theirs.
+    */
+    const reader = await getReader(readerId);
+    if (!reader || reader.partnerId !== partner.id) return null;
+
+    return { partner, reader };
   } catch {
     return null;
   }
+}
+
+export async function currentPartner(): Promise<Partner | null> {
+  return (await currentPartnerView())?.partner ?? null;
 }
 
 export async function requirePartner() {

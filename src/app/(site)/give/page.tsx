@@ -125,11 +125,17 @@ export default async function GivePage(props: PageProps<"/give">) {
     wrong place. Underneath them the kitchen's own lines, where a giver can be
     as specific as they like.
   */
+  /*
+    No `partSummary`. It used to explain the figures underneath it — "What the
+    whole job costs. Any part of it is a real answer." — which is a sentence the
+    form says better twice over: the picker's own words above the list, and the
+    hint under the amount box once one of these is picked. Here it was a third
+    telling, sitting between somebody and the list they came to read.
+  */
   const wholeProjects: GiveChoice[] = appeals.map((appeal) => ({
     value: projectValue(appeal.area.id),
     title: appeal.area.label,
     areaLabel: "A whole project",
-    partSummary: "What the whole job costs. Any part of it is a real answer.",
     costCents: appeal.costCents,
   }));
 

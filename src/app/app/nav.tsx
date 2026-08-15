@@ -41,6 +41,7 @@ type IconName =
   | "pages"
   | "photos"
   | "needs"
+  | "spending"
   | "payments"
   | "partners"
   | "enquiries"
@@ -80,6 +81,17 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <path d="M12 3v18" />
       <path d="M16.5 7.5A3.5 3.5 0 0 0 13 5h-1.5a3 3 0 0 0 0 6h1a3 3 0 0 1 0 6H11a3.5 3.5 0 0 1-3.5-2.5" />
+    </>
+  ),
+  /*
+    A till receipt, against `needs` — a currency symbol — coming the other way.
+    The torn foot is the whole of the difference at 18px, so it is drawn as the
+    zig-zag it actually is rather than as a straight edge nobody would read.
+  */
+  spending: (
+    <>
+      <path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z" />
+      <path d="M9.5 8h5M9.5 12h5" />
     </>
   ),
   payments: (

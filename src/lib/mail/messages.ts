@@ -587,58 +587,83 @@ ${textFooter()}`,
  * incoming message from spending it before the recipient sees it — see the note
  * in lib/partner-codes.ts.
  */
-export function partnerSignInCode(partner: {
-  name: string;
-  email: string;
-  contactName: string;
+export function partnerSignInCode(input: {
+  /** Whose giving the code opens. */
+  partnerName: string;
+  /** Where it goes — the partner's own address, or one Simon added to them. */
+  to: { name: string; email: string };
+  /**
+   * True when `to` is somebody reading on the partner's behalf rather than the
+   * partner themselves. It changes two sentences and nothing else: a treasurer
+   * who has never seen this message before should be told, in it, why their
+   * address opens a church's giving — that is the only place the arrangement is
+   * ever explained to the person on the receiving end of it.
+   */
+  onBehalf: boolean;
   code: string;
   /** How long it lasts, in words — the page and the email have to agree. */
   lifetime: string;
 }): Message {
   const heading = "Your sign-in code";
 
+  /*
+    Built twice rather than escaped and patched, so the name is bold in the HTML
+    and plain in the text without either version being a search-and-replace over
+    the other's markup.
+  */
+  const opensHtml = `Here is the code for seeing everything <strong>${escape(input.partnerName)}</strong> has given, what it went to, and how each piece of work is going. Type it into the page you asked from.`;
+  const opensText = `Here is the code for seeing everything ${input.partnerName} has given, what it went to, and how each piece of work is going. Type it into the page you asked from.`;
+
+  const why = input.onBehalf
+    ? `Your address is on ${input.partnerName}'s giving because we put it there — it shows you what they have given, and nothing is ever recorded against you. If that is not right, reply and we will take it off.`
+    : "";
+
+  /*
+    Two different warnings for two different messages. A partner's own address
+    getting an unexpected code means somebody typed it into the sign-in page.
+    A reader's means that, or that they are on a church's giving and did not
+    know — which is worth saying plainly, because they are the only person who
+    can tell us it is wrong.
+  */
+  const unexpected = input.onBehalf
+    ? "If you did not ask for this, somebody typed your address into the sign-in page and nothing has happened — the code is useless to them without this email. Reply and tell us if it keeps arriving, or if your address should not be here at all."
+    : "If you did not ask for this, somebody typed your address into the sign-in page and nothing has happened — the code is useless to them without this email. You do not need to do anything, but do reply and tell us if it keeps arriving.";
+
   return {
-    to: [named(partner.name, partner.email)],
+    to: [named(input.to.name || input.partnerName, input.to.email)],
     replyTo: publicInbox(),
-    subject: `${partner.code} — your Jepegomi sign-in code`,
+    subject: `${input.code} — your Jepegomi sign-in code`,
     tag: "partner-sign-in-code",
     html: renderEmail({
-      preheader: `Your code is ${partner.code}. It lasts ${partner.lifetime}.`,
+      preheader: `Your code is ${input.code}. It lasts ${input.lifetime}.`,
       eyebrow: "Partners",
       heading,
       body:
-        lead(`Dear ${escape(partner.contactName || partner.name)},`) +
-        p(
-          `Here is the code for seeing everything ${escape(partner.name)} has given, what it went to, and how each piece of work is going. Type it into the page you asked from.`,
-        ) +
+        lead(`Dear ${escape(input.to.name || input.partnerName)},`) +
+        p(opensHtml) +
         panel(
-          `<p style="margin:0 0 16px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;line-height:42px;font-weight:700;letter-spacing:8px;color:#7a1b5c;">${escape(partner.code)}</p>`,
+          `<p style="margin:0 0 16px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;line-height:42px;font-weight:700;letter-spacing:8px;color:#7a1b5c;">${escape(input.code)}</p>`,
           { tone: "plum" },
         ) +
-        p(`It lasts ${escape(partner.lifetime)}, and works once.`, {
+        p(`It lasts ${escape(input.lifetime)}, and works once.`, {
           small: true,
           muted: true,
         }) +
+        (why ? p(escape(why), { small: true, muted: true }) : "") +
         rule() +
-        p(
-          "If you did not ask for this, somebody typed your address into the sign-in page and nothing has happened — the code is useless to them without this email. You do not need to do anything, but do reply and tell us if it keeps arriving.",
-          { small: true, muted: true },
-        ) +
+        p(unexpected, { small: true, muted: true }) +
         signoff(),
       footerNote: `You are getting this because somebody asked to sign in to the partner area with this address on ${escape(site.domain)}.`,
     }),
-    text: `Dear ${partner.contactName || partner.name},
+    text: `Dear ${input.to.name || input.partnerName},
 
-Here is the code for seeing everything ${partner.name} has given, what it went
-to, and how each piece of work is going. Type it into the page you asked from.
+${opensText}
 
-    ${partner.code}
+    ${input.code}
 
-It lasts ${partner.lifetime}, and works once.
-
-If you did not ask for this, somebody typed your address into the sign-in page
-and nothing has happened — the code is useless to them without this email. You
-do not need to do anything, but do reply and tell us if it keeps arriving.
+It lasts ${input.lifetime}, and works once.
+${why ? `\n${why}\n` : ""}
+${unexpected}
 
 ${site.leaders}
 ${site.longName}

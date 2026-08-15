@@ -283,6 +283,53 @@ export function ensureSchema() {
     `;
 
     /*
+      The other people who may read a partner's giving.
+
+      A partner is one email address, because a gift carries one. For a church
+      that is usually a fiction: the money left under the office address, and
+      the treasurer who has to reconcile it, the missions pastor who champions
+      it and the person who writes the newsletter all have a reason to look at
+      what it built — and none of them can, because the code goes to an inbox
+      they may not open.
+
+      Nothing here is inferred. There is no way to tell from a gift that
+      jane@grace.org belongs with office@grace.org, and a rule that guessed —
+      same domain, say — would hand one church's giving to whoever else is on
+      its mail server. So every row is one Simon typed in, and the only thing
+      it grants is the same code door the partner already has.
+
+      `email` is unique across the whole table rather than per partner: one
+      address reads one partner's giving, so there is never a question of which
+      dashboard a code opens. Adding the same address to a second partner is
+      refused out loud rather than resolved by a rule nobody would remember.
+
+      ON DELETE CASCADE, unlike pledges. A reader is permission and nothing
+      else — with the partner gone there is nothing left to read, and a row
+      pointing at a partner who is not there is a permission nobody can see to
+      take away.
+    */
+    await db`
+      CREATE TABLE IF NOT EXISTS partner_readers (
+        id         TEXT PRIMARY KEY,
+        partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+        email      TEXT UNIQUE NOT NULL,
+        name       TEXT NOT NULL DEFAULT '',
+        note       TEXT NOT NULL DEFAULT '',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `;
+
+    /*
+      Read on the sign-in path by partner id, to list who else is on a partner,
+      and by email on every code request. The email side is served by the unique
+      constraint above; this is the other one.
+    */
+    await db`
+      CREATE INDEX IF NOT EXISTS partner_readers_partner_idx
+        ON partner_readers (partner_id)
+    `;
+
+    /*
       One partner promising one amount — the row that makes the whole thing
       work. A need is not funded by a donor; it is funded by however many of
       these it takes to reach its cost, which is exactly the point.

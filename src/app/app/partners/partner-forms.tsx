@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { NEED_AREAS, PARTNER_KINDS, type PartnerWithTotals } from "@/lib/giving";
+import {
+  NEED_AREAS,
+  PARTNER_KINDS,
+  type PartnerReader,
+  type PartnerWithTotals,
+} from "@/lib/giving";
 import { usd } from "@/lib/money";
 import {
   addPartnerAction,
+  addReaderAction,
   issueLoginAction,
   recordGiftAction,
+  removeReaderAction,
   revokeLoginAction,
   seedEncounterChurchAction,
   setVerifiedAction,
@@ -620,6 +627,174 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Who else may see this partner's giving.
+ *
+ * The list and the form that adds to it, together, because they only make sense
+ * as one thing: this is a permission, and a permission you cannot see the
+ * current state of is one nobody dares change. Every row carries its own way
+ * off, and the address is set in monospace so a typo in it is visible.
+ *
+ * A transition and a page reload on success, like everything else here — adding
+ * a row changes the list this form is standing in.
+ */
+export function ReadersPanel({
+  partner,
+  readers,
+}: {
+  partner: PartnerWithTotals;
+  readers: PartnerReader[];
+}) {
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [fields, setFields] = useState({ email: "", name: "", note: "" });
+
+  const set = <K extends keyof typeof fields>(key: K, value: string) =>
+    setFields((current) => ({ ...current, [key]: value }));
+
+  return (
+    <div>
+      <p className="max-w-prose text-sm leading-relaxed text-smoke">
+        A gift carries one address, and for a church that is usually too few
+        people — the treasurer reconciling it and the pastor who championed it
+        may never open the office inbox the code goes to. Addresses you add here
+        can ask for their own code at{" "}
+        <span className="font-mono text-xs">/partners</span> and read{" "}
+        {partner.name}&apos;s giving exactly as {partner.name} sees it. Nothing
+        is ever recorded against them, and they get nothing in this admin.
+      </p>
+
+      {readers.length > 0 && (
+        <ul className="mt-6 divide-y divide-black/8 border-y border-black/8">
+          {readers.map((reader) => (
+            <li
+              key={reader.id}
+              className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-4"
+            >
+              <div className="min-w-0">
+                <p className="font-mono text-xs break-all text-plum">
+                  {reader.email}
+                </p>
+                <p className="mt-1 text-sm text-smoke">
+                  {reader.name || "No name given"}
+                  {reader.note && ` · ${reader.note}`}
+                </p>
+              </div>
+              <RemoveReaderButton reader={reader} partnerName={partner.name} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="eyebrow text-smoke">Their email</span>
+          <input
+            type="email"
+            value={fields.email}
+            onChange={(event) => set("email", event.target.value)}
+            className={`${inputClass} font-mono text-sm`}
+            placeholder="treasurer@example.org"
+          />
+          <span className="mt-2 block text-xs text-smoke">
+            Nothing is sent to it now. They see the arrangement explained in the
+            first code they ask for.
+          </span>
+        </label>
+
+        <label className="block">
+          <span className="eyebrow text-smoke">Who they are</span>
+          <input
+            value={fields.name}
+            onChange={(event) => set("name", event.target.value)}
+            className={inputClass}
+            placeholder="Jane Otieno"
+          />
+          <span className="mt-2 block text-xs text-smoke">
+            How their emails are addressed. Leave it blank if you don&apos;t
+            know.
+          </span>
+        </label>
+      </div>
+
+      <label className="mt-4 block">
+        <span className="eyebrow text-smoke">Your note</span>
+        <input
+          value={fields.note}
+          onChange={(event) => set("note", event.target.value)}
+          className={inputClass}
+          placeholder="Treasurer — asked for this on the call in March"
+        />
+        <span className="mt-2 block text-xs text-smoke">
+          For you only. Why they are on the list, and who asked.
+        </span>
+      </label>
+
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-plum">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="button"
+        disabled={pending || !fields.email.trim()}
+        onClick={() => {
+          setError(null);
+          start(async () => {
+            const result = await addReaderAction({
+              partnerId: partner.id,
+              ...fields,
+            });
+            if (result?.error) {
+              setError(result.error);
+              return;
+            }
+            window.location.assign("/app/partners");
+          });
+        }}
+        className={`${primaryButton} mt-5`}
+      >
+        {pending ? "Adding…" : "Let this address see their giving"}
+      </button>
+    </div>
+  );
+}
+
+function RemoveReaderButton({
+  reader,
+  partnerName,
+}: {
+  reader: PartnerReader;
+  partnerName: string;
+}) {
+  const [pending, start] = useTransition();
+
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() => {
+        if (
+          !confirm(
+            `Take ${reader.email} off ${partnerName}'s giving? They lose the page immediately, and any code already in their inbox stops working.`,
+          )
+        ) {
+          return;
+        }
+        start(async () => {
+          await removeReaderAction(reader.id);
+          // Reloaded rather than revalidated — see the note in actions.ts.
+          window.location.assign("/app/partners");
+        });
+      }}
+      className={`${quietButton} shrink-0`}
+    >
+      {pending ? "Removing…" : "Remove"}
+    </button>
   );
 }
 

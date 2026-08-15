@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getContent } from "@/cms/content";
 import { Icon, type IconName } from "@/components/icons";
-import { KitchenAccounts } from "@/components/kitchen-accounts";
+import { ProjectAccounts } from "@/components/project-accounts";
 import { FoodAtSchoolLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
 import { PhotoGallery } from "@/components/photo-gallery";
@@ -11,7 +11,7 @@ import { ButtonLink, SectionTitle } from "@/components/ui";
 import { showsAccounts } from "@/lib/disclosure";
 import { areaOf } from "@/lib/giving";
 import { getChildrenFed } from "@/lib/enrolment";
-import { accountSet, visibilityOf } from "@/lib/project-accounts";
+import { accountNoteOf, visibilityOf } from "@/lib/project-accounts";
 import { getKitchenReport, kitchenStats } from "@/lib/kitchen";
 import {
   getProjectBudget,
@@ -161,17 +161,30 @@ export default async function KitchenPage() {
     deliberately putting the ministry's own books back on the open web. The
     default is the other thing, and the section below says so either way.
   */
+  const visibility = visibilityOf(accounts, "kitchen");
+
   const publishAccounts = showsAccounts({
-    visibility: visibilityOf(accounts, "kitchen"),
+    visibility,
     disclosure: null,
-    areaId: accountSet("kitchen").area,
+    areaId: "kitchen",
   });
+
+  /*
+    …and whether to say anything about them at all.
+
+    "Nobody, for now" is the setting Simon reaches for while a figure is being
+    corrected, and it has to close the invitation as well as the table. A page
+    that goes on telling people these accounts are waiting behind the partner
+    door, on a day nothing is behind it, sends the church that gave $8,000 to
+    sign in and find an empty screen — which reads as the ministry having
+    something to hide at exactly the moment it is being careful.
+  */
+  const mentionAccounts = visibility !== "nobody";
 
   // Only read when it is about to be drawn — a public page should not pay for
   // the accounts on every visit to keep them hidden.
-  const budget = publishAccounts
-    ? await getProjectBudget(accountSet("kitchen").area)
-    : null;
+  const budget = publishAccounts ? await getProjectBudget("kitchen") : null;
+  const accountNote = accountNoteOf(accounts, "kitchen");
 
   /*
     Every mention of how many children eat here comes from the same enrolment
@@ -458,46 +471,75 @@ export default async function KitchenPage() {
         Deliberately not phrased as a wall in the closed branch. A reader who is
         not a partner should come away knowing the accounts exist and are shown,
         which is the whole point of having them.
+
+        The whole band goes when the switch is on "Nobody, for now" — see
+        `mentionAccounts` above. An invitation to sign in and read something
+        nobody can currently read is worse than silence.
       */}
-      <div className="relative bg-sand px-6 py-20">
-        <ClothEdge className="text-sand" />
+      {mentionAccounts && (
+        <div className="relative bg-sand px-6 py-20">
+          <ClothEdge className="text-sand" />
 
-        <div className="shell">
-          {budget ? (
-            <>
+          <div className="shell">
+            {budget ? (
+              <>
+                <div className="text-center">
+                  <SectionTitle className="mt-3">
+                    Every shilling of the gift, accounted for
+                  </SectionTitle>
+                  <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
+                    Pastor Simon reconciled the build line by line: what each
+                    thing was estimated at, what it actually cost, and where it
+                    ran over.
+                  </p>
+                </div>
+
+                <div className="mx-auto mt-12 max-w-3xl">
+                  <ProjectAccounts
+                    budget={budget}
+                    title={`Where the ${usd(report.giftCents / 100)} went`}
+                    note={accountNote}
+                    intro={
+                      <p>
+                        {report.donorTitled} in {report.donorLocation} gave{" "}
+                        <strong className="text-charcoal">
+                          {usd(report.giftCents / 100)}
+                        </strong>{" "}
+                        to build the kitchen and dining area. Below is Pastor
+                        Simon&apos;s own reconciliation of what was estimated
+                        against what things actually cost.
+                      </p>
+                    }
+                    footnote={
+                      <p>
+                        Figures in USD, as reported by Pastor Simon to the donor.
+                        The {usd(report.giftCents / 100)} gift is fully spent.
+                        {budget.outstanding.length > 0 &&
+                          " The items in the second table were never reached."}
+                      </p>
+                    }
+                  />
+                </div>
+              </>
+            ) : (
               <div className="text-center">
-                <SectionTitle className="mt-3">
-                  Every shilling of the gift, accounted for
-                </SectionTitle>
-                <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
-                  Pastor Simon reconciled the build line by line: what each
-                  thing was estimated at, what it actually cost, and where it ran
-                  over.
+                <p className="font-display mx-auto max-w-lg text-2xl leading-snug font-semibold text-balance">
+                  Every shilling of the gift is accounted for.
                 </p>
+                <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
+                  Pastor Simon reconciled the build line by line: what each thing
+                  was estimated at, what it actually cost, and where it ran over.
+                  Partners who gave towards this work read it in full when they
+                  sign in.
+                </p>
+                <ButtonLink href="/partners" className="mt-8">
+                  Partner sign-in
+                </ButtonLink>
               </div>
-
-              <div className="mx-auto mt-12 max-w-3xl">
-                <KitchenAccounts budget={budget} report={report} />
-              </div>
-            </>
-          ) : (
-            <div className="text-center">
-              <p className="font-display mx-auto max-w-lg text-2xl leading-snug font-semibold text-balance">
-                Every shilling of the gift is accounted for.
-              </p>
-              <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
-                Pastor Simon reconciled the build line by line: what each thing
-                was estimated at, what it actually cost, and where it ran over.
-                Partners who gave towards this work read it in full when they
-                sign in.
-              </p>
-              <ButtonLink href="/partners" className="mt-8">
-                Partner sign-in
-              </ButtonLink>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* The ask. */}
       <section className="relative overflow-hidden bg-plum-deep px-6 py-20 text-center sm:py-24">
@@ -507,7 +549,7 @@ export default async function KitchenPage() {
         <div className="shell relative">
           <div className="mx-auto max-w-md">
             <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
-              Help us finish the kitchen
+              Finish the kitchen with us
             </h2>
 
             {/*

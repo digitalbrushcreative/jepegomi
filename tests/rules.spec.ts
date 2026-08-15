@@ -47,6 +47,20 @@ const project = (areaId: string, received: number): PartnerProject =>
     yoursReceivedCents: received,
   }) as unknown as PartnerProject;
 
+/**
+ * The same, given to the project as a whole — "for the kitchen, wherever it
+ * helps" — rather than against a costed line. No needs at all, which is the
+ * shape `groupByProject` produces for an undesignated gift.
+ */
+const areaGift = (areaId: string, received: number): PartnerProject =>
+  ({
+    area: { id: areaId, label: areaId, blurb: "" },
+    needs: [],
+    gift: { yoursReceivedCents: received },
+    yoursCents: received,
+    yoursReceivedCents: received,
+  }) as unknown as PartnerProject;
+
 test.describe("how far a giver can see", () => {
   test("somebody who has given nothing sees only their own", () => {
     const seen = disclosureFor({
@@ -86,6 +100,38 @@ test.describe("how far a giver can see", () => {
     expect(seen.tier).toBe("project");
     expect(opensAccounts(seen, "kitchen")).toBe(true);
     expect(opensAccounts(seen, "playground")).toBe(false);
+  });
+
+  test("a gift to the project as a whole opens that project too", () => {
+    /*
+      The kitchen page tells the public, in as many words, that "partners who
+      gave towards this work read it in full when they sign in". This used to
+      require an *itemised* gift, so somebody who gave $300 towards the kitchen
+      generally signed in and was shown nothing — the site making a promise the
+      rule then broke. Undesignated giving that arrived opens the project it
+      arrived for.
+    */
+    const seen = disclosureFor({
+      partner: giver(),
+      projects: [areaGift("kitchen", 30_000)],
+      receivedCents: 30_000,
+    });
+
+    expect(seen.tier).toBe("project");
+    expect(opensAccounts(seen, "kitchen")).toBe(true);
+    // And still only that one — this widened which gifts count, not which books.
+    expect(opensAccounts(seen, "playground")).toBe(false);
+  });
+
+  test("an unpaid gift to a project as a whole still opens nothing", () => {
+    const seen = disclosureFor({
+      partner: giver(),
+      projects: [areaGift("kitchen", 0)],
+      receivedCents: 0,
+    });
+
+    expect(seen.tier).toBe("own");
+    expect(opensAccounts(seen, "kitchen")).toBe(false);
   });
 
   test("an unverified church is still only a claim about itself", () => {
