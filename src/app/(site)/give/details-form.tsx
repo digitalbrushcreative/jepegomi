@@ -5,7 +5,7 @@ import {
   type GivingDetailsState,
   requestGivingDetailsAction,
 } from "@/app/(site)/give/details-actions";
-import { SpamTraps } from "@/components/form";
+import { CaptchaNotice, SpamTraps } from "@/components/form";
 import { Icon } from "@/components/icons";
 
 /**
@@ -40,7 +40,7 @@ export function GivingDetailsForm({ email }: { email: string }) {
 
   return (
     <form action={formAction} className="mx-auto mt-9 max-w-lg">
-      <SpamTraps />
+      <SpamTraps action="details" />
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <label className="flex-1">
@@ -85,6 +85,8 @@ export function GivingDetailsForm({ email }: { email: string }) {
         </a>
         .
       </p>
+
+      <CaptchaNotice className="mt-3 text-white/45" />
     </form>
   );
 }

@@ -33,6 +33,14 @@ export function isEmail(value: string) {
 export const TRAP = "website";
 
 /**
+ * Where the reCAPTCHA token rides in. It lives here rather than in lib/captcha.ts
+ * so that `SpamTraps` — a client component — can name the field without pulling
+ * the verifying half of the code, and the secret key it reads, into the browser
+ * bundle. See lib/captcha.ts for what is done with what arrives.
+ */
+export const CAPTCHA_FIELD = "captchaToken";
+
+/**
  * Whether a submission looks automated.
  *
  * Two cheap signals, both of which a real submission passes without noticing:

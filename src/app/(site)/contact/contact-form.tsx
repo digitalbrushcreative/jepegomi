@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { type ContactState, sendContactAction } from "@/app/(site)/contact/actions";
 import { CONTACT_SUBJECTS } from "@/app/(site)/contact/subjects";
 import {
+  CaptchaNotice,
   Done,
   Field,
   FormError,
@@ -48,7 +49,7 @@ export function ContactForm({ email }: { email: string }) {
 
   return (
     <form action={formAction} className="relative space-y-6">
-      <SpamTraps />
+      <SpamTraps action="contact" />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Your name">
@@ -90,6 +91,8 @@ export function ContactForm({ email }: { email: string }) {
         We reply from {email}. Nothing you write here is published, sold or added
         to a mailing list.
       </p>
+
+      <CaptchaNotice className="measure mx-auto text-center text-smoke" />
     </form>
   );
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { STRICT, checkCaptcha } from "@/lib/captcha";
 import { isEmail, looksAutomated, text } from "@/lib/forms";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import {
@@ -69,6 +70,27 @@ export async function sendContactAction(
   if (!limit.ok) {
     return {
       error: `That is several messages in a short time. Try again ${retryWording(limit.retryAfterSeconds)}, or write straight to ${publicInbox()}.`,
+    };
+  }
+
+  /*
+    And the thing neither of the above catches: somebody who read this page once
+    and wrote a loop against the action behind it, which is what started
+    arriving and is why this was added. Strict here — a token is required — for
+    the reason set out beside `STRICT`: what this form does when it is abused is
+    put mail in a real inbox over the ministry's own sending domain.
+
+    The two answers are deliberately different. A refusal is answered like the
+    honeypot, as though it worked, because telling a bot its score was too low
+    is telling it what to change. A missing or expired token is a person: no
+    JavaScript, a blocked script, or a form left open for longer than the two
+    minutes a token lasts. They are told plainly, and given the address.
+  */
+  const captcha = await checkCaptcha(formData, "contact", STRICT);
+  if (!captcha.ok) {
+    if (captcha.reason === "refused") return { done: true };
+    return {
+      error: `We could not check that this was sent from a browser. Please try once more, or write straight to ${publicInbox()} — it reaches the same people.`,
     };
   }
 

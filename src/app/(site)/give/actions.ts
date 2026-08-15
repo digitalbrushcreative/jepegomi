@@ -2,6 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { LENIENT, checkCaptcha } from "@/lib/captcha";
 import { looksAutomated } from "@/lib/forms";
 import { areaForDesignation, areaForValue, isPartnerKind } from "@/lib/giving";
 import {
@@ -339,24 +340,24 @@ export async function giveAction(
     a real person, the screen tells them to expect a reply from Simon rather
     than an email that is not coming.
   */
-  if (looksAutomated(formData, { timing: false })) {
-    /*
-      `towards` here is still the raw slug from the select — the need has not
-      been looked up, and deliberately will not be. So the thank-you is worded
-      without it rather than rendering "recorded towards t-cabro-floor". Only a
-      bot should ever read this, but "should" is doing work in that sentence,
-      and the cost of it being wrong is a real giver seeing a machine's URL.
-    */
-    return {
-      done: {
-        amount: usd(amountCents),
-        towards: "the ministry",
-        email: parsed.giver.email,
-        listed: false,
-        sent: false,
-      },
-    };
-  }
+  /*
+    `towards` here is still the raw slug from the select — the need has not been
+    looked up, and deliberately will not be. So the thank-you is worded without
+    it rather than rendering "recorded towards t-cabro-floor". Only a bot should
+    ever read this, but "should" is doing work in that sentence, and the cost of
+    it being wrong is a real giver seeing a machine's URL.
+  */
+  const pretend = {
+    done: {
+      amount: usd(amountCents),
+      towards: "the ministry",
+      email: parsed.giver.email,
+      listed: false,
+      sent: false,
+    },
+  };
+
+  if (looksAutomated(formData, { timing: false })) return pretend;
 
   /*
     A limit, and a deliberately generous one.
@@ -380,6 +381,18 @@ export async function giveAction(
       error: `That is a lot of gifts from one place in a short time — nothing has been recorded. Try again ${retryWording(limit.retryAfterSeconds)}, or write to ${site.email} and we will do it by hand.`,
     };
   }
+
+  /*
+    reCAPTCHA, and lenient on purpose — the same judgement that switches the
+    two-second clock off on this form. A token is checked when one arrives and
+    never demanded, so a giver whose browser blocks Google, or who has
+    JavaScript off entirely, still gives; and the score has to be poor rather
+    than merely middling before anybody is turned away. What a wrong answer
+    costs here is not a message that can be sent again.
+
+    Answered exactly as the honeypot is, for the same reason.
+  */
+  if (!(await checkCaptcha(formData, "give", LENIENT)).ok) return pretend;
 
   /*
     Which of the two buttons was pressed. It is a value on the submit button

@@ -54,6 +54,25 @@ const ANALYTICS = {
   img: ["https://www.googletagmanager.com", "https://www.google-analytics.com"],
 };
 
+/*
+  reCAPTCHA v3 on the public forms, and the three directives it needs.
+
+  The paths matter and are Google's own: the library is fetched from
+  /recaptcha/ on two hosts, and it then opens a hidden iframe back to
+  www.google.com to do the actual scoring — which is why `frame-src` is here for
+  something with no visible frame in it. recaptcha.google.com is the fallback
+  host Google's documentation names; without it the widget works until the day
+  it doesn't.
+
+  Nothing is fetched from any of these until a visitor starts filling in a form
+  (see components/form.tsx), so a reader who only reads still never meets them.
+*/
+const RECAPTCHA = {
+  script: ["https://www.google.com/recaptcha/", "https://www.gstatic.com/recaptcha/"],
+  frame: ["https://www.google.com/recaptcha/", "https://recaptcha.google.com/recaptcha/"],
+  connect: ["https://www.google.com/recaptcha/"],
+};
+
 const isDev = process.env.NODE_ENV === "development";
 
 /**
@@ -83,7 +102,7 @@ function contentSecurityPolicy() {
   return [
     "default-src 'self'",
     // 'unsafe-eval' is React's dev-only error reconstruction. Never in production.
-    `script-src 'self' 'unsafe-inline' ${ANALYTICS.script}${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline' ${ANALYTICS.script} ${RECAPTCHA.script.join(" ")}${isDev ? " 'unsafe-eval'" : ""}`,
     // Tailwind, and next/font's injected face declarations.
     "style-src 'self' 'unsafe-inline'",
     /*
@@ -99,8 +118,8 @@ function contentSecurityPolicy() {
     `img-src 'self' data: blob: ${ANALYTICS.img.join(" ")}`,
     // next/font self-hosts, so nothing is fetched from Google at runtime.
     "font-src 'self' data:",
-    `frame-src ${MAP_HOST} ${VIDEO_HOST}`,
-    `connect-src 'self' ${ANALYTICS.connect.join(" ")}`,
+    `frame-src ${MAP_HOST} ${VIDEO_HOST} ${RECAPTCHA.frame.join(" ")}`,
+    `connect-src 'self' ${ANALYTICS.connect.join(" ")} ${RECAPTCHA.connect.join(" ")}`,
     `form-action 'self' ${PESAPAL_HOSTS.join(" ")}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",

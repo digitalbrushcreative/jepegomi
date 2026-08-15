@@ -1,5 +1,6 @@
 "use server";
 
+import { LENIENT, checkCaptcha } from "@/lib/captcha";
 import { isEmail, looksAutomated, text } from "@/lib/forms";
 import { givingDetails, isMailConfigured, publicInbox, queue } from "@/lib/mail";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
@@ -66,6 +67,19 @@ export async function requestGivingDetailsAction(
     return {
       error: `That is several requests in a short time. Try again ${retryWording(limit.retryAfterSeconds)}, or write to ${publicInbox()}.`,
     };
+  }
+
+  /*
+    Of the four public forms this is the one with the clearest abuse story — an
+    arbitrary address, mailed on demand — so it is the one where a captcha earns
+    its place most. Lenient all the same, and for a reason particular to this
+    form rather than a general shrug: it sits on the giving page, and somebody
+    who has just decided to give and is asking where to send it is exactly the
+    person who must not be met with a refusal they cannot act on. Answered like
+    the honeypot above, which is to say not answered at all.
+  */
+  if (!(await checkCaptcha(formData, "details", LENIENT)).ok) {
+    return { done: { email } };
   }
 
   if (!isMailConfigured()) {

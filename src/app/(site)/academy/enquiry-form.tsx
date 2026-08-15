@@ -6,6 +6,7 @@ import {
   sendEnrolmentEnquiryAction,
 } from "@/app/(site)/academy/actions";
 import {
+  CaptchaNotice,
   Done,
   Field,
   FormError,
@@ -46,7 +47,7 @@ export function EnrolmentEnquiryForm({ email }: { email: string }) {
 
   return (
     <form action={formAction} className="relative space-y-6">
-      <SpamTraps />
+      <SpamTraps action="enrolment" />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Your name">
@@ -117,6 +118,8 @@ export function EnrolmentEnquiryForm({ email }: { email: string }) {
         privately so we can be sure you get a reply — never published and never
         passed on. You can also write to {email}, and ask us there to delete it.
       </p>
+
+      <CaptchaNotice className="measure mx-auto text-center text-smoke" />
     </form>
   );
 }

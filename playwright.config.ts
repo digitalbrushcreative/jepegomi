@@ -71,7 +71,7 @@ export default defineConfig({
     {
       name: "public",
       use: { ...devices["Desktop Chrome"] },
-      testMatch: /(public|security)\.spec\.ts/,
+      testMatch: /(public|security|captcha)\.spec\.ts/,
     },
     {
       name: "cms",

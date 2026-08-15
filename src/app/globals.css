@@ -158,6 +158,20 @@ body {
   border-radius: 4px;
 }
 
+/*
+  reCAPTCHA's floating badge. Google's terms permit hiding it as long as the
+  branding appears in the form instead, which `CaptchaNotice` in
+  components/form.tsx does — a grey rectangle pinned over the bottom corner of
+  every page would sit on top of the giving buttons on a phone, and it says the
+  same thing a line of small print under the button says better.
+
+  `visibility` rather than `display`, which is what Google's own documentation
+  specifies: the badge still has to be laid out for the widget to work.
+*/
+.grecaptcha-badge {
+  visibility: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

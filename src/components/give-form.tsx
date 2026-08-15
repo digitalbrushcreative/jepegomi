@@ -3,6 +3,7 @@
 import { Fragment, useActionState, useRef, useState } from "react";
 import { type GiveState, giveAction } from "@/app/(site)/give/actions";
 import {
+  CaptchaNotice,
   Done,
   Field,
   FormError,
@@ -349,7 +350,7 @@ export function GiveForm({
 
   return (
     <form action={formAction} className="relative space-y-7">
-      <SpamTraps />
+      <SpamTraps action="give" />
 
       {/*
         Three states, and only the last of them is a picker: the item is already
@@ -659,6 +660,8 @@ export function GiveForm({
           </p>
         </>
       )}
+
+      <CaptchaNotice className="measure mx-auto text-center text-smoke" />
     </form>
   );
 }

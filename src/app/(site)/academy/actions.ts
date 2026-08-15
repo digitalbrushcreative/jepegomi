@@ -1,5 +1,6 @@
 "use server";
 
+import { STRICT, checkCaptcha } from "@/lib/captcha";
 import { recordEnrolmentEnquiry } from "@/lib/enquiries";
 import { isEmail, looksAutomated, text } from "@/lib/forms";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
@@ -71,6 +72,21 @@ export async function sendEnrolmentEnquiryAction(
   if (!limit.ok) {
     return {
       error: `That is several enquiries in a short time. Try again ${retryWording(limit.retryAfterSeconds)}, or write straight to ${publicInbox()}.`,
+    };
+  }
+
+  /*
+    Strict, like the contact form, and with the extra reason the rate limit
+    above already gives: every submission that gets past here writes a row about
+    somebody's child. A loop that is merely slow enough to stay under the limit
+    still fills that table, and the thinness of it is only a privacy answer
+    while the rows are real.
+  */
+  const captcha = await checkCaptcha(formData, "enrolment", STRICT);
+  if (!captcha.ok) {
+    if (captcha.reason === "refused") return { done: true };
+    return {
+      error: `We could not check that this was sent from a browser. Please try once more, or write straight to ${publicInbox()} with your child's name and age.`,
     };
   }
 
