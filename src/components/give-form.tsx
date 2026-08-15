@@ -1,6 +1,12 @@
 "use client";
 
-import { Fragment, useActionState, useRef, useState } from "react";
+import {
+  Fragment,
+  useActionState,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { type GiveState, giveAction } from "@/app/(site)/give/actions";
 import {
   CaptchaNotice,
@@ -9,6 +15,7 @@ import {
   FormError,
   SpamTraps,
   Submit,
+  buttonClass,
   inputClass,
 } from "@/components/form";
 import { Icon } from "@/components/icons";
@@ -57,6 +64,24 @@ import { parseUsd, usd } from "@/lib/money";
  * next tap takes something. Copy that is true in one configuration and false in
  * the other is written as a branch, not as a compromise sentence that is vague
  * enough to survive both.
+ *
+ * All of that had grown into one screen asking eleven questions at once, and a
+ * picker long enough to scroll on top of it. So it is two halves now: what the
+ * gift is for and how much, then who is giving. The split is presentational and
+ * nothing else — one form, one action, one POST, every field named exactly what
+ * it was named before. The first half is hidden rather than unmounted when the
+ * second is showing, which is what keeps that true: the browser submits the
+ * whole form either way, so nothing has to be copied into hidden inputs and
+ * kept in step with the boxes it was copied from.
+ *
+ * Which half is showing is a fact about a browser that has finished hydrating.
+ * Until then — and for anything rendering this markup without React at all —
+ * both halves are drawn, one after the other, exactly the long single page this
+ * used to be. That is what `stepped` below is for, and why every step-only
+ * control is drawn behind it. It matters most in the seconds before the bundle
+ * lands: the whole reason the boxes below use `defaultValue` is that people
+ * type into this form before React is ready, and a half of it that is hidden by
+ * something React has not run yet is a half nobody can fill in.
  */
 
 export type GiveChoice = {
@@ -94,6 +119,97 @@ export type GiveChoice = {
 
 /** The form's word for "not one of the listed items". Matched in giveAction. */
 const OTHER = "other";
+
+/**
+ * Whether the client bundle has taken over — and so whether this form is
+ * allowed to hide half of itself.
+ *
+ * It cannot be plain state. State says "false" on the server and "false" again
+ * on the hydrating render, then never changes without an effect setting it,
+ * which is the one thing React's lint rule is right to object to. And it must
+ * not be assumed either — a half hidden by markup that arrives already folded
+ * is a half nobody can fill in until React turns up to unfold it.
+ *
+ * `useSyncExternalStore` with two different snapshots is exactly this question.
+ * The server, and the hydrating render that has to match it, get `false` — both
+ * halves drawn. The moment hydration is done React re-reads the client snapshot,
+ * gets `true`, and the form folds itself in two. Nothing is subscribed to,
+ * because nothing ever changes it back.
+ */
+const nothingChanges = () => () => {};
+const useHydrated = () =>
+  useSyncExternalStore(
+    nothingChanges,
+    () => true,
+    () => false,
+  );
+
+/**
+ * The line that says where in the form somebody is.
+ *
+ * Deliberately one small line rather than a heading: every step already opens
+ * with a question in a label — "What would you like your gift to go to?", "Who
+ * is giving?" — and a title above that question would be the second thing on
+ * the screen saying the same thing. It is focusable so that moving between the
+ * halves can move the focus somewhere that says which half you are now in,
+ * rather than dumping a keyboard at the top of a page that silently changed
+ * underneath it.
+ */
+function StepMarker({
+  ref,
+  index,
+  title,
+}: {
+  ref: React.RefObject<HTMLParagraphElement | null>;
+  index: number;
+  title: string;
+}) {
+  return (
+    <p
+      ref={ref}
+      tabIndex={-1}
+      className="eyebrow mb-6 block text-plum outline-none"
+    >
+      Step {index} of 2 <span className="text-smoke">· {title}</span>
+    </p>
+  );
+}
+
+/**
+ * What the first half decided, carried into the second.
+ *
+ * A two-step form's one real cost is that the question you answered is off the
+ * screen while you answer the next one — so a giver typing their email should
+ * be able to see, without going back, that this is $250 towards the cabro
+ * floor and not $250 towards the bus. The way back is beside it and says so.
+ */
+function ChosenSummary({
+  amount,
+  towards,
+  onChange,
+}: {
+  amount: string;
+  towards: string;
+  onChange: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-xl border border-green/25 bg-green/8 px-4 py-3.5">
+      <span className="min-w-0">
+        <span className="font-display tabular text-lg font-semibold text-green">
+          {amount}
+        </span>{" "}
+        <span className="text-sm text-smoke">towards {towards}</span>
+      </span>
+      <button
+        type="button"
+        onClick={onChange}
+        className="cursor-pointer text-sm font-medium text-plum underline underline-offset-4"
+      >
+        Change
+      </button>
+    </div>
+  );
+}
 
 function Thanks({
   state,
@@ -310,6 +426,22 @@ export function GiveForm({
     setDesignationValue(next);
   };
 
+  const stepped = useHydrated();
+  const [step, setStep] = useState<1 | 2>(1);
+  /**
+   * What is wrong with the first half, in the same words the action would use
+   * for the same fault. It has to be the form's own message rather than the
+   * browser's: the amount box has a rule no HTML attribute knows about — an
+   * item's balance — and being told "please fill in this field" by Chrome for
+   * two of the four faults and something quite different for the other two is
+   * how a form starts to feel like two forms.
+   */
+  const [stepError, setStepError] = useState("");
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const giftMarkerRef = useRef<HTMLParagraphElement>(null);
+  const detailsMarkerRef = useRef<HTMLParagraphElement>(null);
+
   if (state?.done) return <Thanks state={state.done} email={contactEmail} />;
 
   const chosen = choices.find((choice) => choice.value === towards);
@@ -348,320 +480,500 @@ export function GiveForm({
         )
       : [5_000, 10_000, 25_000, 50_000];
 
+  /*
+    Both halves are in the DOM the whole time; these decide which one the
+    browser draws. Until React has hydrated, both are true and the form is the
+    single long page it always was.
+  */
+  const showingGift = !stepped || step === 1;
+  const showingDetails = !stepped || step === 2;
+
+  const show = (
+    next: 1 | 2,
+    marker: React.RefObject<HTMLParagraphElement | null>,
+  ) => {
+    setStep(next);
+    setStepError("");
+
+    /*
+      Focus follows the half being shown, or a keyboard is left pointing at a
+      button that just went `display: none` — which puts it back at the top of
+      the document with no idea anything moved.
+
+      The scroll only happens when the top of the form is not already in front
+      of somebody: on /give the picker is tall enough that "Continue" can be
+      most of a screen below where the form starts, and the half that replaces
+      it is short. Scrolling when the form is still where the eye left it would
+      be moving the page under somebody for no reason.
+
+      The clearance is the site header, which is fixed and four rem tall — so
+      "at the top of the window" and "where somebody can see it" are two
+      different places, and the `scroll-mt-24` on the form below is what settles
+      the difference.
+    */
+    requestAnimationFrame(() => {
+      marker.current?.focus();
+
+      const form = formRef.current;
+      if (form && form.getBoundingClientRect().top < 96) {
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  };
+
+  /**
+   * The first half, checked before it is put away.
+   *
+   * Every message here is the one `giveAction` gives for the same fault, on
+   * purpose — this is a courtesy in front of the server's answer, not a second
+   * opinion about what is allowed. The server checks all of it again anyway,
+   * against a balance that may well have moved while somebody was typing.
+   */
+  const forward = () => {
+    /*
+      Read from the boxes rather than from the copies in state. Anything typed
+      before the client bundle arrived never fired an onChange, so the copy can
+      be empty while the box in front of the giver plainly says 250 — and
+      refusing to go on because of that would be the form arguing with what is
+      on the screen. Read once, and put the copies right while we are here,
+      because the summary and the buttons in the second half are drawn from
+      them.
+    */
+    const typed = amountRef.current?.value ?? amount;
+    const said = (designationRef.current?.value ?? designation).trim();
+    setAmountValue(typed);
+    setDesignationValue(said);
+
+    if (!towards) {
+      setStepError(
+        "Choose something from the list, or tell us what to put it towards.",
+      );
+      return;
+    }
+
+    if (towards === OTHER && !said) {
+      setStepError("Say what you would like the gift to go towards.");
+      designationRef.current?.focus();
+      return;
+    }
+
+    const cents = parseUsd(typed);
+    if (cents === null) {
+      setStepError("Enter the amount you would like to give, like 250.");
+      amountRef.current?.focus();
+      return;
+    }
+
+    if (openCents !== undefined && cents > openCents) {
+      setStepError(
+        `Only ${usd(openCents)} of that item is still open. Try that, or less.`,
+      );
+      amountRef.current?.focus();
+      return;
+    }
+
+    show(2, detailsMarkerRef);
+  };
+
   return (
-    <form action={formAction} className="relative space-y-7">
+    <form
+      ref={formRef}
+      action={formAction}
+      className="relative scroll-mt-24"
+      /*
+        Enter, in the first half, means "next" and not "submit".
+
+        It has to be caught: the buttons that submit this form live in the
+        second half, and while that half is hidden they are a `required` name
+        and a `required` email the browser cannot focus to complain about. The
+        submission simply dies, silently, with a line in the console — which is
+        the worst way for a form to answer a keypress.
+
+        Inputs and selects only. Enter on a button is a click, and cancelling
+        that would break the suggestion chips and this very control.
+      */
+      onKeyDown={(event) => {
+        if (!stepped || step !== 1 || event.key !== "Enter") return;
+
+        const tag = (event.target as HTMLElement).tagName;
+        if (tag !== "INPUT" && tag !== "SELECT") return;
+
+        event.preventDefault();
+        forward();
+      }}
+    >
       <SpamTraps action="give" />
 
-      {/*
-        Three states, and only the last of them is a picker: the item is already
-        decided (a need's own page), there is nothing listed to pick from (an
-        empty or unreachable ledger — the form still has to work), or there is a
-        list. A picker offering one option is not a choice, so it is not drawn.
-      */}
-      {fixed && choices[0] ? (
-        <input type="hidden" name="towards" value={choices[0].value} />
-      ) : choices.length === 0 ? (
-        <input type="hidden" name="towards" value={OTHER} />
-      ) : (
-        <fieldset>
-          <legend className="block text-sm font-bold text-smoke">
-            What would you like your gift to go to?
-          </legend>
-          <p className="mt-2 text-sm leading-relaxed text-smoke">
-            Take a whole project, take one of the costs inside a project, or take
-            part of either — and if none of it is what you had in mind, say so in
-            your own words.
-          </p>
+      <div hidden={!showingGift}>
+        {stepped && (
+          <StepMarker ref={giftMarkerRef} index={1} title="Your gift" />
+        )}
 
+        <div className="space-y-7">
           {/*
-            Scrolls once the list is long enough that it would otherwise push
-            the amount box — the thing the picker exists to lead to — off the
-            bottom of the screen.
+            Three states, and only the last of them is a picker: the item is
+            already decided (a need's own page), there is nothing listed to pick
+            from (an empty or unreachable ledger — the form still has to work),
+            or there is a list. A picker offering one option is not a choice, so
+            it is not drawn.
           */}
-          {/*
-            No `bg-white` of its own: on /give this list sits inside a white
-            card already, and a second white surface with its own border and
-            radius inside the first reads as a card stacked on a card. The
-            border is doing the only job needed here — marking where the
-            scrolling region starts and stops.
-          */}
-          <div
-            className={`mt-3 overflow-hidden rounded-xl border border-black/12 ${
-              choices.length > 6 ? "max-h-[26rem] overflow-y-auto" : ""
-            }`}
-          >
-            {choices.map((choice, index) => {
-              /*
-                A heading whenever the run changes, which is why the order the
-                page hands these over in matters: the choices arrive already
-                grouped, project by project and part by part, and this simply
-                notices the seam. Comparing against the previous choice rather
-                than building nested arrays keeps one flat list of radios named
-                "towards" — exactly what the picker had before — so there is
-                still no way for the browser to submit two of them.
-              */
-              const previous = choices[index - 1];
-              const newProject = previous?.areaLabel !== choice.areaLabel;
-              const newPart = newProject || previous?.partTitle !== choice.partTitle;
+          {fixed && choices[0] ? (
+            <input type="hidden" name="towards" value={choices[0].value} />
+          ) : choices.length === 0 ? (
+            <input type="hidden" name="towards" value={OTHER} />
+          ) : (
+            <fieldset>
+              <legend className="block text-sm font-bold text-smoke">
+                What would you like your gift to go to?
+              </legend>
+              <p className="mt-2 text-sm leading-relaxed text-smoke">
+                Take a whole project, take one of the costs inside a project, or
+                take part of either — and if none of it is what you had in mind,
+                say so in your own words.
+              </p>
 
-              /*
-                A Fragment rather than a wrapper element, so every radio stays
-                a direct child of the scrolling box — `last:border-b-0` on the
-                rows below depends on it, and so does the box not growing a
-                stack of nested divs for the sake of two headings.
-              */
-              return (
-                <Fragment key={choice.value}>
-                  {newPart && (
-                    <GroupHeading
-                      project={choice.areaLabel}
-                      part={choice.partTitle}
-                      summary={choice.partSummary}
-                    />
-                  )}
-                  <Choice
-                    value={choice.value}
-                    checked={towards === choice.value}
-                    onChoose={() => {
-                      setTowards(choice.value);
-                      setAmount("");
-                    }}
-                    title={choice.title}
-                    /*
-                      "Still open" is a balance and only an item has one. A
-                      project's figure is what the job costs, and calling that
-                      open would say something about money in hand that this
-                      site deliberately does not say.
-                    */
-                    note={
-                      choice.openCents !== undefined
-                        ? "still open"
-                        : "the whole job — any part of it helps"
-                    }
-                    figure={usd(choice.openCents ?? choice.costCents ?? 0)}
-                  />
-                </Fragment>
-              );
-            })}
-
-            <Choice
-              value={OTHER}
-              checked={towards === OTHER}
-              onChoose={() => {
-                setTowards(OTHER);
-                setAmount("");
-              }}
-              title="Something else"
-              note={
-                choices.length === 0
-                  ? "Tell us what you would like to support and we will put it there."
-                  : "Not on the list — tell us what you would like to support instead."
-              }
-            />
-          </div>
-        </fieldset>
-      )}
-
-      {towards === OTHER && (
-        <Field
-          label="What would you like it to go towards?"
-          hint="In your own words. It goes on the ledger exactly as you write it, and Pastor Simon will confirm it back to you."
-        >
-          <input
-            name="designation"
-            required
-            maxLength={120}
-            ref={designationRef}
-            defaultValue={designation}
-            onChange={(event) => setDesignationValue(event.target.value)}
-            placeholder="School fees for one child"
-            className={inputClass}
-          />
-
-          <span className="mt-3 flex flex-wrap gap-2">
-            {GIVING_SUGGESTIONS.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => setDesignation(suggestion)}
-                className="cursor-pointer rounded-full border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-plum hover:text-plum"
+              {/*
+                Scrolls once the list is long enough that it would otherwise
+                push the amount box — the thing the picker exists to lead to —
+                off the bottom of the screen.
+              */}
+              {/*
+                No `bg-white` of its own: on /give this list sits inside a white
+                card already, and a second white surface with its own border and
+                radius inside the first reads as a card stacked on a card. The
+                border is doing the only job needed here — marking where the
+                scrolling region starts and stops.
+              */}
+              <div
+                className={`mt-3 overflow-hidden rounded-xl border border-black/12 ${
+                  choices.length > 6 ? "max-h-[26rem] overflow-y-auto" : ""
+                }`}
               >
-                {suggestion}
-              </button>
-            ))}
-          </span>
-        </Field>
-      )}
+                {choices.map((choice, index) => {
+                  /*
+                    A heading whenever the run changes, which is why the order
+                    the page hands these over in matters: the choices arrive
+                    already grouped, project by project and part by part, and
+                    this simply notices the seam. Comparing against the previous
+                    choice rather than building nested arrays keeps one flat list
+                    of radios named "towards" — exactly what the picker had
+                    before — so there is still no way for the browser to submit
+                    two of them.
+                  */
+                  const previous = choices[index - 1];
+                  const newProject = previous?.areaLabel !== choice.areaLabel;
+                  const newPart =
+                    newProject || previous?.partTitle !== choice.partTitle;
 
-      {/*
-        The hint has to answer two different questions depending on what the
-        buttons below it do, and getting it wrong is worse than saying nothing.
-        With Pesapal on, "nothing is taken now" is simply false — the next tap
-        goes to a payment page — and a giver who reads it and then finds
-        themselves being charged has been misled at the exact moment they were
-        deciding to trust us.
-      */}
-      <Field
-        label="How much would you like to give?"
-        hint={
-          openCents !== undefined
-            ? `${usd(openCents)} of this is still open. Any part of it helps — the rest stays there for somebody else.`
-            : chosen
-              ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}, and nothing has to arrive at once. Give any part of it.`
-              : canPay
-                ? "Whatever you can. You choose below whether to pay it now or send it another way."
-                : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
-        }
-      >
-        <div className="mt-2 flex items-center gap-2 rounded-md border border-black/15 bg-white px-4 py-3 focus-within:border-plum focus-within:ring-2 focus-within:ring-plum/20">
-          <span className="font-display text-lg font-semibold text-smoke">$</span>
-          <input
-            name="amount"
-            inputMode="decimal"
-            required
-            autoComplete="off"
-            placeholder="250"
-            ref={amountRef}
-            defaultValue={amount}
-            onChange={(event) => setAmountValue(event.target.value)}
-            className="tabular w-full bg-transparent text-lg outline-none"
-          />
-        </div>
+                  /*
+                    A Fragment rather than a wrapper element, so every radio
+                    stays a direct child of the scrolling box — `last:border-b-0`
+                    on the rows below depends on it, and so does the box not
+                    growing a stack of nested divs for the sake of two headings.
+                  */
+                  return (
+                    <Fragment key={choice.value}>
+                      {newPart && (
+                        <GroupHeading
+                          project={choice.areaLabel}
+                          part={choice.partTitle}
+                          summary={choice.partSummary}
+                        />
+                      )}
+                      <Choice
+                        value={choice.value}
+                        checked={towards === choice.value}
+                        onChoose={() => {
+                          setTowards(choice.value);
+                          setAmount("");
+                          setStepError("");
+                        }}
+                        title={choice.title}
+                        /*
+                          "Still open" is a balance and only an item has one. A
+                          project's figure is what the job costs, and calling
+                          that open would say something about money in hand that
+                          this site deliberately does not say.
+                        */
+                        note={
+                          choice.openCents !== undefined
+                            ? "still open"
+                            : "the whole job — any part of it helps"
+                        }
+                        figure={usd(choice.openCents ?? choice.costCents ?? 0)}
+                      />
+                    </Fragment>
+                  );
+                })}
 
-        <span className="mt-3 flex flex-wrap gap-2">
-          {suggestions.map((cents) => (
-            <button
-              key={cents}
-              type="button"
-              onClick={() => setAmount(String(cents / 100))}
-              className="cursor-pointer rounded-full border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-green hover:text-green"
+                <Choice
+                  value={OTHER}
+                  checked={towards === OTHER}
+                  onChoose={() => {
+                    setTowards(OTHER);
+                    setAmount("");
+                    setStepError("");
+                  }}
+                  title="Something else"
+                  note={
+                    choices.length === 0
+                      ? "Tell us what you would like to support and we will put it there."
+                      : "Not on the list — tell us what you would like to support instead."
+                  }
+                />
+              </div>
+            </fieldset>
+          )}
+
+          {towards === OTHER && (
+            <Field
+              label="What would you like it to go towards?"
+              hint="In your own words. It goes on the ledger exactly as you write it, and Pastor Simon will confirm it back to you."
             >
-              {cents === openCents ? `All of it — ${usd(cents)}` : usd(cents)}
-            </button>
-          ))}
-        </span>
-      </Field>
+              <input
+                name="designation"
+                required
+                maxLength={120}
+                ref={designationRef}
+                defaultValue={designation}
+                onChange={(event) => setDesignationValue(event.target.value)}
+                placeholder="School fees for one child"
+                className={inputClass}
+              />
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Who is giving?">
-          <input
-            name="name"
-            required
-            placeholder="Your name, or your church"
-            className={inputClass}
-          />
-        </Field>
+              <span className="mt-3 flex flex-wrap gap-2">
+                {GIVING_SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setDesignation(suggestion)}
+                    className="cursor-pointer rounded-full border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-plum hover:text-plum"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </span>
+            </Field>
+          )}
 
-        <Field label="What kind">
-          <select name="kind" defaultValue="church" className={inputClass}>
-            {PARTNER_KINDS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </Field>
+          {/*
+            The hint has to answer two different questions depending on what the
+            buttons below it do, and getting it wrong is worse than saying
+            nothing. With Pesapal on, "nothing is taken now" is simply false —
+            the next tap goes to a payment page — and a giver who reads it and
+            then finds themselves being charged has been misled at the exact
+            moment they were deciding to trust us.
+          */}
+          <Field
+            label="How much would you like to give?"
+            hint={
+              openCents !== undefined
+                ? `${usd(openCents)} of this is still open. Any part of it helps — the rest stays there for somebody else.`
+                : chosen
+                  ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}, and nothing has to arrive at once. Give any part of it.`
+                  : canPay
+                    ? "Whatever you can. You choose on the next step whether to pay it now or send it another way."
+                    : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
+            }
+          >
+            <div className="mt-2 flex items-center gap-2 rounded-md border border-black/15 bg-white px-4 py-3 focus-within:border-plum focus-within:ring-2 focus-within:ring-plum/20">
+              <span className="font-display text-lg font-semibold text-smoke">$</span>
+              <input
+                name="amount"
+                inputMode="decimal"
+                required
+                autoComplete="off"
+                placeholder="250"
+                ref={amountRef}
+                defaultValue={amount}
+                onChange={(event) => setAmountValue(event.target.value)}
+                className="tabular w-full bg-transparent text-lg outline-none"
+              />
+            </div>
 
-        <Field label="Where you are">
-          <input
-            name="location"
-            placeholder="City, country"
-            className={inputClass}
-          />
-        </Field>
+            <span className="mt-3 flex flex-wrap gap-2">
+              {suggestions.map((cents) => (
+                <button
+                  key={cents}
+                  type="button"
+                  onClick={() => setAmount(String(cents / 100))}
+                  className="cursor-pointer rounded-full border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-green hover:text-green"
+                >
+                  {cents === openCents ? `All of it — ${usd(cents)}` : usd(cents)}
+                </button>
+              ))}
+            </span>
+          </Field>
 
-        <Field label="Who we should write to">
-          <input name="contactName" placeholder="Your name" className={inputClass} />
-        </Field>
+          {/*
+            Plum, not green. Green on this site means money moving, and this
+            button moves nobody's money — it turns a page. Keeping it plum
+            leaves the giving colour to the one button that actually gives, at
+            the bottom of the next half, where a giver should be in no doubt
+            about which press is the one that counts.
+          */}
+          {stepped && (
+            <div className="space-y-4">
+              <FormError>{stepError}</FormError>
+
+              <button type="button" onClick={forward} className={buttonClass()}>
+                {amountLabel ? `Continue with ${amountLabel}` : "Continue"}
+              </button>
+
+              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+                Next: who the gift is from. Nothing is recorded until you finish
+                there, and you can come back and change this.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <Field
-        label="Email"
-        hint={
-          canPay
-            ? "Where your receipt goes, and where the updates go."
-            : "Where Pastor Simon sends the account details, and where the updates go."
-        }
-      >
-        <input name="email" type="email" required className={inputClass} />
-      </Field>
+      <div hidden={!showingDetails}>
+        {stepped && (
+          <StepMarker ref={detailsMarkerRef} index={2} title="Your details" />
+        )}
 
-      <Field label="Anything you would like to say">
-        <textarea name="message" rows={3} className={inputClass} />
-      </Field>
+        <div className="space-y-7">
+          {stepped && (
+            <ChosenSummary
+              amount={amountLabel}
+              /*
+                The item's own title, or — for a whole project, or for a gift
+                somebody described themselves — the words that will go on the
+                ledger. Never the slug: this line exists to be read back, and
+                "t-cabro-floor" is not something anybody agreed to.
+              */
+              towards={chosen ? chosen.title : designation}
+              onChange={() => show(1, giftMarkerRef)}
+            />
+          )}
 
-      <FormError>{state?.error}</FormError>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Who is giving?">
+              <input
+                name="name"
+                required
+                placeholder="Your name, or your church"
+                className={inputClass}
+              />
+            </Field>
 
-      {/*
-        Two doors, and the order of them is the whole design.
+            <Field label="What kind">
+              <select name="kind" defaultValue="church" className={inputClass}>
+                {PARTNER_KINDS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-        Paying now is first and is the button that looks like a button, because
-        it is what most people want and it is the only one that finishes the job
-        in one sitting. Sending it another way is second and deliberately plain
-        — not hidden, because a church wiring $5,000 from Ohio should not be
-        made to pay a card fee on it, and that giver is worth more to the
-        ministry than the convenience of a single code path.
+            <Field label="Where you are">
+              <input
+                name="location"
+                placeholder="City, country"
+                className={inputClass}
+              />
+            </Field>
 
-        Both are submit buttons on the same form, so both carry the same
-        validated amount. Only the one actually pressed contributes its name and
-        value, which is how the action tells them apart. Pressing Enter in a
-        text field picks the first submit button — the paying one — which is the
-        right default.
-      */}
-      {canPay ? (
-        <div className="space-y-4">
-          <Submit
-            pending={pending}
-            pendingLabel="Taking you to Pesapal…"
-            tone="green"
-            name="intent"
-            value="pay"
-            icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
+            <Field label="Who we should write to">
+              <input name="contactName" placeholder="Your name" className={inputClass} />
+            </Field>
+          </div>
+
+          <Field
+            label="Email"
+            hint={
+              canPay
+                ? "Where your receipt goes, and where the updates go."
+                : "Where Pastor Simon sends the account details, and where the updates go."
+            }
           >
-            {amountLabel ? `Give ${amountLabel} now` : "Give now"}
-          </Submit>
+            <input name="email" type="email" required className={inputClass} />
+          </Field>
 
-          <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-            By M-Pesa or card, through Pesapal. Your card details are entered on
-            Pesapal&apos;s own page and never touch this site.
-          </p>
+          <Field label="Anything you would like to say">
+            <textarea name="message" rows={3} className={inputClass} />
+          </Field>
 
-          <p className="text-center text-sm">
-            <button
-              type="submit"
-              disabled={pending}
-              className="cursor-pointer font-medium text-plum underline underline-offset-4 disabled:opacity-60"
-            >
-              I&apos;d rather send it another way
-            </button>
-          </p>
+          <FormError>{state?.error}</FormError>
 
-          <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-            Records what you intend to give and nothing else — Pastor Simon
-            replies with the account details himself. Best for bank transfers
-            and larger gifts from overseas.
-          </p>
+          {/*
+            Two doors, and the order of them is the whole design.
+
+            Paying now is first and is the button that looks like a button,
+            because it is what most people want and it is the only one that
+            finishes the job in one sitting. Sending it another way is second and
+            deliberately plain — not hidden, because a church wiring $5,000 from
+            Ohio should not be made to pay a card fee on it, and that giver is
+            worth more to the ministry than the convenience of a single code
+            path.
+
+            Both are submit buttons on the same form, so both carry the same
+            validated amount — including the fields in the half above, which are
+            hidden rather than removed and so are posted exactly as they were
+            filled in. Only the one actually pressed contributes its name and
+            value, which is how the action tells them apart. Pressing Enter in a
+            text field picks the first submit button — the paying one — which is
+            the right default.
+          */}
+          {canPay ? (
+            <div className="space-y-4">
+              <Submit
+                pending={pending}
+                pendingLabel="Taking you to Pesapal…"
+                tone="green"
+                name="intent"
+                value="pay"
+                icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
+              >
+                {amountLabel ? `Give ${amountLabel} now` : "Give now"}
+              </Submit>
+
+              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+                By M-Pesa or card, through Pesapal. Your card details are entered
+                on Pesapal&apos;s own page and never touch this site.
+              </p>
+
+              <p className="text-center text-sm">
+                <button
+                  type="submit"
+                  disabled={pending}
+                  className="cursor-pointer font-medium text-plum underline underline-offset-4 disabled:opacity-60"
+                >
+                  I&apos;d rather send it another way
+                </button>
+              </p>
+
+              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+                Records what you intend to give and nothing else — Pastor Simon
+                replies with the account details himself. Best for bank transfers
+                and larger gifts from overseas.
+              </p>
+            </div>
+          ) : (
+            <>
+              <Submit
+                pending={pending}
+                pendingLabel="Recording…"
+                tone="green"
+                icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
+              >
+                {openCents !== undefined ? "Claim this amount" : "Record this gift"}
+              </Submit>
+
+              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+                No payment is taken here and no card details are asked for. This
+                records what you intend to give; Pastor Simon replies with the
+                account details himself.
+              </p>
+            </>
+          )}
+
+          <CaptchaNotice className="measure mx-auto text-center text-smoke" />
         </div>
-      ) : (
-        <>
-          <Submit
-            pending={pending}
-            pendingLabel="Recording…"
-            tone="green"
-            icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
-          >
-            {openCents !== undefined ? "Claim this amount" : "Record this gift"}
-          </Submit>
-
-          <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-            No payment is taken here and no card details are asked for. This
-            records what you intend to give; Pastor Simon replies with the
-            account details himself.
-          </p>
-        </>
-      )}
-
-      <CaptchaNotice className="measure mx-auto text-center text-smoke" />
+      </div>
     </form>
   );
 }

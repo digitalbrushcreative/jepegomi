@@ -105,9 +105,18 @@ test.describe("the captcha", () => {
       captcha and everything about HTML validation.
     */
     await form.locator('input[name="towards"]').first().check();
+    await form.locator('input[name="amount"]').fill("250");
+
+    /*
+      The form asks what the gift is for before it asks who is giving, so the
+      second half is not on screen yet. Filling it in would silently fail — and
+      "one press is one POST" is a claim about a form somebody could actually
+      have reached this button on.
+    */
+    await form.getByRole("button", { name: /^continue/i }).click();
+
     await form.locator('input[name="name"]').fill("Ruth Wanjiku");
     await form.locator('input[name="email"]').fill("ruth@example.invalid");
-    await form.locator('input[name="amount"]').fill("250");
 
     const posts = countActionPosts(page);
 

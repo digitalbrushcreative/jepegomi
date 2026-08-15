@@ -545,7 +545,13 @@ test.describe("a refused gift", () => {
         )
         .first()
         .check();
-      await page.locator('form input[name="amount"]').first().fill("999999999");
+      /*
+        An amount the form will let through, so that the second half — where
+        the buttons are — actually opens.
+      */
+      await page.locator('form input[name="amount"]').first().fill("250");
+      await page.getByRole("button", { name: /^continue/i }).first().click();
+
       await page.locator('form input[name="name"]').first().fill("Refused Probe");
       await page
         .locator('form input[name="email"]')
@@ -553,11 +559,28 @@ test.describe("a refused gift", () => {
         .fill(strangerAddress("refused"));
 
       /*
+        And now the real amount, written straight onto the box the form has put
+        away rather than typed into it.
+
+        The form checks this before it turns the page, and that check is a
+        courtesy — it is not what stops anybody. Writing the figure the way a
+        hand-written POST would is the whole point of this test, and is the same
+        move as the `novalidate` above: get past what the browser and the page
+        do for a giver, and find out what the server does for a stranger.
+      */
+      await page.evaluate(() => {
+        const box = document.querySelector<HTMLInputElement>(
+          'form input[name="amount"]',
+        );
+        if (box) box.value = "999999999";
+      });
+
+      /*
         The pay button by preference — it is the path that had the bug. Falling
         back to the promise button keeps this meaningful on a deployment with no
         payment gateway configured, where that button is not rendered at all.
       */
-      const pay = page.getByRole("button", { name: /pay|card|m-pesa|give now/i }).first();
+      const pay = page.getByRole("button", { name: /pay|card|m-pesa|give .*now/i }).first();
       const button = (await pay.count())
         ? pay
         : page.getByRole("button", { name: /record|send it/i }).first();

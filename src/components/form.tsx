@@ -273,10 +273,26 @@ export function CaptchaNotice({ className = "" }: { className?: string }) {
 }
 
 /**
+ * The shape of the button that ends a form.
+ *
+ * Extracted from `Submit` so the giving form's "Continue" can be the same
+ * object without being a submit button — it moves between the two halves of
+ * that form and must not post anything. A second hand-copied class string
+ * would have drifted the first time one of these was adjusted.
+ *
  * Green is the giving colour and nothing else's — the rule components/ui.tsx
  * keeps for links and buttons, kept here too. A contact form is not an act of
- * giving, so it gets plum.
+ * giving, so it gets plum; so does a button that only turns a page.
  */
+export function buttonClass(tone: "plum" | "green" = "plum") {
+  const fill =
+    tone === "green"
+      ? "bg-green hover:bg-green-light"
+      : "bg-plum hover:bg-plum-light";
+
+  return `inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full px-7 py-4 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60 ${fill}`;
+}
+
 export function Submit({
   children,
   pending,
@@ -300,18 +316,13 @@ export function Submit({
   name?: string;
   value?: string;
 }) {
-  const fill =
-    tone === "green"
-      ? "bg-green hover:bg-green-light"
-      : "bg-plum hover:bg-plum-light";
-
   return (
     <button
       type="submit"
       disabled={pending}
       name={name}
       value={value}
-      className={`inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full px-7 py-4 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60 ${fill}`}
+      className={buttonClass(tone)}
     >
       {icon}
       {pending ? pendingLabel : children}
