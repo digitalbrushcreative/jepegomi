@@ -219,6 +219,7 @@ will never send an empty account number.
 | Partner login issued, `/app` | — | Sign-in link and password (opt-out checkbox in `/app`) |
 | Partner login revoked, `/app` | — | A note that it has been turned off |
 | CMS account created, `/app` | — | Where to sign in. **Never** the password |
+| A letter written in `/app` → **Email** | — | Whatever was written, one copy each |
 
 Two rules the code keeps, both worth preserving:
 
@@ -233,6 +234,31 @@ Two rules the code keeps, both worth preserving:
   on screen can honestly say whether to expect an email.
 - **The provider is one function.** Everything goes through `src/lib/mail/`.
   Changing provider is a case in `send.ts`, not a change to a single message.
+
+### Writing one by hand
+
+Everything in that table except the last row is the site speaking on its own:
+something happened, and the wording is fixed because the occasion is. The last
+row is Simon writing to the churches who have given, or to the parents who
+enquired, from `/app` → **Email** — in the same masthead, on the same paper,
+over the same sign-off as a receipt.
+
+Three rules hold it steady, and all three are in `src/lib/letters.ts`:
+
+- **One message per person**, never one message with the whole list on it. A
+  partner church should not learn from a `To:` header which other churches give
+  here.
+- **The audience is resolved on the server**, from *which list* was chosen —
+  never from addresses the browser posted. The alternative is an open relay with
+  the ministry's DKIM key on it.
+- **The list is capped** at `MOST_RECIPIENTS` (200). The messages go out inside
+  `after()`, on the route's own clock — `maxDuration` on `/app/email` — and a
+  list longer than that is a campaign, which wants a mailing provider with a
+  subscription list, not a for-loop.
+
+The words, the audience, who pressed send and what reached whom are kept in the
+`letters` table, and read back under the form. A letter that has gone cannot be
+looked at anywhere else.
 
 ## Testing it
 
@@ -274,9 +300,35 @@ rendering through Microsoft Word. The translation is set out in that file's
 comment: Fraunces becomes Georgia, the cloth edge becomes a band of marigold,
 the paper grain is dropped.
 
-**No images anywhere, on purpose.** Every major client blocks remote images
-until the reader asks for them, so an email whose logo is a PNG introduces
-itself as a broken box. The masthead is type, which always renders.
+**One image, and only one.** The mark in the masthead, as a PNG — no mail client
+renders SVG. Everything else is type, because every major client blocks remote
+images until the reader asks for them, and an email that falls apart without
+them is an email half its readers never see properly.
+
+So the masthead is built to work both ways. The logo sits on the plum block, and
+its `alt` is styled to *be* the masthead when the image does not load: white,
+letterspaced, in the display face, on the same plum. The line under it is the
+ministry's town rather than its name, which is also why it is there — it says
+something the mark does not, so nothing is printed twice when the image loads.
+
+The file is `public/email/jepegomi-logo.png`, drawn at twice the size it is
+displayed so it stays sharp on a phone. It is rendered from
+`public/logos/jepegomi-white.svg` — change the mark and run:
+
+```
+npm run logo:email
+```
+
+Emails link it at an absolute URL — `https://www.jepegomi.org/email/…` — because
+a relative path in an email resolves against the webmail's host, which is not
+us. **`MAIL_LOGO_URL` overrides that**, and is worth setting locally:
+
+```
+MAIL_LOGO_URL=http://localhost:3000/email/jepegomi-logo.png
+```
+
+Without it the preview in `/app` → **Email** points at the live site, so the
+masthead is a broken image on a machine that has not deployed yet.
 
 Every message ships a plain-text alternative alongside the HTML. That is not
 politeness — a message with no text part scores worse with essentially every

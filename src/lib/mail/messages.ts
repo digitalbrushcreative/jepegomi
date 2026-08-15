@@ -8,6 +8,7 @@ import {
   lead,
   p,
   panel,
+  paragraphs,
   quote,
   renderEmail,
   rule,
@@ -799,6 +800,93 @@ Whatever you save goes live on the public site straight away, so it is worth
 reading a page back after you change it.
 
 ${user.invitedBy}
+${site.longName}
+${textFooter()}`,
+  };
+}
+
+/* ----------------------------------------------------- a letter Simon writes */
+
+/**
+ * The one message in this file nobody wrote in advance.
+ *
+ * Everything above is the site speaking on its own — a form was filled in, a
+ * code was asked for — and the wording is fixed because the occasion is. This is
+ * the other kind: Simon has something to say to the churches who have given, or
+ * to the parents who enquired last term, and until now the only way to say it
+ * was Gmail, where it arrives as a bare paragraph from a personal address with
+ * nothing about it that looks like the ministry.
+ *
+ * So the shape is the same and only the words change. What is typed into /app
+ * lands in the same plum masthead, the same paper, the same sign-off as the
+ * receipt for a gift, which is the entire point: a reader should not be able to
+ * tell which of these the site sent and which a person did.
+ *
+ * Two rules hold it steady. The body is **plain text**, run through
+ * `paragraphs()`, so nothing typed into a CMS box can put markup — or a script,
+ * or somebody else's link — into a message going out over the ministry's
+ * signature. And it is built one recipient at a time, never as one message with
+ * forty addresses on it: a bulk email that leaks its own mailing list is how a
+ * partner church learns which other churches give here.
+ */
+export type Letter = {
+  subject: string;
+  eyebrow: string;
+  heading: string;
+  /** As typed. Blank lines separate paragraphs; nothing else is interpreted. */
+  body: string;
+  /** Both halves or neither — a button with no link is a dead end. */
+  buttonLabel: string;
+  buttonUrl: string;
+  /** Whose name it goes out over. Defaults to Simon & Joyce. */
+  signedBy: string;
+  /** Whether to open with "Dear <their name>,". */
+  greet: boolean;
+};
+
+export type LetterRecipient = { name: string; email: string };
+
+export function writtenLetter(
+  letter: Letter,
+  recipient: LetterRecipient,
+  /** Why this person is on the list, printed in the small print. */
+  reason: string,
+): Message {
+  const signature = letter.signedBy || site.leaders;
+  const greeting = letter.greet && recipient.name ? `Dear ${recipient.name},` : "";
+  const hasButton = letter.buttonLabel !== "" && letter.buttonUrl !== "";
+
+  return {
+    to: [named(recipient.name, recipient.email)],
+    /*
+      Replies come back to the ministry's own inbox, not to whoever happened to
+      be signed in to /app when they pressed send. A letter from the ministry
+      should be answerable by the ministry.
+    */
+    replyTo: publicInbox(),
+    subject: oneLine(letter.subject),
+    tag: "letter",
+    html: renderEmail({
+      /*
+        The first sentence of what was typed, which is what a preheader should
+        be anyway — the alternative is asking Simon to write a second subject
+        line for a field he cannot see the effect of.
+      */
+      preheader: oneLine(letter.body, 140),
+      eyebrow: letter.eyebrow || undefined,
+      heading: letter.heading,
+      body:
+        (greeting ? lead(escape(greeting)) : "") +
+        paragraphs(letter.body) +
+        (hasButton ? button(letter.buttonUrl, letter.buttonLabel) : "") +
+        signoff(signature),
+      footerNote: escape(reason),
+    }),
+    text: `${greeting ? `${greeting}\n\n` : ""}${letter.body}${
+      hasButton ? `\n\n${letter.buttonLabel}: ${letter.buttonUrl}` : ""
+    }
+
+${signature}
 ${site.longName}
 ${textFooter()}`,
   };

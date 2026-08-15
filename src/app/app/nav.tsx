@@ -44,6 +44,7 @@ type IconName =
   | "payments"
   | "partners"
   | "enquiries"
+  | "email"
   | "settings"
   | "people";
 
@@ -99,6 +100,13 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <rect x="3" y="5" width="18" height="14" rx="2" />
       <path d="m3 7 9 6 9-6" />
+    </>
+  ),
+  /* Writing outward, as against `enquiries` — an envelope — coming in. */
+  email: (
+    <>
+      <path d="M21.5 3.5 2.5 10.2l7.6 3.7 3.7 7.6z" />
+      <path d="M21.5 3.5 10.1 13.9" />
     </>
   ),
   settings: (

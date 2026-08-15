@@ -537,6 +537,52 @@ export function ensureSchema() {
       LEFT JOIN needs n ON n.id = p.need_id
       LEFT JOIN partners ON partners.id = p.partner_id
     `;
+
+    /*
+      One letter written in /app and sent out over the ministry's name.
+
+      The row exists because a bulk email is the one thing the tool does that
+      cannot be looked at afterwards. A need can be re-read on its page and a
+      pledge can be re-read in the ledger; a letter that has left is gone, and
+      "did we already tell the partners about the kitchen?" is a question
+      somebody asks a fortnight later with no way to answer it. So the words are
+      kept as they were typed, along with who pressed send and who it reached.
+
+      `recipients` is the addresses as they were resolved at that moment, not the
+      audience re-run today: a partner added next week was not sent this, and a
+      list rebuilt from `audience` would quietly claim they were.
+
+      `status` starts at 'sending' and is written once more when the last message
+      has been handed over — see lib/letters.ts. A row still saying 'sending' an
+      hour later means the process died holding it, which is worth being able to
+      see rather than being tidied away into a success.
+    */
+    await db`
+      CREATE TABLE IF NOT EXISTS letters (
+        id           TEXT PRIMARY KEY,
+        subject      TEXT NOT NULL,
+        eyebrow      TEXT NOT NULL DEFAULT '',
+        heading      TEXT NOT NULL,
+        body         TEXT NOT NULL,
+        button_label TEXT NOT NULL DEFAULT '',
+        button_url   TEXT NOT NULL DEFAULT '',
+        signed_by    TEXT NOT NULL DEFAULT '',
+        greet        BOOLEAN NOT NULL DEFAULT true,
+        audience     TEXT NOT NULL,
+        recipients   JSONB NOT NULL DEFAULT '[]'::jsonb,
+        status       TEXT NOT NULL DEFAULT 'sending',
+        sent_count   INTEGER NOT NULL DEFAULT 0,
+        failed_count INTEGER NOT NULL DEFAULT 0,
+        error        TEXT NOT NULL DEFAULT '',
+        sent_by      TEXT REFERENCES users(id) ON DELETE SET NULL,
+        created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+        finished_at  TIMESTAMPTZ
+      )
+    `;
+
+    await db`
+      CREATE INDEX IF NOT EXISTS letters_created_idx ON letters (created_at DESC)
+    `;
   })();
 
   return schemaReady;

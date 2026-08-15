@@ -49,6 +49,11 @@ function buildSections(counts: {
           children: pageChildren,
         },
         { href: "/app/photos", label: "Photos", icon: "photos" },
+        /*
+          Under Content rather than Giving, because what it is is a thing you
+          write. It goes to the givers, but so does most of the site.
+        */
+        { href: "/app/email", label: "Email", icon: "email" },
       ],
     },
     {

@@ -2,8 +2,11 @@ import { expect, test } from "@playwright/test";
 import { ORGANISED_GIVING_CENTS, disclosureFor, opensAccounts } from "@/lib/disclosure";
 import type { Partner, PartnerProject } from "@/lib/giving";
 import { sniffImage } from "@/lib/image-upload";
+import { recipientsFor } from "@/lib/letters";
 import { named, oneLine } from "@/lib/mail/send";
+import { safeUrl } from "@/lib/mail/template";
 import { parseUsd } from "@/lib/money";
+import { site } from "@/lib/site";
 
 /**
  * The rules, tested without a browser.
@@ -197,6 +200,77 @@ test.describe("names on their way into an email header", () => {
   test("a subject line stays one line", () => {
     const subject = oneLine("Gift\r\nBcc: someone@example.com");
     expect(subject).not.toMatch(/[\r\n]/);
+  });
+});
+
+/* ------------------------------------------------ a letter written in /app */
+
+test.describe("addresses pasted into the email screen", () => {
+  /*
+    The list is typed by a person into a box, which means it arrives with
+    whatever they had in the clipboard: a column out of a spreadsheet, a row out
+    of a mail client, a stray blank line. All of it has to come out as addresses
+    or come out as nothing — an unparsed line silently dropped is a partner who
+    is never written to and nobody notices.
+  */
+  test("takes the shapes people actually paste", async () => {
+    const list = await recipientsFor(
+      "custom",
+      "ruth@example.invalid\nPastor Njoroge <njoroge@example.invalid>, office@example.invalid;\n\n",
+    );
+
+    expect(list).toEqual([
+      { name: "", email: "ruth@example.invalid" },
+      { name: "Pastor Njoroge", email: "njoroge@example.invalid" },
+      { name: "", email: "office@example.invalid" },
+    ]);
+  });
+
+  test("nobody is written to twice", async () => {
+    const list = await recipientsFor(
+      "custom",
+      "ruth@example.invalid\nRuth <RUTH@example.invalid>",
+    );
+
+    expect(list).toHaveLength(1);
+  });
+
+  test("anything that is not an address is left out", async () => {
+    const list = await recipientsFor(
+      "custom",
+      "Name Surname\nruth@example.invalid\nnot an address\n@\n",
+    );
+
+    expect(list).toEqual([{ name: "", email: "ruth@example.invalid" }]);
+  });
+});
+
+test.describe("links in an email", () => {
+  /*
+    Every link the template draws now includes one somebody typed into /app, and
+    escaping leaves `javascript:` and `data:` completely intact. Nothing
+    legitimate here is anything but http, https or mailto.
+  */
+  test("keeps the ones that are really links", () => {
+    for (const href of [
+      "https://www.jepegomi.org/needs",
+      "http://example.invalid",
+      "mailto:support@jepegomi.org",
+    ]) {
+      expect(safeUrl(href), href).toBe(href);
+    }
+  });
+
+  test("sends everything else to the front page instead", () => {
+    for (const href of [
+      "javascript:alert(1)",
+      "JavaScript:alert(1)",
+      "data:text/html,<script>alert(1)</script>",
+      "  javascript:alert(1)",
+      "",
+    ]) {
+      expect(safeUrl(href), href).toBe(site.url);
+    }
   });
 });
 

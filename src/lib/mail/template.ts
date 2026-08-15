@@ -23,10 +23,17 @@ import { publicInbox } from "./inboxes";
  *   The paper grain   → the cream background alone. A tiled background image
  *                       would be blocked by default in most clients.
  *
- * No images at all, anywhere. Every major client blocks remote images until the
- * reader clicks "show images", so an email whose logo is a PNG introduces
- * itself as a broken box — and `jepegomi.org` is not yet even serving files.
- * The masthead is type, which always renders.
+ * One image, and only one: the mark in the masthead. Everything else is type,
+ * because every major client blocks remote images until the reader clicks "show
+ * images" and an email that falls apart without them is an email half its
+ * readers never see properly.
+ *
+ * So the masthead is built to work both ways. The logo is a PNG — no client
+ * renders SVG in mail — sitting on the plum block, and its `alt` is styled to
+ * be the masthead when it does not load: white, letterspaced, in the display
+ * face, on the same plum. The line under it is the ministry's town rather than
+ * its name, which is a second reason for it to be there: it says something the
+ * mark does not, so nothing is printed twice when the image *does* load.
  */
 
 /* Straight off the logo marks, matching app/globals.css. */
@@ -48,6 +55,29 @@ const colour = {
 const DISPLAY = "Georgia, 'Times New Roman', Times, serif";
 const SANS =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+/**
+ * The mark, as a file a mail client can fetch.
+ *
+ * An absolute URL, always — a relative path in an email resolves against the
+ * webmail's own host, which is not us. It is the white knockout, because the
+ * masthead behind it is plum: the full-colour art was drawn for white paper and
+ * its lettering is charcoal, which is invisible there.
+ *
+ * The PNG is drawn at twice the size it is displayed, so it stays sharp on the
+ * phone screens most of this mail is read on, and lives in `public/email/` —
+ * regenerated from `public/logos/jepegomi-white.svg` if the mark ever changes.
+ *
+ * `MAIL_LOGO_URL` overrides it for a deployment serving from somewhere else. A
+ * preview build's mail still points at the live file, which is right: the image
+ * has to load from wherever the reader opens the message, and a preview host is
+ * gone by the following week.
+ */
+const LOGO = { width: 280, height: 124 } as const;
+
+function logoUrl() {
+  return process.env.MAIL_LOGO_URL || `${site.url}/email/jepegomi-logo.png`;
+}
 
 /**
  * Everything a sender typed goes through here before it reaches the HTML.
@@ -141,11 +171,26 @@ export function quote(text: string) {
 }
 
 /**
+ * Where a link in an email is allowed to point.
+ *
+ * Escaping is not enough on its own: `javascript:` and `data:` survive it
+ * intact, and every link this template draws now includes one an editor typed
+ * into /app. Nothing legitimate here is anything but http, https or mailto, so
+ * anything else becomes the site's front page rather than becoming a decision
+ * somebody has to make while writing a letter.
+ */
+export function safeUrl(href: string) {
+  const value = href.trim();
+  return /^(https?:|mailto:)/i.test(value) ? value : site.url;
+}
+
+/**
  * A button. Green is the giving colour and nothing else's — the same rule the
  * site's `ui.tsx` keeps — so anything that is not an act of giving takes plum.
  */
 export function button(href: string, label: string, tone: "green" | "plum" = "plum") {
   const fill = tone === "green" ? colour.green : colour.plum;
+  href = safeUrl(href);
 
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 28px;">
     <tr>
@@ -192,6 +237,7 @@ export function renderEmail({ preheader, eyebrow, heading, body, footerNote }: E
     .shell { width:100% !important; }
     .pad { padding-left:24px !important; padding-right:24px !important; }
     .display { font-size:26px !important; line-height:32px !important; }
+    .logo { width:210px !important; height:auto !important; }
   }
 </style>
 </head>
@@ -206,11 +252,24 @@ export function renderEmail({ preheader, eyebrow, heading, body, footerNote }: E
       <td align="center" style="padding:28px 12px 40px;">
         <table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
 
-          <!-- Masthead. Type only, so it renders with images turned off. -->
+          <!--
+            Masthead. The mark if images are on; the same words in the same
+            place, set in type, if they are off — see the note at the top.
+            The whole block is one link, because a masthead that is not
+            clickable is the one thing every reader tries anyway.
+          -->
           <tr>
-            <td class="pad" align="center" bgcolor="${colour.plumDeep}" style="padding:34px 40px 30px;background:${colour.plumDeep};border-radius:14px 14px 0 0;">
-              <div style="font-family:${DISPLAY};font-size:27px;font-weight:bold;letter-spacing:5px;color:${colour.white};">JEPEGOMI</div>
-              <div style="margin-top:9px;font-family:${SANS};font-size:10px;font-weight:bold;letter-spacing:2.4px;text-transform:uppercase;color:${colour.marigold};">${escape(site.longName)}</div>
+            <td class="pad" align="center" bgcolor="${colour.plumDeep}" style="padding:32px 40px 26px;background:${colour.plumDeep};border-radius:14px 14px 0 0;">
+              <a href="${escape(site.url)}" style="display:inline-block;text-decoration:none;">
+                <!--
+                  The type in this style rule is never seen while the image
+                  loads; it is what the alt text is set in when it does not, and
+                  it is sized to sit on one line inside the same 280px. A
+                  masthead that wraps to three is worse than no masthead at all.
+                -->
+                <img src="${escape(logoUrl())}" width="${LOGO.width}" height="${LOGO.height}" alt="${escape(site.longName)}" class="logo" style="display:block;width:${LOGO.width}px;max-width:100%;height:auto;border:0;outline:none;-ms-interpolation-mode:bicubic;font-family:${DISPLAY};font-size:18px;font-weight:bold;letter-spacing:1.2px;line-height:26px;text-align:center;color:${colour.white};text-decoration:none;" />
+              </a>
+              <div style="margin-top:14px;font-family:${SANS};font-size:10px;font-weight:bold;letter-spacing:2.4px;text-transform:uppercase;color:${colour.marigold};">${escape(site.location)}</div>
             </td>
           </tr>
 

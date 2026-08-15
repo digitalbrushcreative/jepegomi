@@ -28,6 +28,7 @@ test.describe("the shell", () => {
       "Dashboard",
       "Pages",
       "Photos",
+      "Email",
       "Needs",
       "Payments",
       "Partners",
@@ -320,6 +321,96 @@ test.describe("the ministry's own notes", () => {
       seen === 0,
       "Every field on those pages is filled in, so there is no note to gate.",
     );
+  });
+});
+
+/**
+ * Writing a letter.
+ *
+ * Nothing here presses Send, and nothing here ever should: these run against
+ * whatever DATABASE_URL is set, which on this project is the real database with
+ * the real partners in it. What is worth proving without sending anything is
+ * that the preview is the template — the whole reason it is rendered on the
+ * server by the same function that builds the message — and that the send
+ * button stays out of reach until there is something to send.
+ */
+test.describe("writing an email", () => {
+  const write = async (page: import("@playwright/test").Page) => {
+    await page.goto("/app/email");
+
+    /*
+      `exact`, because the Eyebrow field's own hint says "the small line above
+      the heading" — and an accessible name is the label plus everything else
+      describing the box, hint included.
+    */
+    await page.getByLabel("Subject", { exact: true }).fill("The kitchen has a roof on it");
+    await page.getByLabel("Heading", { exact: true }).fill("The kitchen has a roof on it");
+    await page
+      .getByLabel("The letter", { exact: true })
+      .fill("On Tuesday the cooks made porridge in it for the first time.");
+  };
+
+  test("holds the send back until there is a letter to send", async ({ page }) => {
+    await page.goto("/app/email");
+
+    const send = page.getByRole("button", { name: /^Send to / });
+    await expect(send).toBeDisabled();
+
+    await write(page);
+    await expect(send).toBeEnabled({ timeout: 20_000 });
+  });
+
+  test("previews the real template, not an impression of it", async ({ page }) => {
+    await write(page);
+
+    /*
+      Reaching inside the iframe on purpose. A screenshot would prove it drew
+      something; this proves the thing it drew is the message — the masthead
+      image, the words that were typed, and the ministry's own address under
+      them.
+    */
+    const preview = page.frameLocator("iframe[title='Preview of the email']");
+
+    await expect(
+      preview.getByRole("heading", { name: "The kitchen has a roof on it" }),
+    ).toBeVisible({ timeout: 20_000 });
+    /*
+      The paragraph, specifically. The same words are also in the hidden
+      preheader — the line an inbox shows under the subject — which is built
+      from the opening of the letter on purpose.
+    */
+    await expect(
+      preview
+        .getByRole("paragraph")
+        .filter({ hasText: "On Tuesday the cooks made porridge" }),
+    ).toBeVisible();
+    await expect(preview.getByRole("img")).toBeVisible();
+    /* The masthead's own line, not the address repeated in the footer. */
+    await expect(
+      preview.getByText("Kahawa Sukari, Nairobi, Kenya", { exact: true }),
+    ).toBeVisible();
+  });
+
+  test("says who it would go to before it goes", async ({ page }) => {
+    await page.goto("/app/email");
+
+    await page.getByLabel("Who it goes to").selectOption("custom");
+    await page
+      .getByLabel("The addresses")
+      .fill("ruth@example.invalid\nnjoroge@example.invalid");
+
+    await expect(page.getByText("2 people", { exact: true })).toBeVisible({
+      timeout: 20_000,
+    });
+    /* Read back as the server resolved them, not as they sit in the textarea. */
+    await expect(
+      page.getByText("ruth@example.invalid, njoroge@example.invalid", {
+        exact: true,
+      }),
+    ).toBeVisible();
+
+    /* And the count is on the button, so nobody presses it without seeing it. */
+    await expect(page.getByRole("button", { name: "Send to 2 people" })).toBeVisible();
   });
 });
 
