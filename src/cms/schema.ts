@@ -226,7 +226,7 @@ const giving = {
   defaults: {
     heading: "Support the ministry",
     intro:
-      "Gifts to Jepegomi keep children fed and taught, the church serving its neighbourhood, and the building work moving. Every one of them goes further here than it would almost anywhere else.",
+      "The church, the school, the meals and the building work are run day to day by the people who live here. When you give, you choose a named part of that work at a price we have quoted, and we send you photographs of it as it goes on.",
     waysHeading: "One ministry, four kinds of work",
     ways: [
       {
@@ -301,7 +301,7 @@ const needs = {
   defaults: {
     heading: "What's needed, and what it costs",
     intro: [
-      "Every item below is one thing the ministry is short of, with the price on it. You can take all of an item or part of one — whatever you give is held against it, and the balance stays open for somebody else to pick up.",
+      "Every item below is one thing the ministry is short of, with the price on it. You can take all of an item or part of one.",
       "The figures below are based on quotes and estimates for the work.",
     ].join("\n\n"),
     emptyNote:
@@ -310,7 +310,7 @@ const needs = {
     steps: [
       {
         title: "Choose an item, and an amount",
-        body: "All of it or part of it. What you take shows as promised at once; the rest stays open for somebody else.",
+        body: "All of it or part of it. What you take shows as promised at once.",
       },
       {
         title: "Pay it, or ask for the details",
@@ -318,15 +318,15 @@ const needs = {
       },
       {
         title: "The gift is marked received",
-        body: "Payments here record themselves. Anything sent another way is marked by hand when it lands. Either way, the page updates.",
+        body: "M-Pesa and card payments are recorded automatically. Anything sent another way is marked by hand when it arrives. Either way, the page updates.",
       },
       {
-        title: "You see what it did",
-        body: "Progress is posted back with photographs — the thing you paid for is a thing you can look at.",
+        title: "You get updates and photos",
+        body: "We post progress and photographs of the work as it goes on, so you can see what your gift paid for.",
       },
     ],
     partnerNote:
-      "No account to make. Sign in with the email you gave from and see everything you have given, and what came of it.",
+      "No account to make. Sign in with the email you gave from and see everything you have given, and what it paid for.",
     verse:
       "He who has pity on the poor lends to the Lord, And He will pay back what he has given.",
     verseRef: "Proverbs 19:17 NKJV",

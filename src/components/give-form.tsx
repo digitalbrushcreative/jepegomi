@@ -223,7 +223,7 @@ function Thanks({
       <p>
         {state.listed
           ? "That amount now shows as promised against the item, so nobody else will be asked for it. The balance stays open for somebody else to pick up."
-          : "Nothing on the site changes for this one — it is not against a costed item — but it is on the ledger, and Pastor Simon has it in front of him."}
+          : "This one is not against a costed item, so no figure on the site changes. It is recorded, and Pastor Simon has it in front of him."}
       </p>
       <p>
         {state.sent
@@ -243,8 +243,8 @@ function Thanks({
         .
       </p>
       <p>
-        Once the gift arrives it is marked received here, and you will be able to
-        follow what it paid for — including photographs — as the work goes on.
+        Once the gift arrives it is marked received here, and we will send you
+        updates and photographs of the work it paid for.
       </p>
     </Done>
   );
@@ -627,9 +627,9 @@ export function GiveForm({
                 What would you like your gift to go to?
               </legend>
               <p className="mt-2 text-sm leading-relaxed text-smoke">
-                Take a whole project, take one of the costs inside a project, or
-                take part of either — and if none of it is what you had in mind,
-                say so in your own words.
+                Choose a whole project, one of the costs inside a project, or
+                part of either. If none of these is what you had in mind, say so
+                in your own words.
               </p>
 
               {/*
@@ -768,9 +768,9 @@ export function GiveForm({
             label="How much would you like to give?"
             hint={
               openCents !== undefined
-                ? `${usd(openCents)} of this is still open. Any part of it helps — the rest stays there for somebody else.`
+                ? `${usd(openCents)} of this is still open. You can give any part of it.`
                 : chosen
-                  ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}, and nothing has to arrive at once. Give any part of it.`
+                  ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}. You can give any part of it.`
                   : canPay
                     ? "Whatever you can. You choose on the next step whether to pay it now or send it another way."
                     : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
