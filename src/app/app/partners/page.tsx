@@ -7,6 +7,7 @@ import { usd } from "@/lib/money";
 import { PARTNER_KINDS, areaOf } from "@/lib/giving";
 import { getKitchenReport } from "@/lib/kitchen";
 import { listNeeds } from "@/lib/needs";
+import { readersByPartner } from "@/lib/partner-readers";
 import { listPartners } from "@/lib/partners";
 import { PageHeader } from "../ui";
 import {
@@ -14,6 +15,7 @@ import {
   type GiftTarget,
   IssueLoginForm,
   PartnerDetailsForm,
+  ReadersPanel,
   RecordGiftForm,
   RevokeLoginButton,
   SeedEncounterForm,
@@ -36,10 +38,12 @@ export default async function AdminPartnersPage() {
   if (!user) redirect("/app");
 
   await ensureSchema();
-  const [partners, needs, kitchen] = await Promise.all([
+  const [partners, needs, kitchen, readers] = await Promise.all([
     listPartners(),
     listNeeds(),
     getKitchenReport(),
+    // One query for the whole page rather than one per card — see the note on it.
+    readersByPartner(),
   ]);
 
   const unverified = partners.filter((partner) => !partner.verified);
@@ -242,6 +246,25 @@ export default async function AdminPartnersPage() {
                     appears on {partner.name}&apos;s own page straight away.
                   </p>
                   <RecordGiftForm partner={partner} targets={targets} />
+                </div>
+              </details>
+
+              {/*
+                Folded away like the rest, but the count is in the summary so
+                the page says who can read a church's giving without anybody
+                having to open twenty panels to find out.
+              */}
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
+                  Who else may see this
+                  {(readers.get(partner.id)?.length ?? 0) > 0 &&
+                    ` · ${readers.get(partner.id)!.length}`}
+                </summary>
+                <div className="mt-5 border-t border-black/8 pt-5">
+                  <ReadersPanel
+                    partner={partner}
+                    readers={readers.get(partner.id) ?? []}
+                  />
                 </div>
               </details>
 

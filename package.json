@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 5174",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 5174",
     "lint": "eslint",
     "logo:email": "node scripts/email-logo.mjs",
     "detect": "impeccable detect src/",
-    "detect:live": "impeccable detect http://localhost:3000/ http://localhost:3000/about http://localhost:3000/give http://localhost:3000/needs http://localhost:3000/programs http://localhost:3000/education http://localhost:3000/projects http://localhost:3000/projects/kitchen http://localhost:3000/projects/playground http://localhost:3000/academy http://localhost:3000/college http://localhost:3000/church http://localhost:3000/contact http://localhost:3000/partners",
+    "detect:live": "impeccable detect http://localhost:5174/ http://localhost:5174/about http://localhost:5174/give http://localhost:5174/needs http://localhost:5174/programs http://localhost:5174/education http://localhost:5174/projects http://localhost:5174/projects/kitchen http://localhost:5174/projects/playground http://localhost:5174/academy http://localhost:5174/college http://localhost:5174/church http://localhost:5174/contact http://localhost:5174/partners",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report"

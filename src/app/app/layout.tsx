@@ -65,6 +65,17 @@ function buildSections(counts: {
           icon: "needs",
           badge: counts.claims,
         },
+        /*
+          Directly under Needs, because the two are the same ledger read from
+          opposite ends — what is being asked for, and what it came to. Anywhere
+          else in the rail and somebody looking for "where did the kitchen money
+          go" would look under Payments, which is card and M-Pesa traffic.
+        */
+        {
+          href: "/app/spending",
+          label: "Where the money went",
+          icon: "spending",
+        },
         { href: "/app/payments", label: "Payments", icon: "payments" },
         {
           href: "/app/partners",

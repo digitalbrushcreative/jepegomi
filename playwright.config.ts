@@ -23,12 +23,26 @@ loadEnvConfig(process.cwd());
  */
 
 /*
-  The ordinary dev port, because Next 16 allows exactly one `next dev` per
-  project directory — a second one refuses to start whatever port it is given.
-  So these attach to the server you already have running rather than trying to
-  own one, and start their own only when there is nothing there.
+  This project's own port, and not the ordinary one.
+
+  It used to be :3000, which is where every framework on a laptop puts itself by
+  default, and the collisions were not theoretical: this suite has attached to a
+  Rails app on :3000 and to a different Next.js site on :3001, on the same
+  afternoon. So the number is now 5174 — arbitrary, and set in exactly two
+  places, here and in the `dev` and `start` scripts in package.json. Changing one
+  without the other is the mistake this comment exists to prevent.
+
+  A pinned port makes a collision unlikely. It cannot make one impossible: no
+  port is reserved to anybody, and `reuseExistingServer` below will cheerfully
+  attach to whatever answers. That is what the `whose-server` project is for —
+  it refuses to go on unless the thing on this port is actually this site, and
+  says so in those words rather than as a mystery about a missing form field.
+
+  Attaching rather than insisting on our own server is still right: Next 16
+  allows one `next dev` per project directory, so starting a fresh one would mean
+  shutting down the one you are working in.
 */
-const PORT = Number(process.env.E2E_PORT ?? 3000);
+const PORT = Number(process.env.E2E_PORT ?? 5174);
 const baseURL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
@@ -50,11 +64,22 @@ export default defineConfig({
 
   projects: [
     /*
+      Before anything else that needs a server: is that server ours? Everything
+      below which drives a browser depends on this, directly or through `setup`,
+      so a wrong-server run stops here with one legible failure instead of
+      cascading into forty puzzling ones. See tests/whose-server.setup.ts.
+    */
+    { name: "whose-server", testMatch: /whose-server\.setup\.ts/ },
+    /*
       Signing in happens once, in its own project, and every CMS test reuses the
       cookie it saved. Doing it per-test would be a dozen round trips through a
       form that is not what any of them are testing.
     */
-    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+      dependencies: ["whose-server"],
+    },
     /*
       The pure rules — who may see whose accounts, what an uploaded file really
       is, what may reach an email header. No browser, no server, no database, so
@@ -72,6 +97,7 @@ export default defineConfig({
       name: "public",
       use: { ...devices["Desktop Chrome"] },
       testMatch: /(public|security|captcha)\.spec\.ts/,
+      dependencies: ["whose-server"],
     },
     {
       name: "cms",

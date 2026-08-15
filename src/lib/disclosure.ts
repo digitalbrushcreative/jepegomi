@@ -27,9 +27,10 @@ import type { AccountVisibility } from "@/lib/project-accounts";
  *                own $10, not a builder's merchant reconciliation for a building
  *                they have no stake in.
  *
- *   project      They picked a costed item out of a project and paid for it, so
- *                the figures around *that* project open up. They bought a line
- *                in that budget; they may read the budget.
+ *   project      Money of theirs reached a project, so the figures around *that*
+ *                project open up — what it bought, what each thing was estimated
+ *                at, what it actually came to. They paid towards that budget;
+ *                they may read it.
  *
  *   everything   They organised to give — a church, a company — or they gave at
  *                a scale that is an organised decision whoever made it. These
@@ -123,27 +124,41 @@ export function disclosureFor({
   }
 
   /*
-    `needs`, not `yoursCents`. A gift given towards a project as a whole — "for
-    the kitchen, wherever it helps" — is a generous thing and it is not the same
-    act as taking a costed line off the list and paying for it. The second one
-    buys a place in that budget; the first one is caught by the threshold above
-    if it is large enough to be, which is the right way round.
+    Money that reached this project, however it was addressed.
 
-    Narrowed to items they have actually paid for. A church part-way through
-    paying for the cement it claimed has `yoursReceivedCents` above zero and
-    reads the budget; somebody who claimed a $5 line an hour ago and sent nothing
-    has not bought anything yet, and this is the door they would otherwise walk
-    through.
+    This used to require an *itemised* gift — a costed line taken off the list
+    and paid for — and treat "for the kitchen, wherever it helps" as buying no
+    place in the kitchen's budget. The argument was that the two are different
+    acts, which they are. It was the wrong rule anyway, for two reasons that only
+    became visible once every project kept accounts rather than just the kitchen.
+
+    The first is that the kitchen page tells the public, in as many words, that
+    "partners who gave towards this work read it in full when they sign in".
+    Somebody who gave $300 towards the kitchen read that, signed in, and was
+    shown nothing — the site made a promise the rule then broke.
+
+    The second is that the distinction protected a document that no longer exists
+    in that form. What the narrow rule guarded was one donor's private
+    reconciliation letter, published to everybody as soon as anybody could read
+    it. What it guards now is a project's own record of what it bought, and "I
+    paid towards this project, so I may see what this project bought" is the rule
+    a person would guess. Guessing right is most of what makes a thing feel
+    honest.
+
+    Still received money only, and still per project. The threshold above is the
+    separate, larger permission — to read the books of projects you did *not* pay
+    towards — and it is untouched.
   */
-  const itemised = new Set(
+  const paidTowards = new Set(
     projects
-      .filter((project) =>
-        project.needs.some((need) => need.yoursReceivedCents > 0),
-      )
+      .filter((project) => project.yoursReceivedCents > 0)
       .map((project) => project.area.id),
   );
 
-  return { tier: itemised.size > 0 ? "project" : "own", projects: itemised };
+  return {
+    tier: paidTowards.size > 0 ? "project" : "own",
+    projects: paidTowards,
+  };
 }
 
 /** Whether this partner has *earned* a reading of one project's accounts. */

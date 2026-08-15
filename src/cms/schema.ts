@@ -1,9 +1,9 @@
+import { NEED_AREAS } from "@/lib/giving";
 import {
-  ACCOUNT_SETS,
   ACCOUNT_VISIBILITIES,
   DEFAULT_VISIBILITY,
-  type AccountSetId,
-  type AccountVisibility,
+  noteField,
+  visibilityField,
 } from "@/lib/project-accounts";
 import { site as siteDefaults } from "@/lib/site";
 
@@ -226,7 +226,7 @@ const giving = {
   defaults: {
     heading: "Support the ministry",
     intro:
-      "Gifts to Jepegomi keep children fed and taught, the church serving its neighbourhood, and the building work moving. Every one of them goes further here than it would almost anywhere else.",
+      "The church, the school, the meals and the building work are run day to day by the people who live here. When you give, you choose a named part of that work at a price we have quoted, and we send you photographs of it as it goes on.",
     waysHeading: "One ministry, four kinds of work",
     ways: [
       {
@@ -235,7 +235,7 @@ const giving = {
       },
       {
         title: "The academy",
-        body: "Jepegomi Academy: teachers' pay, books, desks, and the everyday cost of keeping a school open for children whose families could not otherwise afford one.",
+        body: "Jepegomi Academy: teachers' pay, books, desks, and the everyday cost of running a school at fees the families here can meet.",
       },
       {
         title: "Food at School",
@@ -249,7 +249,7 @@ const giving = {
     howHeading: "Or write to us and we will send the details",
     howBody: `We do not publish account details here. Ask, and ${siteDefaults.leaders} reply with the right account for wherever you are giving from — usually the better route for a transfer from overseas.`,
     designationNote:
-      "Tell us if you would like your gift to go to something in particular. If you don't, it goes wherever the need is greatest that month.",
+      "Tell us if you would like your gift to go to something in particular. If you don't, we put it where it does the most that month, and tell you where that was.",
     verse:
       "So let each one give as he purposes in his heart, not grudgingly or of necessity; for God loves a cheerful giver.",
     verseRef: "2 Corinthians 9:7 NKJV",
@@ -301,7 +301,7 @@ const needs = {
   defaults: {
     heading: "What's needed, and what it costs",
     intro: [
-      "Every item below is one thing the ministry is short of, with the price on it. You can take all of an item or part of one — whatever you give is held against it, and the balance stays open for somebody else to pick up.",
+      "Every item below is one thing the ministry is short of, with the price on it. You can take all of an item or part of one.",
       "The figures below are based on quotes and estimates for the work.",
     ].join("\n\n"),
     emptyNote:
@@ -310,7 +310,7 @@ const needs = {
     steps: [
       {
         title: "Choose an item, and an amount",
-        body: "All of it or part of it. What you take shows as promised at once; the rest stays open for somebody else.",
+        body: "All of it or part of it. What you take shows as promised at once.",
       },
       {
         title: "Pay it, or ask for the details",
@@ -318,15 +318,15 @@ const needs = {
       },
       {
         title: "The gift is marked received",
-        body: "Payments here record themselves. Anything sent another way is marked by hand when it lands. Either way, the page updates.",
+        body: "M-Pesa and card payments are recorded automatically. Anything sent another way is marked by hand when it arrives. Either way, the page updates.",
       },
       {
-        title: "You see what it did",
-        body: "Progress is posted back with photographs — the thing you paid for is a thing you can look at.",
+        title: "You get updates and photos",
+        body: "We post progress and photographs of the work as it goes on, so you can see what your gift paid for.",
       },
     ],
     partnerNote:
-      "No account to make. Sign in with the email you gave from and see everything you have given, and what came of it.",
+      "No account to make. Sign in with the email you gave from and see everything you have given, and what it paid for.",
     verse:
       "He who has pity on the poor lends to the Lord, And He will pay back what he has given.",
     verseRef: "Proverbs 19:17 NKJV",
@@ -711,7 +711,7 @@ const home = {
     needs: [
       {
         label: "The kitchen",
-        heading: "Help us finish the kitchen",
+        heading: "Finish the kitchen with us",
         body: "Every one of those meals now comes out of a kitchen of its own. A partner church in the United States built it with us, and it has been cooking every school day since. Three things would finish the job: a water tank, a proper floor where the children eat, and plaster and power in the dining hall.",
         status: "",
         giveCta: "Give to the kitchen",
@@ -730,7 +730,7 @@ const home = {
     ],
     closingHeading: "Stand with the whole ministry",
     closingBody:
-      "A gift to Jepegomi holds up all of it: the church on Sunday, the classroom on Monday, the college that trains the next teachers, and the meal a child eats at school tomorrow.",
+      "A gift to Jepegomi goes into all of it: the church on Sunday, the classroom on Monday, the college that trains the next teachers, and the meal a child eats at school tomorrow.",
   },
 } satisfies CmsDocument;
 
@@ -818,7 +818,7 @@ const academy = {
     intro: `Jepegomi Academy teaches ${pupilsEnrolled} children in the Kahawa Sukari community, from kindergarten to Grade 6, a school the ministry built a classroom at a time and is building still.`,
     sectionTitle: "The school today",
     body: [
-      `The Academy sits in ${siteDefaults.location}, run by the same hands as the church: ${siteDefaults.leaders}. Children come from families across the neighbourhood, many of whom could not otherwise afford to keep a child in school.`,
+      `The Academy sits in ${siteDefaults.location}, run by the same hands as the church: ${siteDefaults.leaders}. Children come from families across the neighbourhood, and the fees are kept where those families can reach them.`,
       "It did not start where it stands. The first classrooms were a row of iron-sheet rooms on the roadside, with the school's name painted on by hand. Lessons happen in semi-permanent blocks now (stone to the window sill, iron sheet above, a proper roof over both), and the bigger classrooms the government requires are going up behind them.",
       "The classes are small enough that a child is known by name rather than by number. And what the school is for was painted on that first signboard and has not changed since: value-based education: character and Scripture taught alongside the syllabus, because the ministry has never thought those were two separate subjects.",
     ].join("\n\n"),
@@ -1197,16 +1197,19 @@ const contact = {
 } satisfies CmsDocument;
 
 /**
- * Who may read each project's line-by-line figures.
+ * Who may read each project's line-by-line figures, and what you want to say
+ * about them.
  *
- * Every field here is generated from `ACCOUNT_SETS`, so a project that grows a
- * set of accounts later gets its switch by being added to that list and nothing
- * else. The alternative — a hand-written field per project — is a step somebody
- * eventually forgets, and forgetting it means a new set of figures ships with no
- * way to close them.
+ * Every field here is generated from `NEED_AREAS`, so every arm of the ministry
+ * has a switch whether or not it has spent anything yet — and recording what a
+ * project bought is enough to give its partners something to read. The
+ * alternative, a field per project registered by hand, is a step somebody
+ * eventually forgets; forgetting it used to mean figures that could not be
+ * shown, and would now mean figures Simon entered that silently went nowhere.
+ * See `accountFields` below, and the head of lib/project-accounts.ts.
  *
- * No `path`: this governs two different pages, so there is no single one to
- * offer a "View the page" link to.
+ * No `path`: this governs a dashboard and a page per project, so there is no
+ * single one to offer a "View the page" link to.
  */
 
 
@@ -1544,15 +1547,35 @@ const playground = {
   },
 } satisfies CmsDocument;
 
-function accountFields() {
-  const fields = {} as Record<AccountSetId, LeafField>;
+/*
+  Two fields per arm of the ministry: who may read what it spent, and Simon's
+  own paragraph about the figures.
 
-  for (const set of ACCOUNT_SETS) {
-    fields[set.id] = {
+  Generated from `NEED_AREAS` rather than from a registry of projects that have
+  accounts, because there is no longer any such thing — a project has accounts
+  the moment Simon records something it bought, in /app → Where the money went.
+  Generating these from a list in a source file would mean he could enter a
+  term's transport costs and have nothing appear, for a reason he cannot see.
+  See the head of lib/project-accounts.ts.
+
+  The keys come from that file too, so the schema, the form and the pages cannot
+  drift apart on what a field is called.
+*/
+function accountFields() {
+  const fields: Record<string, LeafField> = {};
+
+  for (const area of NEED_AREAS) {
+    fields[visibilityField(area.id)] = {
       type: "choice",
-      label: set.label,
-      help: set.help,
+      label: `${area.label} — who may read the figures`,
+      help: `What ${area.label.toLowerCase()} has bought, line by line, with what each thing was estimated at beside what it actually cost.`,
       options: ACCOUNT_VISIBILITIES,
+    };
+
+    fields[noteField(area.id)] = {
+      type: "prose",
+      label: `${area.label} — a note on the figures`,
+      help: "The part a table cannot hold: why a line ran over, what you did about it, what you would do differently. Shown in a box under the table. Leave it blank and no box appears.",
     };
   }
 
@@ -1560,8 +1583,22 @@ function accountFields() {
 }
 
 function accountDefaults() {
-  const defaults = {} as Record<AccountSetId, AccountVisibility>;
-  for (const set of ACCOUNT_SETS) defaults[set.id] = DEFAULT_VISIBILITY;
+  const defaults: Record<string, string> = {};
+
+  for (const area of NEED_AREAS) {
+    defaults[visibilityField(area.id)] = DEFAULT_VISIBILITY;
+    defaults[noteField(area.id)] = "";
+  }
+
+  /*
+    The kitchen's note, which lived in the accounts component as hard-coded
+    English until this field existed. It is Pastor Simon's account of his own
+    over-runs and it is the best thing on that page; it belongs where he can
+    edit it.
+  */
+  defaults[noteField("kitchen")] =
+    "Costs ran over on almost every line — cement, sand, drainage and ballast all cost more than planned, and the drainage work had to grow to satisfy NEEMA regulations. The one line that came in under was roofing and labour, because Pastor Simon did the building he knew how to do himself, and put the saved labour cost back into materials.";
+
   return defaults;
 }
 
@@ -1570,7 +1607,7 @@ const projectAccounts = {
   path: null,
   group: "giving",
   description:
-    "Who can read the line-by-line figures behind each project — the reconciliation of the kitchen, the costings for the playground. The public pages always show the totals and what is still needed; this is only about the detail underneath.",
+    "Who can read what each project actually spent — the line-by-line figures behind it, and your own note on them. Record the spending itself under Where the money went. The public pages always show the totals and what is still needed; this is only about the detail underneath.",
   fields: accountFields(),
   defaults: accountDefaults(),
 } satisfies CmsDocument;

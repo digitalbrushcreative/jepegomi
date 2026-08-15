@@ -90,11 +90,22 @@ async function requestCode(formData: FormData): Promise<CodeSignInState> {
       which is the timing half of saying the same sentence either way.
     */
     if (issued) {
+      /*
+        The code goes to the address that asked for it, which is not always the
+        partner's own — Simon can add a treasurer or a missions pastor to a
+        church's giving, and they sign in here like anybody else. See
+        lib/partner-readers.ts. What the message says changes with that; who it
+        is addressed to is the part that must not be got wrong.
+      */
+      const to = issued.reader
+        ? { name: issued.reader.name, email: issued.reader.email }
+        : { name: issued.partner.contactName, email: issued.partner.email };
+
       queue(
         partnerSignInCode({
-          name: issued.partner.name,
-          email: issued.partner.email,
-          contactName: issued.partner.contactName,
+          partnerName: issued.partner.name,
+          to,
+          onBehalf: Boolean(issued.reader),
           code: issued.code,
           lifetime: CODE_LIFETIME,
         }),

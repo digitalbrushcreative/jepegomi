@@ -6,8 +6,12 @@
 npm install
 cp .env.example .env.local     # fill in APP_SESSION_SECRET and DATABASE_URL
 createdb jepegomi              # the CMS needs a Postgres to write into
-npm run dev                    # http://localhost:3000
+npm run dev                    # http://localhost:5174
 ```
+
+The port is deliberately not :3000. Every framework claims that one by default,
+and on a laptop running more than one project it gets taken — which, when the
+tests attach to it, means driving somebody else's application.
 
 Then open `/app`. It creates its own tables on first visit and offers to make
 the first account — that is the whole installation.
@@ -43,7 +47,20 @@ E2E_PASSWORD=…
 Without those the CMS tests skip with a note and the public ones still run.
 
 Next allows only one `next dev` per project directory, so the tests attach to
-the server you already have on :3000 and start one only if nothing answers.
+the server you already have on :5174 and start one only if nothing answers.
+
+Because attaching means trusting a port number, the first thing the run does is
+check that whatever answered is actually this site, and stop with a plain
+sentence if it is not:
+
+```
+Something else is answering on http://127.0.0.1:5174.
+```
+
+That check has earned its place. Before the port moved off :3000 this suite
+attached to a Rails app once and to an unrelated Next.js site once, and both
+times the failure looked like a broken sign-in form rather than a wrong server.
+Use `E2E_PORT` to point the tests somewhere else deliberately.
 
 ## The CMS
 

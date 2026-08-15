@@ -1,14 +1,15 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getContent } from "@/cms/content";
-import { KitchenAccounts } from "@/components/kitchen-accounts";
 import { NeedBar } from "@/components/need-meter";
 import { NeedUpdates } from "@/components/need-updates";
 import { PlaygroundEstimate } from "@/components/playground-estimate";
 import { PhotoStrip, type SitePhoto } from "@/components/photos";
+import { ProjectAccounts } from "@/components/project-accounts";
 import { ButtonLink, SectionTitle } from "@/components/ui";
 import { formatDay } from "@/lib/dates";
 import {
+  NEED_AREAS,
   PLEDGE_LABELS,
   type NeedWithLedger,
   type Partner,
@@ -20,10 +21,10 @@ import {
 } from "@/lib/giving";
 import { disclosureFor, showsAccounts } from "@/lib/disclosure";
 import { usd } from "@/lib/money";
-import { getKitchenReport } from "@/lib/kitchen";
 import { getPlayground } from "@/lib/playground";
 import {
   type AccountSetId,
+  accountNoteOf,
   accountSet,
   visibilityOf,
 } from "@/lib/project-accounts";
@@ -78,18 +79,6 @@ export async function PartnerDashboard({
       getContent("site"),
       getContent("projectAccounts"),
     ]);
-
-  /*
-    The two sets of private figures this page may draw: the kitchen's
-    reconciliation, read back out of the ledger by `getProjectBudget`, and the
-    playground's costings, read out of the CMS by `getPlayground`. Neither is in
-    a source file any more.
-  */
-  const [kitchenBudget, kitchenReport, playgroundQuote] = await Promise.all([
-    getProjectBudget(accountSet("kitchen").area),
-    getKitchenReport(),
-    getPlayground(),
-  ]);
 
   const projects = groupByProject(needs, areaGifts);
 
@@ -159,10 +148,53 @@ export async function PartnerDashboard({
   */
   const shows = (id: AccountSetId) =>
     showsAccounts({
-      visibility: visibilityOf(accounts, id),
+      visibility: visibilityOf(accounts, accountSet(id).area),
       disclosure,
       areaId: accountSet(id).area,
     });
+
+  /*
+    Every project whose spending this partner may read, and what it spent.
+
+    The two questions are asked in this order on purpose. Working out which
+    areas are open first means the query for a set of accounts only runs for a
+    partner who is allowed to see them — a church at the `everything` tier pays
+    for one read per arm of the ministry, and everybody else pays for one per
+    project they gave to. Reading all nine and then hiding eight would be the
+    same page at nine times the cost, and would put figures nobody may see into
+    the render tree to be dropped later, which is the shape that eventually
+    leaks one.
+
+    Filtered to projects with something actually recorded as bought. A project
+    with nothing but open lines has no account to show — that is the ledger, and
+    the partner's own share of it is already up the page.
+  */
+  const openAreas = NEED_AREAS.filter((area) =>
+    showsAccounts({
+      visibility: visibilityOf(accounts, area.id),
+      disclosure,
+      areaId: area.id,
+    }),
+  );
+
+  const budgets = await Promise.all(
+    openAreas.map(async (area) => ({
+      area,
+      note: accountNoteOf(accounts, area.id),
+      budget: await getProjectBudget(area.id),
+    })),
+  );
+
+  const spent = budgets.filter((entry) => entry.budget.spent.length > 0);
+
+  /*
+    The playground's costings, which are not spending and so are not in the loop
+    above: a list of frames nobody has bought, held in the CMS rather than read
+    off the ledger. Fetched only when it is going to be drawn — the ordinary
+    partner never pays for it.
+  */
+  const showsPlayground = shows("playground");
+  const playgroundQuote = showsPlayground ? await getPlayground() : null;
 
   return (
     <>
@@ -262,33 +294,50 @@ export async function PartnerDashboard({
           )}
 
           {/*
-            The reconciliation, for the partners it was written for.
+            The accounts, for the partners they were written for.
 
-            This is the whole reason the tiers in lib/disclosure.ts exist. It
-            used to sit on the open web behind a button; a set of accounts
-            naming what a ministry in Nairobi bought, what it paid, and what it
-            is still short of is not a thing to leave lying about, however
-            proud of it everyone is entitled to be.
+            This is the whole reason the tiers in lib/disclosure.ts exist. The
+            kitchen's used to sit on the open web behind a button; a set of
+            accounts naming what a ministry in Nairobi bought, what it paid, and
+            what it is still short of is not a thing to leave lying about,
+            however proud of it everyone is entitled to be.
 
-            Only the kitchen has an account like this — it is the one project
-            whose money came as a single gift and was reconciled in a letter.
-            Everything else is the ledger, and a partner's own share of that is
-            already on this page above.
+            It used to be the kitchen's alone, because that was the one project
+            anybody had reconciled. Now every project keeps its accounts the same
+            way and this draws whichever of them this partner has earned — so a
+            church that paid for a term of school transport reads what the
+            transport cost, without anybody having to write it a page.
           */}
-          {shows("kitchen") && (
+          {spent.length > 0 && (
             <div className="mt-20">
-              <SectionTitle>
-                Where the kitchen money went
-              </SectionTitle>
+              <SectionTitle>Where the money went</SectionTitle>
               <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
-                Pastor Simon&apos;s own reconciliation, line by line: what each
-                thing was estimated at, what it actually cost, and the three
-                items the money never reached. It is not published on the site —
-                it is here because you have a stake in it.
+                {spent.length === 1
+                  ? "Our own reconciliation of this work, line by line: what each thing was estimated at, what it actually cost, and what the money never reached."
+                  : "Our own reconciliation of the work you have a stake in, line by line: what each thing was estimated at, what it actually cost, and what the money never reached."}{" "}
+                It is not published on the site — it is here because you have a
+                stake in it.
               </p>
 
-              <div className="mt-10">
-                <KitchenAccounts budget={kitchenBudget} report={kitchenReport} />
+              <div className="mt-10 space-y-10">
+                {spent.map(({ area, budget, note }) => (
+                  <ProjectAccounts
+                    key={area.id}
+                    budget={budget}
+                    title={`${area.label} — where the money went`}
+                    note={note}
+                    footnote={
+                      <>
+                        Figures in USD. {usd(budget.spentCents)} spent across{" "}
+                        {budget.spent.length}{" "}
+                        {budget.spent.length === 1 ? "line" : "lines"}
+                        {budget.outstanding.length > 0 &&
+                          `; the items in the second table were never reached`}
+                        .
+                      </>
+                    }
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -303,7 +352,7 @@ export async function PartnerDashboard({
             Filed under the playground itself, which is a project a gift can
             name now rather than a corner of the academy's page.
           */}
-          {shows("playground") && (
+          {showsPlayground && playgroundQuote && (
             <div className="mt-20">
               <SectionTitle>
                 The playground, line by line

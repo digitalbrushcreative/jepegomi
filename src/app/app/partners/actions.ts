@@ -20,6 +20,8 @@ import {
   recordNeedPledge,
   setPledgeStatus,
 } from "@/lib/needs";
+import { forgetCode } from "@/lib/partner-codes";
+import { addReader, removeReader } from "@/lib/partner-readers";
 import {
   createPartner,
   getPartner,
@@ -601,6 +603,83 @@ export async function revokeLoginAction(partnerId: string) {
       }),
     );
   }
+}
+
+/* ------------------------------------- who else may read a partner's giving */
+
+/**
+ * Adding somebody to a church's giving.
+ *
+ * The whole of the association is this form. Nothing infers it, and the reason
+ * is in lib/partner-readers.ts: there is no fact in a gift that says one address
+ * belongs with another, and the rule that looks like one — same domain — hands a
+ * church's giving to everybody on its mail server. So it is typed in by a person
+ * who knows the church.
+ *
+ * No mail goes out. What has been granted is the right to ask for a code at
+ * /partners, which is worth nothing until somebody who knows about it goes and
+ * asks — and an unexpected "you now have access to a church's giving" arriving
+ * at an address Simon mistyped is a worse letter than none. The first thing this
+ * address ever receives from the site is a code it asked for, and that message
+ * explains the arrangement.
+ */
+export async function addReaderAction(input: {
+  partnerId: string;
+  email: string;
+  name: string;
+  note: string;
+}) {
+  await requireUser();
+
+  const email = input.email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return { error: "Enter an email address — it is how they sign in." };
+  }
+
+  /*
+    Read back rather than trusted from the form, like the notify address in
+    `issueLoginAction` above: this decides whose giving an address will open, so
+    the partner has to be one that exists, not one that arrived in the POST.
+  */
+  const partner = await getPartner(input.partnerId);
+  if (!partner) return { error: "That partner no longer exists." };
+
+  let result;
+  try {
+    result = await addReader({
+      partnerId: partner.id,
+      email,
+      name: input.name.trim(),
+      note: input.note.trim(),
+    });
+  } catch (error) {
+    console.error("Partners: could not add a reader.", error);
+    return { error: "Could not add that address." };
+  }
+
+  if (!result.ok) return { error: result.error };
+
+  refresh();
+  return {
+    saved: true,
+    message: `${email} can now sign in at /partners and see ${partner.name}'s giving.`,
+  };
+}
+
+export async function removeReaderAction(readerId: string) {
+  await requireUser();
+
+  const removed = await removeReader(readerId);
+
+  /*
+    Their live code goes with the permission. A code already sitting in an inbox
+    is a quarter of an hour of access that would otherwise outlast the row that
+    justified it — and `signInPartnerWithCode` re-resolves the address anyway, so
+    this is the belt to that pair of braces rather than the only guard.
+  */
+  if (removed) await forgetCode(removed.email);
+
+  refresh();
 }
 
 export async function updatePartnerAction(input: {

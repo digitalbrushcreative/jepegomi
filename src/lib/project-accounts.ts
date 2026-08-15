@@ -1,4 +1,4 @@
-import type { NeedArea } from "@/lib/giving";
+import { NEED_AREAS, type NeedArea } from "@/lib/giving";
 
 /**
  * The sets of private figures a project can have, and who is allowed to read
@@ -19,17 +19,29 @@ import type { NeedArea } from "@/lib/giving";
  * in the CMS with three positions, and the middle one is the rule that file
  * describes.
  *
- * ## Why a registry rather than two booleans
+ * ## One switch per arm of the ministry, not per registered document
  *
- * Because there will be a third project, and a fourth. Everything downstream is
- * generated from the list below — the CMS fields, their defaults, the type of
- * the saved document — so adding a project's accounts is adding an entry here
- * and rendering the component behind the check. Nobody has to remember to go and
- * add a switch, which is exactly the kind of thing that does not get remembered
- * and ends up published.
+ * The switches used to be generated from `ACCOUNT_SETS` below, which meant a
+ * project could only have accounts by being added to a list in a source file.
+ * That was right while accounts were a rare, hand-built thing — the kitchen's
+ * reconciliation letter, the playground's quotes. It stopped being right the
+ * moment Simon could record what a project spent in /app: he would enter a
+ * term's transport costs, nothing would appear on anybody's dashboard, and the
+ * reason would be a TypeScript array he has never seen.
  *
- * Nothing in this file may import anything but types: it is read by the CMS
- * schema, by server components, and by the public pages.
+ * So the switches are generated from `NEED_AREAS` — every arm of the ministry
+ * gets one, defaulting to `partners`, and recording spending against a project
+ * is all it takes for the people who paid for it to be able to read it. The
+ * keys are the area ids, which is what the two hand-written switches were keyed
+ * on already: nothing saved needs migrating.
+ *
+ * `ACCOUNT_SETS` stays for what it is now the only thing it describes — the
+ * costing documents that are *not* the ledger, and so cannot be generated from
+ * it. The playground's quotes are a list of things not yet bought, held in the
+ * CMS; no amount of recorded spending would produce them.
+ *
+ * Nothing in this file may import anything but types and the area list: it is
+ * read by the CMS schema, by server components, and by the public pages.
  */
 
 export const ACCOUNT_VISIBILITIES = [
@@ -67,19 +79,17 @@ export type AccountSet = {
 };
 
 /*
-  One entry per set of private figures on the site.
+  One entry per costing document that is not the ledger.
 
-  `area` is what ties a set of accounts to the giving that earns a reading of
-  it — the playground is filed under the academy because the yard is the
-  academy's, not because anybody gave to a project called "playground".
+  The kitchen used to be here. It is not any more, and not because its accounts
+  went away — they are the ledger now, six closed rows with an estimate beside
+  each actual, and every project's spending is read the same way. What is left
+  in this list is the one document that cannot be derived from what has been
+  spent, because nothing has been: a page of quotes for frames nobody has bought.
+
+  `area` is what ties a document to the giving that earns a reading of it.
 */
 export const ACCOUNT_SETS = [
-  {
-    id: "kitchen",
-    area: "kitchen",
-    label: "The kitchen accounts",
-    help: "Pastor Simon's reconciliation of the build, line by line: what each thing was estimated at, what it actually cost, and the three items the money never reached.",
-  },
   {
     /*
       Filed under the playground itself, now that the playground is a project a
@@ -112,8 +122,29 @@ export function accountSet(id: AccountSetId): AccountSet {
   return found;
 }
 
+/* ------------------------------------------- where each project's switch lives */
+
+/*
+  The two keys a project has in the saved `projectAccounts` document.
+
+  Written as functions rather than spelled out at every call site because three
+  files have to agree on them — the CMS schema that generates the fields, the
+  form that saves them, and the pages that read them back — and a key that is a
+  string literal in three places is a key that is a typo in one of them.
+
+  `visibilityField` is the bare area id. It was the bare id when the only two
+  switches were hand-written for the kitchen and the playground, whose registry
+  ids happened to equal their areas, so every setting Simon has already saved
+  reads back unchanged under the generated fields.
+*/
+export const visibilityField = (areaId: NeedArea) => areaId;
+export const noteField = (areaId: NeedArea) => `${areaId}Note`;
+
+/** Every arm of the ministry, in the ministry's own order. */
+export const ACCOUNTABLE_AREAS = NEED_AREAS;
+
 /**
- * What one set of accounts is currently set to.
+ * What one project's accounts are currently set to.
  *
  * Takes the saved CMS document rather than reading it, so a page that has
  * already loaded its content does not go back for it, and so this stays free of
@@ -124,8 +155,26 @@ export function accountSet(id: AccountSetId): AccountSet {
  */
 export function visibilityOf(
   saved: Record<string, unknown> | null | undefined,
-  id: AccountSetId,
+  areaId: NeedArea,
 ): AccountVisibility {
-  const value = saved?.[id];
+  const value = saved?.[visibilityField(areaId)];
   return isAccountVisibility(value) ? value : DEFAULT_VISIBILITY;
+}
+
+/**
+ * Simon's own paragraph about one project's figures — why a line ran over, what
+ * he did about it — or empty for a project he has not written one for.
+ *
+ * This is the part of a set of accounts that a table cannot hold. "Cement, sand,
+ * drainage and ballast all cost more than planned, and the roofing came in under
+ * because Pastor Simon did the building himself" is the sentence that turns six
+ * over-run rows from a worry into an account of a man building a kitchen, and
+ * nothing in the ledger could ever derive it. It is content, so it is in the CMS.
+ */
+export function accountNoteOf(
+  saved: Record<string, unknown> | null | undefined,
+  areaId: NeedArea,
+): string {
+  const value = saved?.[noteField(areaId)];
+  return typeof value === "string" ? value.trim() : "";
 }

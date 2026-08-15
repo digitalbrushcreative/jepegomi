@@ -223,7 +223,7 @@ function Thanks({
       <p>
         {state.listed
           ? "That amount now shows as promised against the item, so nobody else will be asked for it. The balance stays open for somebody else to pick up."
-          : "Nothing on the site changes for this one — it is not against a costed item — but it is on the ledger, and Pastor Simon has it in front of him."}
+          : "This one is not against a costed item, so no figure on the site changes. It is recorded, and Pastor Simon has it in front of him."}
       </p>
       <p>
         {state.sent
@@ -243,8 +243,8 @@ function Thanks({
         .
       </p>
       <p>
-        Once the gift arrives it is marked received here, and you will be able to
-        follow what it paid for — including photographs — as the work goes on.
+        Once the gift arrives it is marked received here, and we will send you
+        updates and photographs of the work it paid for.
       </p>
     </Done>
   );
@@ -256,25 +256,31 @@ function Thanks({
  * The radio itself is the field that gets submitted — it carries the slug while
  * the label shows the title — so there is exactly one input named "towards" on
  * the form and no chance of the browser sending the wrong one of two.
+ *
+ * A title and a figure, and nothing else. Every row used to carry a second line
+ * as well — "still open" under an item, "the whole job — any part of it helps"
+ * under a project — which said the same two things under every row in the list
+ * and made a list of eleven choices twice as tall as the choosing warranted.
+ * The distinction those lines were drawing is real, but the place for it is not
+ * eleven times over: the amount box below says which kind of figure this is the
+ * moment a row is picked, and says it about the one row that now matters.
  */
 function Choice({
   value,
   checked,
   onChoose,
   title,
-  note,
   figure,
 }: {
   value: string;
   checked: boolean;
   onChoose: () => void;
   title: string;
-  note: string;
   figure?: string;
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-start gap-3.5 border-b border-sand-deep p-4 transition-colors last:border-b-0 ${
+      className={`flex cursor-pointer items-start gap-3.5 border-b border-sand-deep px-4 py-3.5 transition-colors last:border-b-0 ${
         checked ? "bg-green/8" : "hover:bg-sand/60"
       }`}
     >
@@ -287,14 +293,17 @@ function Choice({
         required
         className="mt-1 h-4 w-4 shrink-0 accent-green"
       />
-      <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <span className="font-medium">{title}</span>
-          {figure && (
-            <span className="tabular text-sm font-bold text-green">{figure}</span>
-          )}
-        </span>
-        <span className="mt-0.5 block text-xs leading-relaxed text-smoke">{note}</span>
+      {/*
+        Still wrapping, and still `items-baseline`: a title long enough to run
+        to two lines on a phone — "Cabro stones — the children's eating area
+        floor" — drops its figure onto a line of its own rather than squeezing
+        the title into a column three words wide.
+      */}
+      <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <span className="font-medium">{title}</span>
+        {figure && (
+          <span className="tabular text-sm font-bold text-green">{figure}</span>
+        )}
       </span>
     </label>
   );
@@ -627,9 +636,9 @@ export function GiveForm({
                 What would you like your gift to go to?
               </legend>
               <p className="mt-2 text-sm leading-relaxed text-smoke">
-                Take a whole project, take one of the costs inside a project, or
-                take part of either — and if none of it is what you had in mind,
-                say so in your own words.
+                Choose a whole project, one of the costs inside a project, or
+                part of either. If none of these is what you had in mind, say so
+                in your own words.
               </p>
 
               {/*
@@ -690,16 +699,15 @@ export function GiveForm({
                         }}
                         title={choice.title}
                         /*
-                          "Still open" is a balance and only an item has one. A
-                          project's figure is what the job costs, and calling
-                          that open would say something about money in hand that
-                          this site deliberately does not say.
+                          A balance on an item, the price of the job on a
+                          project — two different figures wearing the same
+                          typeface, and the row no longer says which. What says
+                          it is the hint under the amount box, in the sentence
+                          that begins "$850 of this is still open" or "The whole
+                          of this comes to $9,580": the distinction is drawn
+                          once, about the row that was actually picked, at the
+                          moment somebody is deciding what to type.
                         */
-                        note={
-                          choice.openCents !== undefined
-                            ? "still open"
-                            : "the whole job — any part of it helps"
-                        }
                         figure={usd(choice.openCents ?? choice.costCents ?? 0)}
                       />
                     </Fragment>
@@ -714,12 +722,12 @@ export function GiveForm({
                     setAmount("");
                     setStepError("");
                   }}
+                  /*
+                    No figure, and no second line either — picking it opens the
+                    box that asks the question, which is a better answer than a
+                    row explaining in advance what the row would do.
+                  */
                   title="Something else"
-                  note={
-                    choices.length === 0
-                      ? "Tell us what you would like to support and we will put it there."
-                      : "Not on the list — tell us what you would like to support instead."
-                  }
                 />
               </div>
             </fieldset>
@@ -768,9 +776,9 @@ export function GiveForm({
             label="How much would you like to give?"
             hint={
               openCents !== undefined
-                ? `${usd(openCents)} of this is still open. Any part of it helps — the rest stays there for somebody else.`
+                ? `${usd(openCents)} of this is still open. You can give any part of it.`
                 : chosen
-                  ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}, and nothing has to arrive at once. Give any part of it.`
+                  ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}. You can give any part of it.`
                   : canPay
                     ? "Whatever you can. You choose on the next step whether to pay it now or send it another way."
                     : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."

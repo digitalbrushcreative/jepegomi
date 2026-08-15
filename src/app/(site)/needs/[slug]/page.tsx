@@ -81,8 +81,7 @@ function ClaimPanel({
               Take part of this
             </h2>
             <p className="mt-2 mb-7 leading-relaxed text-smoke">
-              Any amount up to {usd(need.ledger.openCents)}. Whatever you leave
-              stays open for somebody else.
+              Any amount up to {usd(need.ledger.openCents)}.
             </p>
             {/*
               The same form /give uses, with the choosing already done: this

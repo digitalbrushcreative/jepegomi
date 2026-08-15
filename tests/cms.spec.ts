@@ -17,6 +17,27 @@ test.skip(
   "Set E2E_EMAIL and E2E_PASSWORD in .env.local to run the CMS tests.",
 );
 
+/**
+ * One rail link by its label, tolerating the count beside it.
+ *
+ * Three of these links carry a badge — claims, partners and enquiries waiting —
+ * and a badge is part of the link, so its accessible name is "Needs 2" on a
+ * morning somebody has claimed two things and "Needs" on a morning nobody has.
+ * Matching the label exactly therefore passed or failed on what was in the
+ * database that hour, which is not a thing about the rail at all.
+ *
+ * Anchored at both ends rather than loosened to a substring, so this still
+ * catches the failure it was written for: a link whose label has been changed
+ * or lost. Only the digits are optional.
+ *
+ * The space before them has to be optional too, because the two ways of asking
+ * disagree about it: an accessible name is assembled from the label and the
+ * badge as "Needs 2", and `toHaveText` reads the raw textContent of the same
+ * element, where the two spans sit against each other as "Needs2".
+ */
+const railLink = (label: string) =>
+  new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\d*$`);
+
 test.describe("the shell", () => {
   test("puts the whole tool in the rail", async ({ page }) => {
     await page.goto("/app");
@@ -30,13 +51,14 @@ test.describe("the shell", () => {
       "Photos",
       "Email",
       "Needs",
+      "Where the money went",
       "Payments",
       "Partners",
       "Enquiries",
       "Site details",
       "People",
     ]) {
-      await expect(rail.getByRole("link", { name: label, exact: true })).toBeVisible();
+      await expect(rail.getByRole("link", { name: railLink(label) })).toBeVisible();
     }
 
     // The categories the links are filed under.
@@ -60,7 +82,7 @@ test.describe("the shell", () => {
     const lit = rail.locator("[aria-current='page']");
 
     await expect(lit).toHaveCount(1);
-    await expect(lit).toHaveText("Needs");
+    await expect(lit).toHaveText(railLink("Needs"));
   });
 
   test("lights Site details rather than Pages, inside Site details", async ({
@@ -158,6 +180,67 @@ test.describe("payments", () => {
       satisfy.
     */
     await expect(page.locator("#main").getByRole("button")).toHaveCount(0);
+  });
+});
+
+test.describe("where the money went", () => {
+  /*
+    Read-only, like everything else in this file. Nothing here presses Record —
+    these tests point at the real database, and a screen whose whole job is
+    writing rows into the giving ledger is the last one to leave test data in.
+    What is worth pinning without writing anything is that the vocabulary is
+    right, because the vocabulary is the entire reason this screen exists: the
+    same rows were always reachable under Needs, and nobody could find them.
+  */
+  test("asks what was bought, not what is needed", async ({ page }) => {
+    await page.goto("/app/spending");
+
+    await expect(
+      page.getByRole("heading", { name: "Where the money went", level: 1 }),
+    ).toBeVisible();
+
+    const add = page
+      .locator("form")
+      .filter({ has: page.getByLabel("Which project") });
+
+    for (const label of [
+      "Which project",
+      "What was bought",
+      "Estimated",
+      "Actual",
+      "Why the two differ",
+    ]) {
+      await expect(add.getByLabel(label)).toBeVisible();
+    }
+
+    await expect(add.getByRole("button", { name: "Record this" })).toBeVisible();
+  });
+
+  test("offers no way to put an expense on the public site", async ({ page }) => {
+    await page.goto("/app/spending");
+
+    /*
+      The single worst bug this screen could have is an expense that arrives on
+      /needs with a Give button under it — a church asked to pay for something
+      already bought. The way to not have it is to have no control for it, so
+      the two switches the Needs form carries are absent here and the action
+      decides both. See the head of app/spending/actions.ts.
+    */
+    const add = page
+      .locator("form")
+      .filter({ has: page.getByLabel("Which project") });
+
+    await expect(add.getByRole("checkbox")).toHaveCount(0);
+  });
+
+  test("shows what is on the books, or says there is nothing", async ({
+    page,
+  }) => {
+    await page.goto("/app/spending");
+
+    const booked = page.getByRole("heading", { name: "On the books" });
+    const empty = page.getByRole("heading", { name: "Nothing recorded yet" });
+    await expect(booked.or(empty).first()).toBeVisible();
   });
 });
 

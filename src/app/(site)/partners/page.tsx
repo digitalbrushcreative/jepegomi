@@ -36,9 +36,15 @@ const promises: { icon: IconName; title: string; body: string }[] = [
     body: "Progress on the items you backed, posted from Nairobi with photographs.",
   },
   {
+    /*
+      This used to say "nobody else sees your giving" flatly, and that stopped
+      being true the day Simon could add a treasurer to a church's page. The
+      promise worth making is the one that is still kept: no other *giver* sees
+      it, and the only people who do are ones the church asked us to add.
+    */
     icon: "church",
     title: "Yours, and only yours",
-    body: "Nobody else sees your giving, and you never see theirs.",
+    body: "No other giver sees your giving, and you never see theirs. If someone else at your church should see it too, ask us and we will add their address.",
   },
 ];
 

@@ -125,11 +125,17 @@ export default async function GivePage(props: PageProps<"/give">) {
     wrong place. Underneath them the kitchen's own lines, where a giver can be
     as specific as they like.
   */
+  /*
+    No `partSummary`. It used to explain the figures underneath it — "What the
+    whole job costs. Any part of it is a real answer." — which is a sentence the
+    form says better twice over: the picker's own words above the list, and the
+    hint under the amount box once one of these is picked. Here it was a third
+    telling, sitting between somebody and the list they came to read.
+  */
   const wholeProjects: GiveChoice[] = appeals.map((appeal) => ({
     value: projectValue(appeal.area.id),
     title: appeal.area.label,
     areaLabel: "A whole project",
-    partSummary: "What the whole job costs. Any part of it is a real answer.",
     costCents: appeal.costCents,
   }));
 
@@ -257,7 +263,7 @@ export default async function GivePage(props: PageProps<"/give">) {
 
             <p className="mt-6 leading-relaxed text-smoke">
               {choices.length > 0
-                ? `Choose a project or one of the costs inside it, take all of it or part of it, or tell us in your own words what you would like to support. ${
+                ? `Choose a project or one of its costs, take all of it or part, or tell us in your own words what you would like to support. ${
                     canPay
                       ? "Then pay by M-Pesa or card, or ask for the account details."
                       : "It goes on the ledger straight away, so the ministry knows to expect it."
@@ -283,10 +289,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                       <strong className="font-medium text-charcoal">
                         Pay now, or send it later.
                       </strong>{" "}
-                      M-Pesa or card takes a minute — card details go to
-                      Pesapal&apos;s own page, never here. Or record what you
-                      intend to give and Pastor Simon sends you the account
-                      details.
+                      Card details go to Pesapal&apos;s own page, never here.
                     </>
                   ) : (
                     <>
@@ -303,18 +306,16 @@ export default async function GivePage(props: PageProps<"/give">) {
                 <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-green" />
                 <span>
                   <strong className="font-medium text-charcoal">
-                    A part is a real answer.
-                  </strong>{" "}
-                  Whatever you leave stays open for somebody else.
+                    You can give part of the cost.
+                  </strong>
                 </span>
               </li>
               <li className="flex gap-3">
                 <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-green" />
                 <span>
                   <strong className="font-medium text-charcoal">
-                    You will see what it did.
-                  </strong>{" "}
-                  Progress and photographs follow, as the work goes on.
+                    You will get updates and photos as the work goes on.
+                  </strong>
                 </span>
               </li>
             </ul>

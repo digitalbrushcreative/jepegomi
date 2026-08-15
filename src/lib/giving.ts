@@ -271,12 +271,18 @@ export const PLEDGE_LABELS: Record<PledgeStatus, string> = {
   actually submitted, so a suggestion can be edited into something else and
   somebody with a different idea is never boxed out.
 
-  "Wherever the need is greatest" leads because it is the honest default and the
-  one most people mean. The rest are the arms of the ministry, in the order they
-  are listed everywhere else.
+  "Wherever it does the most" leads because it is the honest default and the one
+  most people mean. It used to read "Wherever the need is greatest", which is the
+  language of an appeal rather than of a partnership — and it went onto the
+  ledger in the giver's own name, so it was Simon reading back a sentence about
+  how badly he needed it. The rest are the arms of the ministry, in the order
+  they are listed everywhere else.
+
+  None of these may match an area label, or `areaForDesignation` would file a
+  gift meant for the whole ministry under one arm of it.
 */
 export const GIVING_SUGGESTIONS = [
-  "Wherever the need is greatest",
+  "Wherever it does the most",
   ...NEED_AREAS.filter((area) => area.id !== "other").map((area) => area.label),
 ];
 
@@ -337,6 +343,26 @@ export type PartnerWithTotals = Partner & {
   claimedCents: number;
   receivedCents: number;
   pledgeCount: number;
+};
+
+/**
+ * Somebody Simon has said may read a partner's giving alongside them.
+ *
+ * A church's account is one email address, and for a church that is often the
+ * wrong number: the gift went out under the office address, and the treasurer,
+ * the missions pastor and whoever writes the newsletter all have a reason to
+ * look at what it built. There is no way to work out from a gift who those
+ * people are, so nothing tries to — every row here is one Simon typed in.
+ */
+export type PartnerReader = {
+  id: string;
+  partnerId: string;
+  email: string;
+  /** What to call them. Blank is allowed; the address is the identity. */
+  name: string;
+  /** Simon's own note. Never shown to them. */
+  note: string;
+  createdAt: string;
 };
 
 /* ------------------------------------------ what one partner's giving built */

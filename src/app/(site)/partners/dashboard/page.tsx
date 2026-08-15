@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PartnerDashboard } from "@/components/partner-dashboard";
-import { currentPartner } from "@/lib/partners";
+import { currentPartnerView } from "@/lib/partners";
 import { partnerSignOutAction } from "../actions";
 
 export const metadata: Metadata = {
@@ -20,12 +20,40 @@ export const metadata: Metadata = {
  * queries. See the note on `PartnerDashboard`.
  */
 async function OwnDashboard() {
-  const partner = await currentPartner();
-  if (!partner) redirect("/partners");
+  const view = await currentPartnerView();
+  if (!view) redirect("/partners");
+
+  const { partner, reader } = view;
 
   return (
     <PartnerDashboard
       partner={partner}
+      /*
+        For a treasurer or a missions pastor Simon has added to this church, the
+        page is otherwise indistinguishable from their own — a church's name in
+        large type over figures, with nothing on it saying whose. Said once, at
+        the top, so nobody reads a set of totals as theirs; and it says who to
+        write to, because the person who should not be here is the only one who
+        can tell us so.
+      */
+      notice={
+        reader ? (
+          <div className="mb-10 border-b border-white/15 pb-6 text-white">
+            <p className="max-w-2xl text-sm leading-relaxed">
+              <span className="eyebrow mr-3 rounded-full bg-marigold px-3 py-1 text-plum-deep">
+                On their behalf
+              </span>
+              You are seeing{" "}
+              <strong className="font-semibold">{partner.name}</strong>&apos;s
+              giving, because we added{" "}
+              <span className="font-mono text-xs">{reader.email}</span> to it.
+              Nothing here is recorded against you, and nothing you do changes
+              it. If it should not be you, reply to any email from us and we
+              will take your address off.
+            </p>
+          </div>
+        ) : undefined
+      }
       action={
         <form action={partnerSignOutAction}>
           <button
