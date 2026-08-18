@@ -11,6 +11,7 @@ import { formatDay } from "@/lib/dates";
 import {
   NEED_AREAS,
   PLEDGE_LABELS,
+  type NeedArea,
   type NeedWithLedger,
   type Partner,
   type PartnerProject,
@@ -19,11 +20,10 @@ import {
   groupByProject,
   pledgeTowards,
 } from "@/lib/giving";
-import { disclosureFor, showsAccounts } from "@/lib/disclosure";
+import { disclosureFor, showsAccounts, stakeIn } from "@/lib/disclosure";
 import { usd } from "@/lib/money";
 import { getPlayground } from "@/lib/playground";
 import {
-  type AccountSetId,
   accountNoteOf,
   accountSet,
   visibilityOf,
@@ -142,15 +142,26 @@ export async function PartnerDashboard({
   });
 
   /*
-    …and, over the top of it, what Simon has said each set of papers is for. The
-    switch is in /app under Giving → Project accounts; the two questions and the
-    order they are asked in are in lib/disclosure.ts.
+    Whether one project's private figures are drawn on this page.
+
+    Three questions now, not two. What Simon has said the papers are for (the
+    switch in /app under Giving → Project accounts) and whether this partner has
+    earned a reading of them are both in `showsAccounts`. The one in front of
+    them is `stakeIn`: did their own money reach this project.
+
+    That last one is what this page was missing. A verified church sits at the
+    `everything` tier, `opensAccounts` says yes to every area, and the dashboard
+    obligingly drew the lot — so the church that built the kitchen was handed the
+    playground's costings, a page of frames nobody has bought, in a project they
+    have never given towards. The books were theirs to read; the page was not
+    theirs to be filled with. See lib/disclosure.ts.
   */
-  const shows = (id: AccountSetId) =>
+  const shows = (areaId: NeedArea) =>
+    stakeIn(disclosure, areaId) &&
     showsAccounts({
-      visibility: visibilityOf(accounts, accountSet(id).area),
+      visibility: visibilityOf(accounts, areaId),
       disclosure,
-      areaId: accountSet(id).area,
+      areaId,
     });
 
   /*
@@ -169,13 +180,7 @@ export async function PartnerDashboard({
     with nothing but open lines has no account to show — that is the ledger, and
     the partner's own share of it is already up the page.
   */
-  const openAreas = NEED_AREAS.filter((area) =>
-    showsAccounts({
-      visibility: visibilityOf(accounts, area.id),
-      disclosure,
-      areaId: area.id,
-    }),
-  );
+  const openAreas = NEED_AREAS.filter((area) => shows(area.id));
 
   const budgets = await Promise.all(
     openAreas.map(async (area) => ({
@@ -193,7 +198,7 @@ export async function PartnerDashboard({
     off the ledger. Fetched only when it is going to be drawn — the ordinary
     partner never pays for it.
   */
-  const showsPlayground = shows("playground");
+  const showsPlayground = shows(accountSet("playground").area);
   const playgroundQuote = showsPlayground ? await getPlayground() : null;
 
   return (

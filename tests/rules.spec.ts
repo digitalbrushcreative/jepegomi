@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { ORGANISED_GIVING_CENTS, disclosureFor, opensAccounts } from "@/lib/disclosure";
+import {
+  ORGANISED_GIVING_CENTS,
+  disclosureFor,
+  opensAccounts,
+  stakeIn,
+} from "@/lib/disclosure";
 import type { Partner, PartnerProject } from "@/lib/giving";
 import { sniffImage } from "@/lib/image-upload";
 import { recipientsFor } from "@/lib/letters";
@@ -158,6 +163,47 @@ test.describe("how far a giver can see", () => {
 
     expect(seen.tier).toBe("everything");
     expect(opensAccounts(seen, "anything-at-all")).toBe(true);
+  });
+
+  test("a verified church may read everything, but has a stake only where it gave", () => {
+    /*
+      Encounter Church built the kitchen and nothing else, and was shown the
+      playground's costings — a page of steel frames nobody has bought, under a
+      project they have never given towards. Permission was never the problem:
+      at this tier they are entitled to read those figures, and still are. What
+      was wrong was the dashboard drawing every set of books it was allowed to
+      rather than the ones belonging to the work they paid for.
+    */
+    const seen = disclosureFor({
+      partner: giver({ kind: "church", verified: true }),
+      projects: [project("kitchen", 800_000), project("playground", 0)],
+      receivedCents: 800_000,
+    });
+
+    expect(seen.tier).toBe("everything");
+
+    // May read: all of it, exactly as before.
+    expect(opensAccounts(seen, "kitchen")).toBe(true);
+    expect(opensAccounts(seen, "playground")).toBe(true);
+
+    // Has a stake in: the kitchen alone — which is what the dashboard draws.
+    expect(stakeIn(seen, "kitchen")).toBe(true);
+    expect(stakeIn(seen, "playground")).toBe(false);
+  });
+
+  test("a claim a verified church has not paid is not a stake", () => {
+    /*
+      The same rule as everywhere else in this file: money that arrived. A
+      church can put its name against an item without sending anything, and the
+      tier must not turn that into a project of theirs.
+    */
+    const seen = disclosureFor({
+      partner: giver({ kind: "church", verified: true }),
+      projects: [project("playground", 0)],
+      receivedCents: 0,
+    });
+
+    expect(stakeIn(seen, "playground")).toBe(false);
   });
 
   test("the organised-giving threshold is a boundary, not a range", () => {

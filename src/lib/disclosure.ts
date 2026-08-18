@@ -88,9 +88,13 @@ export type DisclosureTier = "own" | "project" | "everything";
 export type Disclosure = {
   tier: DisclosureTier;
   /**
-   * Area ids whose accounts are open to them by way of an item they paid for.
-   * Empty at the `everything` tier, which does not need the list — see
-   * `opensAccounts`.
+   * Area ids this partner's money actually reached.
+   *
+   * Populated at every tier, including `everything`. It used to be left empty
+   * there on the grounds that a partner who may read all of it does not need a
+   * list of the ones they paid for — true of permission, and the reason the
+   * kitchen's church was shown the playground's costings. Permission is not the
+   * only question a page asks; see `stakeIn`.
    */
   projects: ReadonlySet<string>;
 };
@@ -116,13 +120,6 @@ export function disclosureFor({
    */
   receivedCents: number;
 }): Disclosure {
-  if (
-    (ORGANISED_KINDS.has(partner.kind) && partner.verified) ||
-    receivedCents >= ORGANISED_GIVING_CENTS
-  ) {
-    return { tier: "everything", projects: new Set() };
-  }
-
   /*
     Money that reached this project, however it was addressed.
 
@@ -155,6 +152,19 @@ export function disclosureFor({
       .map((project) => project.area.id),
   );
 
+  /*
+    Worked out before the tier, and carried into every one of them. The list is
+    a record of what this partner's money did, which is true of a verified
+    church exactly as it is true of anybody else — the tier decides what they
+    may *read*, and has no business editing the history.
+  */
+  if (
+    (ORGANISED_KINDS.has(partner.kind) && partner.verified) ||
+    receivedCents >= ORGANISED_GIVING_CENTS
+  ) {
+    return { tier: "everything", projects: paidTowards };
+  }
+
   return {
     tier: paidTowards.size > 0 ? "project" : "own",
     projects: paidTowards,
@@ -164,6 +174,32 @@ export function disclosureFor({
 /** Whether this partner has *earned* a reading of one project's accounts. */
 export function opensAccounts(disclosure: Disclosure, areaId: string) {
   return disclosure.tier === "everything" || disclosure.projects.has(areaId);
+}
+
+/**
+ * Whether this partner's own money reached one project.
+ *
+ * The other half of `opensAccounts`, and the two are asked for different
+ * reasons. That one is permission: may this person be shown these figures at
+ * all. This one is relevance: is this project theirs — did they pay for any of
+ * it.
+ *
+ * They came apart the first time a verified church signed in. Encounter Church
+ * built the kitchen and nothing else, and the dashboard drew them the
+ * playground's costings: a page of steel frames nobody has bought, filed under
+ * a project they have never given a penny towards. Nothing was leaked — a
+ * church at the `everything` tier is entitled to read those figures — but being
+ * entitled to read a thing is not a reason to be handed it. The dashboard is an
+ * account of the work you have partnered with us for, and a project you have no
+ * stake in is not that, however open its books are to you.
+ *
+ * So the dashboard draws by stake and the tier goes on governing permission.
+ * Somewhere to go on giving is a different question, and the page already
+ * answers it further down, where everything still short is offered under its own
+ * heading with a link to /needs.
+ */
+export function stakeIn(disclosure: Disclosure, areaId: string) {
+  return disclosure.projects.has(areaId);
 }
 
 /**
