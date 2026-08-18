@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getContent } from "@/cms/content";
 import { HubCard, PageHero, Verse } from "@/components/ui";
+import { getAppeals } from "@/lib/appeals";
 import { getKitchenReport } from "@/lib/kitchen";
-import { getPlayground } from "@/lib/playground";
 import { pageMeta } from "@/lib/seo";
 
 const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
@@ -16,27 +16,46 @@ export const metadata: Metadata = pageMeta({
 /*
   Where the cards go, and nothing else. The words on them are edited in the CMS
   and paired with this list in order. Add a project by adding a link here, a
-  card in the editor, and a page under /projects.
+  card in the editor, and a page for it to point at.
+
+  Two of these point into /programs rather than /projects, which looks like an
+  inconsistency and is the honest state of things: the bus and the streaming kit
+  are programmes the ministry runs *and* jobs it is raising for, and they were
+  reachable only as the former. Being raised for is what this page is a list of,
+  so they belong on it whatever their address. Nobody is served by a second
+  transport page existing purely to make a URL tidy.
 */
-const links = [{ href: "/projects/kitchen" }, { href: "/projects/playground" }];
+const links = [
+  { href: "/projects/kitchen", area: "kitchen" },
+  { href: "/projects/playground", area: "playground" },
+  { href: "/programs/transport", area: "transport" },
+  { href: "/programs/digital", area: "digital" },
+] as const;
 
 export default async function ProjectsPage() {
-  const [content, kitchen, playground] = await Promise.all([
+  const [content, kitchen, appeals] = await Promise.all([
     getContent("projects"),
     getKitchenReport(),
-    getPlayground(),
+    getAppeals(),
   ]);
 
   /*
-    Both eyebrows carry a figure that comes out of the database, so the label is
-    built here rather than typed: the editor owns the words before the dot and
-    the ledger owns what comes after it. A percentage on this page therefore
+    Every eyebrow carries a figure that comes out of the database, so the label
+    is built here rather than typed: the editor owns the words before the dot
+    and the ledger owns what comes after it. A percentage on this page therefore
     cannot drift from the same percentage on the project's own page.
+
+    The kitchen is the one measured in progress rather than in price, because it
+    is the one being finished — the others have not been started, and "0%
+    complete" on a playground nobody has bought a swing for reads as a failure
+    rather than as an ask. Those show what the whole job comes to, which is the
+    same figure /needs prints for them, off the same function.
   */
-  const figures = [
-    `${kitchen.percentComplete}% complete`,
-    `${usd(playground.totalUsd)} for the whole job`,
-  ];
+  const figureFor = (area: string) => {
+    if (area === "kitchen") return `${kitchen.percentComplete}% complete`;
+    const appeal = appeals.find((entry) => entry.area.id === area);
+    return appeal ? `${usd(appeal.costCents / 100)} for the whole job` : "";
+  };
 
   return (
     <>
@@ -53,12 +72,14 @@ export default async function ProjectsPage() {
             const card = content.cards[index];
             if (!card) return null;
 
+            const figure = figureFor(link.area);
+
             return (
               <HubCard
                 key={link.href}
-                {...link}
+                href={link.href}
                 {...card}
-                eyebrow={`${card.eyebrow} · ${figures[index]}`}
+                eyebrow={figure ? `${card.eyebrow} · ${figure}` : card.eyebrow}
               />
             );
           })}

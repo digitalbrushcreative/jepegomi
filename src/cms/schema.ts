@@ -1232,7 +1232,7 @@ const projects = {
   path: "/projects",
   group: "giving",
   description:
-    "The landing page over the build projects. Each card's figure — how far the kitchen has got, what the playground comes to — is added to its label automatically and is not typed here.",
+    "The landing page over the projects being raised for. Each card's figure — how far the kitchen has got, what the others come to — is added to its label automatically and is not typed here.",
   fields: {
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro", help: "Optional." },
@@ -1262,6 +1262,20 @@ const projects = {
         blurb:
           "Swings welded on site out of angle iron, a slide stripped to its frame, and all of it standing on bare packed earth. What proper equipment and a rubber crumb safe surface would cost.",
         cta: "See what it costs",
+      },
+      {
+        eyebrow: "The school run",
+        title: "School Transport",
+        blurb:
+          "The van the school has outgrown, on roads that carry lorries. What a 26-seater bus costs, and how many children are waiting on one.",
+        cta: "See what it costs",
+      },
+      {
+        eyebrow: "Streaming",
+        title: "Jepegomi Digital",
+        blurb:
+          "Services recorded on a phone and sent to the people who cannot get to the building. What a camera, a laptop that can edit and a year of connection would cost.",
+        cta: "See the kit",
       },
     ],
     verse:

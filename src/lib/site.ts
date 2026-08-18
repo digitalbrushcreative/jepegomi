@@ -156,7 +156,7 @@ export const navLinks: NavLink[] = [
     label: "Projects",
     href: "/projects",
     blurb:
-      "The things being built — the kitchen that cooks the meals, and the playground that needs replacing.",
+      "The things being raised for — the kitchen that cooks the meals, the playground that needs replacing, the bus, and the kit the services go out on.",
     children: [
       {
         label: "Kitchen Build",
