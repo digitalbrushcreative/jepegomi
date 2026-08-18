@@ -83,6 +83,22 @@ somebody want to finish it. The arithmetic in the giving form stays public too �
 the box, what you type, the total on the button — because a form that would not
 tell you what you had just typed is not a careful form, it is a broken one.
 
+**In the giving form the figure follows the selection.** The list of costed
+items carries no prices at all — a column of identical blurs answered no question
+a giver was asking. Instead the form opens by asking *who is giving*, which it
+has always asked and merely used to ask last; answering it opens the figure for
+whatever item you then pick, shown beside the box asking how much. One item at a
+time, never the list, and rate-limited — because those details cannot be verified
+without emailing a code and stopping the gift halfway through, so what keeps the
+rung safe is how little it hands over rather than who it hands it to. A signed-in
+giver keeps the old order and gets their details prefilled.
+
+That makes three rungs, and they are three files on purpose:
+`src/lib/reveal.ts` (the site's prices), `src/lib/disclosure.ts` (a partner's own
+books, earned by money that arrived) and the asking session in
+`src/lib/supporters.ts` (one figure, inside the form that asked).
+`figuresRevealed()` does not consult the third and must never be made to.
+
 **Anybody can pass the gate**, which is the point and also its limit. The door at
 `/partners` takes any address, emails a code, and opens the figures — a person
 with no giving behind their name becomes a *supporter* (`src/lib/supporters.ts`),

@@ -148,6 +148,7 @@ export default async function GivePage(props: PageProps<"/give">) {
               title: "All of it — the whole project",
               areaLabel,
               costCents: project.stillAskingCents,
+              isItem: false,
             },
           ]
         : [];
@@ -162,6 +163,8 @@ export default async function GivePage(props: PageProps<"/give">) {
           partTitle: group.part?.title,
           partSummary: group.part?.summary || undefined,
           openCents: need.ledger.openCents,
+          costCents: need.costCents,
+          isItem: true,
         })),
     );
 

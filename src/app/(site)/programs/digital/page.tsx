@@ -6,6 +6,7 @@ import { EditorOnly } from "@/components/editor-only";
 import { Icon } from "@/components/icons";
 import { JepegomiLogo } from "@/components/logos";
 import { Money } from "@/components/money";
+import { ProjectItems } from "@/components/project-items";
 import { PhotoStrip } from "@/components/photos";
 import {
   ButtonLink,
@@ -228,6 +229,14 @@ export default async function DigitalPage() {
           )}
         </div>
       </section>
+
+      {/*
+        The kit, line by line, off the ledger rather than out of the CMS list
+        above it. The two agree because the seeding script wrote the ledger from
+        the same figures the CMS holds — see scripts/seed-project-ledgers.mjs —
+        and this is the half a giver can act on an item at a time.
+      */}
+      <ProjectItems area="digital" />
 
       {/* How to support. */}
       <section className="px-6 py-24">

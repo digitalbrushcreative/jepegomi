@@ -104,6 +104,8 @@ function ClaimPanel({
                   title: need.title,
                   areaLabel: area.label,
                   openCents: need.ledger.openCents,
+                  costCents: need.costCents,
+                  isItem: true,
                 },
               ]}
               contactEmail={contactEmail}

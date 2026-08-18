@@ -306,10 +306,13 @@ export default async function AdminPartnersPage() {
  * what a water tank costs is a warmer name than any newsletter box has ever
  * produced — and not worth a heading in the nav.
  *
- * Confirmed and unconfirmed are shown together, labelled. An unconfirmed row is
- * somebody who asked for a code and never typed it back, which is usually a
- * mistyped address and occasionally somebody entering other people's. Averaging
- * the two into one count would hide both.
+ * Every row says how it got here, because the two ways are not the same person.
+ * Somebody who asked for a code at /partners came looking for the figures.
+ * Somebody who filled in the top of the giving form was part-way through
+ * actually giving and stopped — which is the warmer name of the two, and the one
+ * worth a reply. Confirmed and unconfirmed are shown apart for the same reason:
+ * an unconfirmed code row is usually a mistyped address, and averaging it in
+ * with the rest would hide both facts.
  */
 function SupporterList({
   supporters,
@@ -319,18 +322,22 @@ function SupporterList({
   if (supporters.length === 0) return null;
 
   const confirmed = supporters.filter((supporter) => supporter.confirmed);
+  const started = supporters.filter(
+    (supporter) => !supporter.confirmed && supporter.source === "giving",
+  );
 
   return (
     <details className="mt-12 rounded border border-black/8 bg-white p-6">
       <summary className="cursor-pointer font-medium hover:text-plum">
-        Signed in for the figures · {confirmed.length}
+        Asked about the figures · {confirmed.length + started.length}
       </summary>
 
       <p className="mt-4 max-w-prose text-sm leading-relaxed text-smoke">
-        Addresses that proved themselves to see what things cost. They have given
-        nothing and nothing is recorded against them — this is a list of people
-        who wanted to know the price, which is the closest thing this site has to
-        a warm list. Nothing here needs doing.
+        Addresses that asked what things cost — some by signing in at{" "}
+        <span className="font-mono text-xs">/partners</span>, some by starting the
+        giving form and stopping. They have given nothing and nothing is recorded
+        against them. Nothing here needs doing, but the ones who started giving
+        are the ones worth a reply.
       </p>
 
       <ul className="mt-6 divide-y divide-black/8 border-t border-black/8">
@@ -341,9 +348,11 @@ function SupporterList({
           >
             <span className="font-mono text-sm">{supporter.email}</span>
             <span className="text-xs text-smoke">
-              {supporter.confirmed
-                ? `signed in ${formatDay(supporter.confirmedAt ?? supporter.createdAt)}`
-                : `asked ${formatDay(supporter.createdAt)} — never typed the code`}
+              {supporter.source === "giving"
+                ? `started giving ${formatDay(supporter.createdAt)}`
+                : supporter.confirmed
+                  ? `signed in ${formatDay(supporter.confirmedAt ?? supporter.createdAt)}`
+                  : `asked ${formatDay(supporter.createdAt)} — never typed the code`}
             </span>
           </li>
         ))}

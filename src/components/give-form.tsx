@@ -8,7 +8,13 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { type GiveState, giveAction } from "@/app/(site)/give/actions";
+import {
+  type ChoiceFigure,
+  type GiveState,
+  beginGivingAction,
+  figureForAction,
+  giveAction,
+} from "@/app/(site)/give/actions";
 import {
   CaptchaNotice,
   Done,
@@ -19,7 +25,6 @@ import {
   buttonClass,
   inputClass,
 } from "@/components/form";
-import { HiddenFigure } from "@/components/hidden-figure";
 import { Icon } from "@/components/icons";
 import { GIVING_SUGGESTIONS, PARTNER_KINDS } from "@/lib/giving";
 import { parseUsd, usd } from "@/lib/money";
@@ -117,6 +122,17 @@ export type GiveChoice = {
   openCents?: number;
   /** What the whole job comes to. Set on a project choice, absent on an item. */
   costCents?: number;
+  /**
+   * One costed line, rather than "all of it" on a project.
+   *
+   * Carried separately from the two figures above because it is not one. Those
+   * are stripped out for anybody who may not read them (see
+   * components/give-panel.tsx), and the form still has to know which kind of
+   * thing was picked — the button at the end says "claim this amount" against an
+   * item and "record this gift" against a project, and that distinction is about
+   * what the ledger does with the money, not about what it costs.
+   */
+  isItem?: boolean;
 };
 
 /** The form's word for "not one of the listed items". Matched in giveAction. */
@@ -360,6 +376,72 @@ function GroupHeading({
 }
 
 
+/**
+ * What the chosen thing costs, beside the box asking how much of it to give.
+ *
+ * This is where the figures went. They used to sit on every row of the picker,
+ * which put the whole ledger on the page to answer a question about one item —
+ * and once the ledger moved behind a sign-in, it put a column of identical blurs
+ * there instead, which told a giver nothing and read as a broken page.
+ *
+ * One figure, for the row somebody actually picked, in the place they are about
+ * to type a number. Both halves of it: what is still open is the ceiling on the
+ * gift and the thing that decides what gets typed, and what the whole item comes
+ * to is the size of the job they are joining. A giver who can only see the
+ * balance cannot tell whether $450 is most of a water tank or a rounding error
+ * on a bus.
+ *
+ * Renders nothing at all rather than an empty frame when there is no figure —
+ * for "something else", which has no cost by definition, and for a giver who has
+ * not said who they are yet. An empty box where a number belongs is worse than
+ * no box.
+ */
+function SelectedFigure({
+  title,
+  openCents,
+  wholeCents,
+  isItem,
+  pending,
+}: {
+  title: string;
+  openCents?: number;
+  wholeCents?: number;
+  isItem: boolean;
+  pending: boolean;
+}) {
+  if (openCents === undefined && !pending) return null;
+
+  return (
+    <div className="rounded-xl border border-green/25 bg-green/8 px-5 py-4">
+      <p className="eyebrow text-green">{title}</p>
+
+      {openCents === undefined ? (
+        <p className="mt-1.5 text-sm text-smoke">Looking up what this costs…</p>
+      ) : isItem ? (
+        <>
+          <p className="font-display tabular mt-1 text-2xl font-semibold text-green">
+            {usd(openCents)} still open
+          </p>
+          {wholeCents !== undefined && wholeCents !== openCents && (
+            <p className="mt-0.5 text-sm text-smoke">
+              of {usd(wholeCents)} for the whole item
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="font-display tabular mt-1 text-2xl font-semibold text-green">
+            {usd(openCents)}
+          </p>
+          <p className="mt-0.5 text-sm text-smoke">
+            everything still open on this project
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function GiveForm({
   choices,
   fixed = false,
@@ -367,6 +449,8 @@ export function GiveForm({
   contactEmail,
   canPay = false,
   revealed = false,
+  detailsFirst = false,
+  giver,
 }: {
   /** The costed items still open. On a need's own page this is that one need. */
   choices: GiveChoice[];
@@ -392,6 +476,27 @@ export function GiveForm({
    * for this flag to be wrong about.
    */
   revealed?: boolean;
+  /**
+   * Ask who is giving first, and the gift second.
+   *
+   * Set for a giver who is not signed in, and it is the whole of how the figures
+   * get opened for them: the form has always asked for a name and an email, and
+   * putting that question at the front turns a step somebody was going to answer
+   * anyway into the thing that unlocks what they need. See `beginGivingAction`.
+   *
+   * A signed-in giver keeps the old order, because for them the question is
+   * already answered — their details are prefilled below, and the figures were
+   * never hidden in the first place.
+   */
+  detailsFirst?: boolean;
+  /** What the ledger already knows about whoever is signed in. */
+  giver?: {
+    name?: string;
+    kind?: string;
+    location?: string;
+    contactName?: string;
+    email?: string;
+  };
   /** True when the item is already decided, so the picker is not shown at all. */
   fixed?: boolean;
   /**
@@ -474,6 +579,26 @@ export function GiveForm({
 
   const stepped = useHydrated();
   const [step, setStep] = useState<1 | 2>(1);
+
+  /**
+   * The figures for choices somebody has actually selected, one at a time.
+   *
+   * Empty for a signed-in giver, whose choices arrive carrying their own figures
+   * — there is nothing to fetch. For everybody else the list is deliberately
+   * figure-free (see components/give-panel.tsx, which strips the amounts before
+   * they ever reach the browser) and this fills in the one row they picked.
+   *
+   * Keyed by choice value and never cleared, so going back and forth between two
+   * items asks the server once each rather than once per click. A value present
+   * with `null` against it is one the server would not answer for — asked and
+   * settled, not still pending.
+   */
+  const [figures, setFigures] = useState<Record<string, ChoiceFigure | null>>({});
+  const [figurePending, setFigurePending] = useState(false);
+
+  /** What the details step said, when it is the one in front. */
+  const [detailsError, setDetailsError] = useState("");
+  const [beginPending, setBeginPending] = useState(false);
   /**
    * What is wrong with the first half, in the same words the action would use
    * for the same fault. It has to be the form's own message rather than the
@@ -491,8 +616,43 @@ export function GiveForm({
   if (state?.done) return <Thanks state={state.done} email={contactEmail} />;
 
   const chosen = choices.find((choice) => choice.value === towards);
+
+  /*
+    Two ways the same figure can arrive, and the form does not care which.
+
+    A signed-in giver gets it on the choice itself, the way this form has always
+    worked. Everybody else gets it from the server one selection at a time, once
+    they have said who they are. Reading them in this order means the code below
+    — the chips, the ceiling, the panel — is written once and works for both.
+  */
+  const fetched = figures[towards];
   /** The balance on a costed item. Undefined on a whole project, which has none. */
-  const openCents = chosen?.openCents;
+  const openCents = chosen?.openCents ?? fetched?.openCents;
+  /** What the whole of the chosen thing comes to, where we know it. */
+  const wholeCents = chosen?.costCents ?? fetched?.costCents;
+  const isItem = chosen?.isItem ?? false;
+
+  /**
+   * Asks what one selected thing costs.
+   *
+   * Once per value, and never for a signed-in giver — their choices already
+   * carry it. `OTHER` has no figure by definition: it is the row for a gift
+   * nobody has costed.
+   */
+  const loadFigure = (value: string) => {
+    if (revealed || !value || value === OTHER || value in figures) return;
+
+    setFigurePending(true);
+    figureForAction(value)
+      .then((figure) => setFigures((all) => ({ ...all, [value]: figure })))
+      /*
+        A refusal and a network fault are recorded the same way, as "no figure".
+        There is nothing for a giver to do about either, and the form works
+        without one — the amount box is a box.
+      */
+      .catch(() => setFigures((all) => ({ ...all, [value]: null })))
+      .finally(() => setFigurePending(false));
+  };
 
   /*
     The amount on the paying button, so it reads "Give $250 now" rather than
@@ -531,8 +691,35 @@ export function GiveForm({
     browser draws. Until React has hydrated, both are true and the form is the
     single long page it always was.
   */
-  const showingGift = !stepped || step === 1;
-  const showingDetails = !stepped || step === 2;
+  /**
+   * Which half comes first.
+   *
+   * The two halves are the same two halves they have always been; all that
+   * changes is which one a giver meets. Signed in, the gift leads, because the
+   * details are already known and prefilled. Signed out, the details lead — see
+   * `detailsFirst` above — and answering them is what opens the figures for the
+   * half that follows.
+   *
+   * Held as an order rather than a pair of booleans so that everything keyed to
+   * "first" and "last" — the step numbers, which half carries Continue and which
+   * carries the buttons that give — follows from one line instead of four
+   * conditions that could drift apart.
+   */
+  const order: ("gift" | "details")[] = detailsFirst
+    ? ["details", "gift"]
+    : ["gift", "details"];
+
+  const stepOf = (block: "gift" | "details") =>
+    (order.indexOf(block) + 1) as 1 | 2;
+  const isLast = (block: "gift" | "details") =>
+    order[order.length - 1] === block;
+
+  /*
+    Unhydrated, both halves are on screen at once and the form is the single long
+    page it always was — so "showing" is true for both. See `useHydrated`.
+  */
+  const showing = (block: "gift" | "details") =>
+    !stepped || order[step - 1] === block;
 
   const show = (
     next: 1 | 2,
@@ -618,41 +805,185 @@ export function GiveForm({
       return;
     }
 
-    show(2, detailsMarkerRef);
+    show(stepOf("details"), detailsMarkerRef);
   };
 
-  return (
-    <form
-      ref={formRef}
-      action={formAction}
-      className="relative scroll-mt-24"
-      /*
-        Enter, in the first half, means "next" and not "submit".
+  /**
+   * The details half, checked before it is put away.
+   *
+   * Only ever the first step, and only for somebody not signed in. It asks the
+   * server rather than checking in the browser alone, because the point of the
+   * step is not validation — it is being remembered, so that the half below can
+   * ask what one chosen item costs. See `beginGivingAction`.
+   *
+   * A refusal stops the giver here; a failure to record them does not, because
+   * the action waves those through. The worst case is a giver who reaches the
+   * gift half with no figure beside the amount box, which is the form as it
+   * stood before any of this and still takes a gift perfectly well.
+   */
+  const forwardFromDetails = async () => {
+    const form = formRef.current;
+    if (!form || beginPending) return;
 
-        It has to be caught: the buttons that submit this form live in the
-        second half, and while that half is hidden they are a `required` name
-        and a `required` email the browser cannot focus to complain about. The
-        submission simply dies, silently, with a line in the console — which is
-        the worst way for a form to answer a keypress.
+    setBeginPending(true);
+    setDetailsError("");
 
-        Inputs and selects only. Enter on a button is a click, and cancelling
-        that would break the suggestion chips and this very control.
-      */
-      onKeyDown={(event) => {
-        if (!stepped || step !== 1 || event.key !== "Enter") return;
+    let result: Awaited<ReturnType<typeof beginGivingAction>>;
+    try {
+      result = await beginGivingAction(undefined, new FormData(form));
+    } catch {
+      result = { ok: true };
+    } finally {
+      setBeginPending(false);
+    }
 
-        const tag = (event.target as HTMLElement).tagName;
-        if (tag !== "INPUT" && tag !== "SELECT") return;
+    if (!result.ok) {
+      setDetailsError(result.error);
+      return;
+    }
 
-        event.preventDefault();
-        forward();
-      }}
-    >
-      <SpamTraps action="give" />
+    /*
+      A giver who arrived from a project page already has something selected —
+      /needs/[slug] hands this form one choice and hides the picker entirely — so
+      the figure is asked for on the way through rather than waiting for a click
+      on a row that is not there.
+    */
+    loadFigure(towards);
+    show(stepOf("gift"), giftMarkerRef);
+  };
 
-      <div hidden={!showingGift}>
+  /**
+   * The bottom of each half: "continue" on the first, the buttons that give on
+   * the last.
+   *
+   * Built here rather than written into the two halves, because which half is
+   * last now depends on who is filling the form in. A giver must never meet two
+   * "continue" buttons and no way to finish, and the way to guarantee that is to
+   * have one place decide.
+   */
+  const continueControl = (block: "gift" | "details") => (
+    <div className="space-y-4">
+      <FormError>{block === "gift" ? stepError : detailsError}</FormError>
+
+      <button
+        type="button"
+        onClick={block === "gift" ? forward : () => void forwardFromDetails()}
+        disabled={beginPending}
+        className={buttonClass()}
+      >
+        {block === "details"
+          ? beginPending
+            ? "One moment…"
+            : "Continue"
+          : amountLabel
+            ? `Continue with ${amountLabel}`
+            : "Continue"}
+      </button>
+
+      <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+        {block === "gift"
+          ? "Next: who the gift is from. Nothing is recorded until you finish there, and you can come back and change this."
+          : "Next: what your gift is for, and how much. Nothing is recorded until you finish there."}
+      </p>
+    </div>
+  );
+
+  const submitControls = (
+    <div className="space-y-4">
+          <FormError>{state?.error}</FormError>
+
+          {/*
+            Two doors, and the order of them is the whole design.
+
+            Paying now is first and is the button that looks like a button,
+            because it is what most people want and it is the only one that
+            finishes the job in one sitting. Sending it another way is second and
+            deliberately plain — not hidden, because a church wiring $5,000 from
+            Ohio should not be made to pay a card fee on it, and that giver is
+            worth more to the ministry than the convenience of a single code
+            path.
+
+            Both are submit buttons on the same form, so both carry the same
+            validated amount — including the fields in the half above, which are
+            hidden rather than removed and so are posted exactly as they were
+            filled in. Only the one actually pressed contributes its name and
+            value, which is how the action tells them apart. Pressing Enter in a
+            text field picks the first submit button — the paying one — which is
+            the right default.
+          */}
+          {canPay ? (
+            <div className="space-y-4">
+              <Submit
+                pending={pending}
+                pendingLabel="Taking you to Pesapal…"
+                tone="green"
+                name="intent"
+                value="pay"
+                icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
+              >
+                {amountLabel ? `Give ${amountLabel} now` : "Give now"}
+              </Submit>
+
+              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+                By M-Pesa or card, through Pesapal. Your card details are entered
+                on Pesapal&apos;s own page and never touch this site.
+              </p>
+
+              <p className="text-center text-sm">
+                <button
+                  type="submit"
+                  disabled={pending}
+                  className="cursor-pointer font-medium text-plum underline underline-offset-4 disabled:opacity-60"
+                >
+                  I&apos;d rather send it another way
+                </button>
+              </p>
+
+              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+                Records what you intend to give and nothing else — Pastor Simon
+                replies with the account details himself. Best for bank transfers
+                and larger gifts from overseas.
+              </p>
+            </div>
+          ) : (
+            <>
+              <Submit
+                pending={pending}
+                pendingLabel="Recording…"
+                tone="green"
+                icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
+              >
+                {isItem ? "Claim this amount" : "Record this gift"}
+              </Submit>
+
+              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
+                No payment is taken here and no card details are asked for. This
+                records what you intend to give; Pastor Simon replies with the
+                account details himself.
+              </p>
+            </>
+          )}
+
+          <CaptchaNotice className="measure mx-auto text-center text-smoke" />
+    </div>
+  );
+
+  /*
+    Unhydrated there are no steps, so the halves are one page and only the last
+    of them may carry a "continue" that does nothing. The buttons that give are
+    outside that condition — they are the form working at all.
+  */
+  const tailFor = (block: "gift" | "details") =>
+    isLast(block) ? submitControls : stepped ? continueControl(block) : null;
+
+  /** Whichever half is in front, moved on. */
+  const forwardFirst = () =>
+    order[0] === "details" ? void forwardFromDetails() : forward();
+
+  const giftHalf = (
+      <div hidden={!showing("gift")}>
         {stepped && (
-          <StepMarker ref={giftMarkerRef} index={1} title="Your gift" />
+          <StepMarker ref={giftMarkerRef} index={stepOf("gift")} title="Your gift" />
         )}
 
         <div className="space-y-7">
@@ -739,6 +1070,7 @@ export function GiveForm({
                           setTowards(choice.value);
                           setAmount("");
                           setStepError("");
+                          loadFigure(choice.value);
                         }}
                         title={choice.title}
                         /*
@@ -751,12 +1083,18 @@ export function GiveForm({
                           once, about the row that was actually picked, at the
                           moment somebody is deciding what to type.
                         */
+                        /*
+                          Nothing at all when the figures are not ours to show,
+                          rather than a blur. A column of identical smudges down
+                          a list is noise: it answers no question a giver is
+                          asking here, and the one figure that matters appears
+                          beside the amount box the moment a row is picked. See
+                          `SelectedFigure`.
+                        */
                         figure={
-                          revealed ? (
-                            usd(choice.openCents ?? choice.costCents ?? 0)
-                          ) : (
-                            <HiddenFigure />
-                          )
+                          revealed
+                            ? usd(choice.openCents ?? choice.costCents ?? 0)
+                            : undefined
                         }
                       />
                     </Fragment>
@@ -821,27 +1159,32 @@ export function GiveForm({
             then finds themselves being charged has been misled at the exact
             moment they were deciding to trust us.
           */}
+          {stepped && towards && towards !== OTHER && (
+            <SelectedFigure
+              title={chosen?.title ?? "What you picked"}
+              openCents={openCents}
+              wholeCents={wholeCents}
+              isItem={isItem}
+              pending={figurePending}
+            />
+          )}
+
           <Field
             label="How much would you like to give?"
             hint={
               /*
-                The first two branches recite a ledger figure, so they are only
-                reachable when there is one to recite: `openCents` and
-                `costCents` are stripped from the choices for anybody signed out,
-                which drops the sentence through to the plainer wording below.
-                The distinction those two draw — a balance that runs out, against
-                a target that does not — is only worth drawing beside the number
-                it is about.
+                The figures came out of this sentence when the panel above took
+                them on. It used to say "$850 of this is still open" and then the
+                panel said it again two inches higher, in larger type, next to
+                the name of the thing it was about — so the sentence went back to
+                doing the job only it can do, which is telling somebody that a
+                part of it is a real answer.
               */
-              openCents !== undefined
-                ? `${usd(openCents)} of this is still open. You can give any part of it.`
-                : chosen?.costCents !== undefined
-                  ? `The whole of this comes to ${usd(chosen.costCents)}. You can give any part of it.`
-                  : chosen
-                    ? "Any part of it is a real answer — whatever you can."
-                    : canPay
-                      ? "Whatever you can. You choose on the next step whether to pay it now or send it another way."
-                      : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
+              chosen
+                ? "Any part of it is a real answer — you do not have to take the whole thing."
+                : canPay
+                  ? "Whatever you can. You choose on the next step whether to pay it now or send it another way."
+                  : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
             }
           >
             <div className="mt-2 flex items-center gap-2 rounded-md border border-black/15 bg-white px-4 py-3 focus-within:border-plum focus-within:ring-2 focus-within:ring-plum/20">
@@ -880,30 +1223,31 @@ export function GiveForm({
             the bottom of the next half, where a giver should be in no doubt
             about which press is the one that counts.
           */}
-          {stepped && (
-            <div className="space-y-4">
-              <FormError>{stepError}</FormError>
-
-              <button type="button" onClick={forward} className={buttonClass()}>
-                {amountLabel ? `Continue with ${amountLabel}` : "Continue"}
-              </button>
-
-              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-                Next: who the gift is from. Nothing is recorded until you finish
-                there, and you can come back and change this.
-              </p>
-            </div>
-          )}
+{tailFor("gift")}
         </div>
       </div>
+  );
 
-      <div hidden={!showingDetails}>
+  const detailsHalf = (
+      <div hidden={!showing("details")}>
         {stepped && (
-          <StepMarker ref={detailsMarkerRef} index={2} title="Your details" />
+          <StepMarker
+            ref={detailsMarkerRef}
+            index={stepOf("details")}
+            title="Your details"
+          />
         )}
 
         <div className="space-y-7">
-          {stepped && (
+          {/*
+            Only where the gift was decided first. Its whole job is to carry a
+            decision forward past the point where it scrolls off the screen — and
+            when the details lead, there is no decision yet to carry. Rendering it
+            anyway would open the form on "$ towards", which reads as a bug and is
+            somehow worse than that: it is the form asserting somebody chose
+            something when they have not.
+          */}
+          {stepped && !detailsFirst && (
             <ChosenSummary
               amount={amountLabel}
               /*
@@ -913,7 +1257,7 @@ export function GiveForm({
                 "t-cabro-floor" is not something anybody agreed to.
               */
               towards={chosen ? chosen.title : designation}
-              onChange={() => show(1, giftMarkerRef)}
+              onChange={() => show(stepOf("gift"), giftMarkerRef)}
             />
           )}
 
@@ -922,13 +1266,18 @@ export function GiveForm({
               <input
                 name="name"
                 required
+                defaultValue={giver?.name}
                 placeholder="Your name, or your church"
                 className={inputClass}
               />
             </Field>
 
             <Field label="What kind">
-              <select name="kind" defaultValue="church" className={inputClass}>
+              <select
+                name="kind"
+                defaultValue={giver?.kind ?? "church"}
+                className={inputClass}
+              >
                 {PARTNER_KINDS.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
@@ -940,13 +1289,19 @@ export function GiveForm({
             <Field label="Where you are">
               <input
                 name="location"
+                defaultValue={giver?.location}
                 placeholder="City, country"
                 className={inputClass}
               />
             </Field>
 
             <Field label="Who we should write to">
-              <input name="contactName" placeholder="Your name" className={inputClass} />
+              <input
+                name="contactName"
+                defaultValue={giver?.contactName}
+                placeholder="Your name"
+                className={inputClass}
+              />
             </Field>
           </div>
 
@@ -958,90 +1313,62 @@ export function GiveForm({
                 : "Where Pastor Simon sends the account details, and where the updates go."
             }
           >
-            <input name="email" type="email" required className={inputClass} />
+            <input
+              name="email"
+              type="email"
+              required
+              defaultValue={giver?.email}
+              className={inputClass}
+            />
           </Field>
 
           <Field label="Anything you would like to say">
             <textarea name="message" rows={3} className={inputClass} />
           </Field>
 
-          <FormError>{state?.error}</FormError>
-
-          {/*
-            Two doors, and the order of them is the whole design.
-
-            Paying now is first and is the button that looks like a button,
-            because it is what most people want and it is the only one that
-            finishes the job in one sitting. Sending it another way is second and
-            deliberately plain — not hidden, because a church wiring $5,000 from
-            Ohio should not be made to pay a card fee on it, and that giver is
-            worth more to the ministry than the convenience of a single code
-            path.
-
-            Both are submit buttons on the same form, so both carry the same
-            validated amount — including the fields in the half above, which are
-            hidden rather than removed and so are posted exactly as they were
-            filled in. Only the one actually pressed contributes its name and
-            value, which is how the action tells them apart. Pressing Enter in a
-            text field picks the first submit button — the paying one — which is
-            the right default.
-          */}
-          {canPay ? (
-            <div className="space-y-4">
-              <Submit
-                pending={pending}
-                pendingLabel="Taking you to Pesapal…"
-                tone="green"
-                name="intent"
-                value="pay"
-                icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
-              >
-                {amountLabel ? `Give ${amountLabel} now` : "Give now"}
-              </Submit>
-
-              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-                By M-Pesa or card, through Pesapal. Your card details are entered
-                on Pesapal&apos;s own page and never touch this site.
-              </p>
-
-              <p className="text-center text-sm">
-                <button
-                  type="submit"
-                  disabled={pending}
-                  className="cursor-pointer font-medium text-plum underline underline-offset-4 disabled:opacity-60"
-                >
-                  I&apos;d rather send it another way
-                </button>
-              </p>
-
-              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-                Records what you intend to give and nothing else — Pastor Simon
-                replies with the account details himself. Best for bank transfers
-                and larger gifts from overseas.
-              </p>
-            </div>
-          ) : (
-            <>
-              <Submit
-                pending={pending}
-                pendingLabel="Recording…"
-                tone="green"
-                icon={<Icon name="give" className="h-[1.15em] w-[1.15em]" />}
-              >
-                {openCents !== undefined ? "Claim this amount" : "Record this gift"}
-              </Submit>
-
-              <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-                No payment is taken here and no card details are asked for. This
-                records what you intend to give; Pastor Simon replies with the
-                account details himself.
-              </p>
-            </>
-          )}
-
-          <CaptchaNotice className="measure mx-auto text-center text-smoke" />
+{tailFor("details")}
         </div>
       </div>
+  );
+
+  return (
+    <form
+      ref={formRef}
+      action={formAction}
+      className="relative scroll-mt-24"
+      /*
+        Enter, in the first half, means "next" and not "submit".
+
+        It has to be caught: the buttons that submit this form live in the
+        second half, and while that half is hidden they are a `required` name
+        and a `required` email the browser cannot focus to complain about. The
+        submission simply dies, silently, with a line in the console — which is
+        the worst way for a form to answer a keypress.
+
+        Inputs and selects only. Enter on a button is a click, and cancelling
+        that would break the suggestion chips and this very control.
+      */
+      onKeyDown={(event) => {
+        if (!stepped || step !== 1 || event.key !== "Enter") return;
+
+        const tag = (event.target as HTMLElement).tagName;
+        if (tag !== "INPUT" && tag !== "SELECT") return;
+
+        event.preventDefault();
+        forwardFirst();
+      }}
+    >
+      <SpamTraps action="give" />
+
+      {/*
+        Whichever half comes first, first — in the document and not merely on the
+        screen. A CSS reordering would leave a screen reader walking them in the
+        opposite order to everybody else, and the halves are a sequence: the
+        second one is written on the assumption you have answered the first.
+      */}
+      {order.map((block) => (
+        <Fragment key={block}>{block === "gift" ? giftHalf : detailsHalf}</Fragment>
+      ))}
     </form>
   );
 }

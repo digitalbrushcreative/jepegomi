@@ -430,6 +430,59 @@ test.describe("the figures, signed out", () => {
   });
 });
 
+/*
+  The three rungs, and the gaps between them.
+
+  A partner and a supporter proved something — giving, or an inbox. Somebody who
+  typed a name into the giving form proved nothing, and the whole safety of
+  letting them see anything rests on how little that opens: one figure, for the
+  item they selected, inside the form that asked. If that ever widens into the
+  site, the emailed code stops being worth sending.
+*/
+test.describe("typing details into the giving form", () => {
+  async function sayWhoYouAre(page: Page, what: string) {
+    await page.goto("/give");
+    const form = page.locator("form").filter({ hasText: "Who is giving?" });
+    await form.getByLabel("Who is giving?").fill("A Test Church");
+    await form
+      .getByLabel("Email")
+      .fill(`${what}-${Date.now()}@example.invalid`);
+    await form.getByRole("button", { name: "Continue" }).click();
+    return form;
+  }
+
+  test("does not open the figures anywhere else on the site", async ({
+    page,
+  }) => {
+    await freshCaller(page, "asking-scope");
+    await sayWhoYouAre(page, "asking-scope");
+
+    /*
+      The cookie that step set is now in this browser. Every page below reads
+      figures through lib/reveal.ts, which must not consult it — so all of them
+      have to stay exactly as shut as they were for a stranger.
+    */
+    for (const path of ["/needs", "/projects/kitchen", "/programs/transport"]) {
+      await page.goto(path);
+      const html = await page.content();
+      expect(
+        html.match(/\$[0-9]{1,3},[0-9]{3}/g) ?? [],
+        `${path} opened up for somebody who only typed a name`,
+      ).toEqual([]);
+    }
+  });
+
+  test("still shows the blur and the invitation on /needs", async ({ page }) => {
+    await freshCaller(page, "asking-blur");
+    await sayWhoYouAre(page, "asking-blur");
+
+    await page.goto("/needs");
+    await expect(
+      page.getByRole("link", { name: /sign in to reveal the total cost/i }),
+    ).toBeVisible();
+  });
+});
+
 /* ------------------------------------------------------------- the two doors */
 
 test.describe("the partner area, signed out", () => {
@@ -627,6 +680,20 @@ test.describe("a refused gift", () => {
       );
 
       /*
+        Who is giving comes first for anybody not signed in, so the item is not
+        reachable until this is answered. That is the form's order and this test
+        follows it rather than working around it — the point here is what the
+        *server* does with a bad amount, and getting there the way a person does
+        is the honest way to arrive.
+      */
+      await page.locator('form input[name="name"]').first().fill("Refused Probe");
+      await page
+        .locator('form input[name="email"]')
+        .first()
+        .fill(strangerAddress("refused"));
+      await page.getByRole("button", { name: /^continue/i }).first().click();
+
+      /*
         A costed item, specifically — not a whole project and not "something
         else". This test is about the balance on an item being enforced by the
         server, and those other two have no balance to exceed: a gift towards
@@ -639,18 +706,6 @@ test.describe("a refused gift", () => {
         )
         .first()
         .check();
-      /*
-        An amount the form will let through, so that the second half — where
-        the buttons are — actually opens.
-      */
-      await page.locator('form input[name="amount"]').first().fill("250");
-      await page.getByRole("button", { name: /^continue/i }).first().click();
-
-      await page.locator('form input[name="name"]').first().fill("Refused Probe");
-      await page
-        .locator('form input[name="email"]')
-        .first()
-        .fill(strangerAddress("refused"));
 
       /*
         And now the real amount, written straight onto the box the form has put
@@ -692,4 +747,27 @@ test.describe("a refused gift", () => {
       await pool.end();
     }
   });
+});
+
+/*
+  The rows these tests wrote, taken back out.
+
+  `supporters` is not a scratch table — it is the list Simon reads at the foot of
+  /app -> Partners to see who has been asking what things cost, and a suite run
+  four times a day would fill it with addresses at `example.invalid` that nobody
+  can write to and nobody should have to scroll past. The reserved domain is what
+  makes this safe to delete on sight: no real supporter can ever be at one.
+*/
+test.afterAll(async () => {
+  if (!process.env.DATABASE_URL) return;
+
+  const { Pool } = await import("pg");
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    await pool.query("DELETE FROM supporters WHERE email LIKE '%@example.invalid'");
+  } catch {
+    // Never worth failing a green run over a tidy-up.
+  } finally {
+    await pool.end();
+  }
 });

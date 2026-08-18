@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getContent } from "@/cms/content";
 import { Money } from "@/components/money";
+import { ProjectItems } from "@/components/project-items";
 import { Icon } from "@/components/icons";
 import { PlaygroundEstimate } from "@/components/playground-estimate";
 import { ClothEdge } from "@/components/pattern";
@@ -203,6 +204,13 @@ export default async function PlaygroundPage() {
           </div>
         </div>
       </section>
+
+      {/*
+        The equipment and the surface, as the ledger holds them — two steps, in
+        the order they have to happen, because there is no sense buying a rubber
+        crumb floor for frames nobody has paid for yet. See lib/projects.ts.
+      */}
+      <ProjectItems area="playground" />
 
       {/* The estimate, as a total rather than as a delivery note. */}
       <section className="px-6 py-20 sm:py-24">

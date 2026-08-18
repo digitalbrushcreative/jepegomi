@@ -165,3 +165,104 @@ test.describe("the CMS, signed out", () => {
     }
   });
 });
+
+/*
+  The giving form, as somebody who has never given meets it.
+
+  Three things went wrong here at once when the ledger moved behind a sign-in,
+  and they are tested together because they are one shape: a giver arrives, is
+  told nothing useful about what anything costs, and is expected to type a number
+  anyway. The form now asks who they are first — which it always asked, just at
+  the end — and hands back the figure for the one thing they picked.
+*/
+test.describe("giving, signed out", () => {
+  test("names each project once in the picker", async ({ page }) => {
+    await page.goto("/give");
+
+    /*
+      A project broken into steps produces a heading for its "all of it" row and
+      another for each part. The project's own name belongs on the first of those
+      and no others — printing it on every one made the playground appear three
+      times down the list and read as duplicated projects.
+    */
+    const names = await page
+      .locator("form .sticky p.eyebrow")
+      .allTextContents();
+
+    const seen = new Set<string>();
+    for (const name of names) {
+      expect(seen.has(name), `"${name}" heads more than one group`).toBe(false);
+      seen.add(name);
+    }
+    expect(names.length).toBeGreaterThan(0);
+  });
+
+  test("asks who is giving before it asks what for", async ({ page }) => {
+    await page.goto("/give");
+
+    const form = page.locator("form").filter({ hasText: "Who is giving?" });
+    await expect(form.getByText("Your details")).toBeVisible();
+
+    // The picker belongs to the second step, and is not on screen yet.
+    await expect(
+      form.getByRole("group", { name: /what would you like your gift to go to/i }),
+    ).toBeHidden();
+  });
+
+  test("shows the total for the item picked, and nothing for the rest", async ({
+    page,
+  }) => {
+    await page.goto("/give");
+    const form = page.locator("form").filter({ hasText: "Who is giving?" });
+
+    await form.getByLabel("Who is giving?").fill("A Test Church");
+    await form.getByLabel("Email").fill(`giving-${Date.now()}@example.invalid`);
+    await form.getByRole("button", { name: "Continue" }).click();
+
+    const picker = form.getByRole("group", {
+      name: /what would you like your gift to go to/i,
+    });
+    await expect(picker).toBeVisible();
+
+    /*
+      Nothing in the list carries a balance. The four amounts on screen at this
+      point are the suggestion chips, which are public constants and not the
+      ledger's — so the assertion is against the ledger's own words rather than
+      against anything shaped like money. That the response carries no figure at
+      all is asserted properly, against the HTML, in security.spec.ts.
+    */
+    await expect(form.getByText(/still open/i)).toHaveCount(0);
+    await expect(form.getByText(/for the whole item/i)).toHaveCount(0);
+
+    const item = picker
+      .locator('input[name="towards"]:not([value^="project:"]):not([value="other"])')
+      .first();
+    await item.check();
+
+    // Exactly one figure appears, and it belongs to the thing just chosen.
+    await expect(form.getByText(/still open/i)).toBeVisible();
+  });
+});
+
+/*
+  The rows these tests wrote, taken back out.
+
+  `supporters` is not a scratch table — it is the list Simon reads at the foot of
+  /app -> Partners to see who has been asking what things cost, and a suite run
+  four times a day would fill it with addresses at `example.invalid` that nobody
+  can write to and nobody should have to scroll past. The reserved domain is what
+  makes this safe to delete on sight: no real supporter can ever be at one.
+*/
+test.afterAll(async () => {
+  if (!process.env.DATABASE_URL) return;
+
+  const { Pool } = await import("pg");
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    await pool.query("DELETE FROM supporters WHERE email LIKE '%@example.invalid'");
+  } catch {
+    // Never worth failing a green run over a tidy-up.
+  } finally {
+    await pool.end();
+  }
+});

@@ -7,6 +7,7 @@ import { SchoolBus } from "@/components/school-bus";
 import { ButtonLink, Eyebrow, SectionTitle } from "@/components/ui";
 import { getKitchenReport } from "@/lib/kitchen";
 import { Money, MoneyText } from "@/components/money";
+import { ProjectItems } from "@/components/project-items";
 import { busPrice } from "@/lib/money";
 import { pageMeta } from "@/lib/seo";
 import { RelatedLinks } from "@/components/related-links";
@@ -170,6 +171,14 @@ export default async function TransportPage() {
           </dl>
         </div>
       </section>
+
+      {/*
+        The bus, as the ledger holds it. One line today — but it is the same
+        rung the playground and the streaming kit sit on, so it is drawn by the
+        same component rather than by a paragraph that would have to be rewritten
+        the day somebody itemises a deposit and a first term of fuel.
+      */}
+      <ProjectItems area="transport" />
 
       {/* How to support. */}
       <section className="px-6 py-24">

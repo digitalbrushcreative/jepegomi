@@ -1,5 +1,7 @@
 import { type GiveChoice, GiveForm } from "@/components/give-form";
+import { currentPartnerView } from "@/lib/partners";
 import { figuresRevealed } from "@/lib/reveal";
+import { currentSupporter } from "@/lib/supporters";
 
 /**
  * The giving form, with the ledger's figures taken out of it for a stranger.
@@ -19,6 +21,17 @@ import { figuresRevealed } from "@/lib/reveal";
  * from the choices before they are ever handed to a client component, and the
  * form's own `revealed` flag arrives already agreeing with them. There is
  * nothing to un-blur because there is nothing there.
+ *
+ * ## Who is asked first
+ *
+ * A signed-out giver is asked who they are before being asked what for. That is
+ * not an extra step — the form has always wanted a name and an email, just at
+ * the end — and moving it to the front is what opens the figures for the half
+ * that follows. See `detailsFirst` on the form, and `beginGivingAction`.
+ *
+ * A signed-in giver keeps the order they had, with their details filled in from
+ * whatever the ledger already holds. A partner has all of it; a supporter has an
+ * address and nothing more, because the door never asked them for anything else.
  *
  * ## What stays visible, and why that is not a compromise
  *
@@ -73,10 +86,38 @@ type PanelProps = Omit<
 export async function GivePanel(props: PanelProps) {
   const revealed = await figuresRevealed();
 
+  /*
+    Read only once we know somebody is signed in. For the great majority — who
+    are not — this is two queries nobody needed, and `figuresRevealed` has
+    already established the answer is no.
+  */
+  const view = revealed ? await currentPartnerView() : null;
+  const supporter = revealed && !view ? await currentSupporter() : null;
+
+  /*
+    A reader Simon added to a church is filled in as themselves, not as the
+    church. They are giving their own money if they give here — nothing about
+    being able to read a church's dashboard says a gift from them is that
+    church's — so the only thing borrowed is the address they signed in with.
+  */
+  const giver = view
+    ? {
+        name: view.reader ? "" : view.partner.name,
+        kind: view.reader ? undefined : view.partner.kind,
+        location: view.reader ? "" : view.partner.location,
+        contactName: view.reader ? view.reader.name : view.partner.contactName,
+        email: view.reader ? view.reader.email : view.partner.email,
+      }
+    : supporter
+      ? { email: supporter.email }
+      : undefined;
+
   return (
     <GiveForm
       {...props}
       revealed={revealed}
+      detailsFirst={!revealed}
+      giver={giver}
       choices={revealed ? props.choices : strip(props.choices)}
     />
   );
