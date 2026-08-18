@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getContent } from "@/cms/content";
+import { Icon } from "@/components/icons";
 import { NeedBar } from "@/components/need-meter";
 import { NeedUpdates } from "@/components/need-updates";
 import { PlaygroundEstimate } from "@/components/playground-estimate";
 import { PhotoStrip, type SitePhoto } from "@/components/photos";
 import { ProjectAccounts } from "@/components/project-accounts";
 import { ButtonLink, SectionTitle } from "@/components/ui";
+import { type Appeal, getAppeals } from "@/lib/appeals";
 import { formatDay } from "@/lib/dates";
 import {
   NEED_AREAS,
@@ -69,7 +71,7 @@ export async function PartnerDashboard({
   /** A strip above the name, inside the plum. Used by the /app preview. */
   notice?: ReactNode;
 }) {
-  const [needs, areaGifts, pledges, updates, published, site, accounts] =
+  const [needs, areaGifts, pledges, updates, published, site, accounts, appeals] =
     await Promise.all([
       listNeedsForPartner(partner.id),
       listAreaGiftsForPartner(partner.id),
@@ -78,6 +80,7 @@ export async function PartnerDashboard({
       getPublishedNeeds(),
       getContent("site"),
       getContent("projectAccounts"),
+      getAppeals(),
     ]);
 
   const projects = groupByProject(needs, areaGifts);
@@ -100,6 +103,21 @@ export async function PartnerDashboard({
   const theirAreas = new Set(projects.map((project) => project.area.id));
   const continuing = open.filter((need) => theirAreas.has(areaOf(need.area).id));
   const elsewhere = open.filter((need) => !theirAreas.has(areaOf(need.area).id));
+
+  /*
+    The rest of the ministry, offered as whole jobs rather than as items.
+
+    Itemised needs are the better invitation and come first, but the kitchen is
+    the only project anybody has broken into lines — so a church that built it
+    has an `elsewhere` of nothing at all, and the playground, the bus and the
+    streaming kit go unmentioned on the one page most likely to be read by
+    somebody who would fund them. Those three are costed as single jobs in
+    lib/appeals.ts, which is exactly the shape this section wants.
+
+    Filtered against the projects they already have, so nobody is invited to
+    take on a thing they are in the middle of paying for.
+  */
+  const newWays = appeals.filter((appeal) => !theirAreas.has(appeal.area.id));
 
   /*
     Photographs to stand in for progress notes nobody has written yet — see the
@@ -483,16 +501,11 @@ export async function PartnerDashboard({
             </div>
           </div>
 
-          {open.length > 0 && (
+          {(open.length > 0 || newWays.length > 0) && (
             <div className="mt-24 border-t border-sand-deep pt-16">
-              <SectionTitle>
-                {continuing.length > 0
-                  ? "More of what you started"
-                  : "New ways to partner"}
-              </SectionTitle>
-
               {continuing.length > 0 && (
                 <>
+                  <SectionTitle>More of what you started</SectionTitle>
                   <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
                     {continuing.length === 1
                       ? "One item"
@@ -520,24 +533,55 @@ export async function PartnerDashboard({
                 </>
               )}
 
-              {elsewhere.length > 0 && (
-                <>
-                  <h3 className="font-display mt-14 text-xl font-semibold">
-                    {continuing.length > 0
-                      ? "Elsewhere in the ministry"
-                      : "What is needed just now"}
-                  </h3>
-                  <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
-                    Everything else currently being asked for, with what is left
-                    on each.
+              {/*
+                The rest of the ministry, under its own heading and in its own
+                register.
+
+                This is not the section above with different rows in it. That
+                one is the work they are already in, and it can say "you of all
+                people should not have to go looking for it" because they have a
+                stake in every line of it. This one is a stranger's project being
+                mentioned to somebody who has no obligation to it whatever, and
+                the copy has to carry that or the page turns into a bill. Hence
+                "no part of what you have already done" — said plainly, once, so
+                that nobody has to wonder whether the kitchen is now thought
+                insufficient.
+              */}
+              {(newWays.length > 0 || elsewhere.length > 0) && (
+                <div className={continuing.length > 0 ? "mt-20" : ""}>
+                  <SectionTitle>New ways to partner</SectionTitle>
+                  <p className="mt-5 max-w-2xl leading-relaxed text-smoke">
+                    The other work going on here, in case any of it is close to
+                    your heart. This is no part of what you have already done and
+                    carries no expectation at all — it is here so that you can
+                    see it, not so that you will answer it.
                   </p>
 
-                  <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-                    {elsewhere.slice(0, 6).map((need) => (
-                      <OpenNeed key={need.id} need={need} />
-                    ))}
-                  </ul>
-                </>
+                  {newWays.length > 0 && (
+                    <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {newWays.map((appeal) => (
+                        <WholeProject key={appeal.area.id} appeal={appeal} />
+                      ))}
+                    </div>
+                  )}
+
+                  {elsewhere.length > 0 && (
+                    <>
+                      <h3 className="font-display mt-14 text-xl font-semibold">
+                        Items in the rest of the ministry
+                      </h3>
+                      <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
+                        Costed line by line, with what is left on each.
+                      </p>
+
+                      <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+                        {elsewhere.slice(0, 6).map((need) => (
+                          <OpenNeed key={need.id} need={need} />
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
               )}
 
               <ButtonLink href="/needs" className="mt-12">
@@ -590,6 +634,55 @@ function OpenNeed({ need }: { need: NeedWithLedger }) {
         </Link>
       </div>
     </li>
+  );
+}
+
+/**
+ * A whole project, offered to a partner who has no stake in it.
+ *
+ * The sister of `OpenNeed`, and the differences are all the ones between an item
+ * and a job. No meter, because these are not itemised and a bar across one would
+ * be a running total of what the ministry is holding in the bank — the argument
+ * is in lib/appeals.ts. No "still open", for the same reason: a balance is
+ * something only a ledger has.
+ *
+ * It leads with the work rather than the figure. Somebody reading this has
+ * already given to something else, so the question in front of them is whether
+ * they care about a playground, not whether $6,000 is a good price for one.
+ */
+function WholeProject({ appeal }: { appeal: Appeal }) {
+  return (
+    <div className="flex flex-col rounded-2xl bg-white p-7 shadow-warm">
+      <Icon name={appeal.area.icon} className="h-8 w-8 text-plum" />
+      <h4 className="font-display mt-4 text-xl leading-snug font-semibold">
+        <Link href={appeal.area.href} className="hover:text-plum">
+          {appeal.area.label}
+        </Link>
+      </h4>
+      <p className="mt-2.5 flex-1 text-sm leading-relaxed text-smoke">
+        {appeal.summary}
+      </p>
+
+      <p className="eyebrow mt-6 text-smoke">The whole job</p>
+      <p className="font-display tabular mt-1 text-2xl font-semibold text-plum">
+        {usd(appeal.costCents)}
+      </p>
+
+      <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <Link
+          href={`/give?for=${appeal.area.id}#pledge`}
+          className="text-sm font-bold text-plum underline underline-offset-4 hover:text-green"
+        >
+          Give to this
+        </Link>
+        <Link
+          href={appeal.area.href}
+          className="text-sm text-smoke underline underline-offset-4 hover:text-plum"
+        >
+          See the work
+        </Link>
+      </div>
+    </div>
   );
 }
 
