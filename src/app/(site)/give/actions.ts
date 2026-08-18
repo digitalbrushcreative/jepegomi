@@ -17,6 +17,9 @@ import {
   NEEDS_TAG,
   claimNeed,
   getNeedBySlug,
+  getParts,
+  getProjects,
+  getPublishedNeeds,
   needTag,
   recordGeneralPledge,
   setPledgeStatus,
@@ -24,8 +27,15 @@ import {
 import { findOrCreatePartner } from "@/lib/partners";
 import { releaseAbandonedPayments, startPayment } from "@/lib/payments";
 import { isPesapalConfigured } from "@/lib/pesapal";
+import { buildProjects } from "@/lib/projects";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
+import { figuresRevealed } from "@/lib/reveal";
 import { site } from "@/lib/site";
+import {
+  currentAsking,
+  findOrCreateSupporter,
+  startAsking,
+} from "@/lib/supporters";
 
 /**
  * Somebody offering a gift — the one action behind both giving forms.
@@ -566,4 +576,167 @@ export async function giveAction(
       sent,
     },
   };
+}
+
+/* ------------------------------------------------ saying who is giving first */
+
+/**
+ * The step the giving form opens with when nobody is signed in.
+ *
+ * ## Why the form asks this first now
+ *
+ * It always asked it — just at the end, after the amount. Moving it to the front
+ * costs a signed-out giver nothing, because they were going to fill it in
+ * anyway, and it buys them the thing the rest of the form is useless without:
+ * what the item they are looking at actually costs.
+ *
+ * Nothing here is verified and nothing here can be. The only way to prove an
+ * address is to email a code to it, and a giving form that stops halfway to send
+ * somebody to their inbox is a form a good share of people never come back to.
+ * The gift is worth more than the proof. What makes that safe is not this action
+ * but the narrowness of what it opens — one figure at a time, from
+ * `figureForAction` below. See lib/supporters.ts.
+ *
+ * ## What it deliberately does not do
+ *
+ * Write a partner row. `findOrCreatePartner` is for somebody whose gift has been
+ * accepted, and the Partners screen in /app is a queue Simon works through and
+ * vouches for one at a time — filling it with people who opened a form and
+ * wandered off is how that queue stops being worth opening. The same reasoning
+ * is already spelled out in `openPayment` above, which moved partner creation
+ * below every reason to refuse for exactly this.
+ *
+ * A supporters row *is* written, because that table is the one whose whole
+ * purpose is people who asked about money without giving any.
+ */
+export type BeganGiving = { ok: true } | { ok: false; error: string };
+
+export async function beginGivingAction(
+  _prev: BeganGiving | undefined,
+  formData: FormData,
+): Promise<BeganGiving> {
+  const name = String(formData.get("name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+
+  if (!name) return { ok: false, error: "Tell us who the gift is from." };
+  if (!email || !email.includes("@")) {
+    return { ok: false, error: "Enter an email address we can reply to." };
+  }
+
+  const attempt = await consume(
+    `giving-details:${await callerKey()}`,
+    RATES.givingDetails,
+  );
+  if (!attempt.ok) {
+    return {
+      ok: false,
+      error: `That is a lot of attempts from one place. Try again ${retryWording(attempt.retryAfterSeconds)}, or write to us and we will help.`,
+    };
+  }
+
+  try {
+    const supporter = await findOrCreateSupporter(email, "giving");
+    await startAsking(supporter.id);
+  } catch (error) {
+    /*
+      Logged and waved through. This step opens a convenience — a figure beside
+      the amount box — and the gift itself works without it. Refusing to let
+      somebody give because a supporters row could not be written would be
+      trading the thing that matters for the thing that does not.
+    */
+    console.error("Giving: could not record who is giving.", error);
+  }
+
+  return { ok: true };
+}
+
+/* --------------------------------------------- one figure, for one selection */
+
+/**
+ * What the item somebody just picked costs, and what is left on it.
+ *
+ * The narrow hole through the wall, and every part of it is narrow on purpose.
+ *
+ * It answers about **one** choice per call. That is the whole security argument
+ * for a rung whose details are unverifiable: a script can produce a thousand
+ * names, so what has to be bounded is not who asks but how much any one asking
+ * gets. A list would hand over the ledger; a row at a time, rate-limited, costs
+ * a scraper more than it costs the giver it exists for.
+ *
+ * It is served to somebody mid-way through the giving form *or* to anybody the
+ * site would show figures to anyway, and to nobody else — so this can never
+ * become a way around lib/reveal.ts, only a way to see the one thing you are
+ * about to pay for.
+ *
+ * Returns null rather than an error for anything it will not answer. There is
+ * nothing useful to tell the caller apart from "no figure", and a message that
+ * distinguished "you may not ask" from "no such item" would be a way to test
+ * which slugs exist.
+ */
+export type ChoiceFigure = {
+  /** What is left to give, on a costed item. */
+  openCents: number;
+  /** What the whole item comes to. Equal to `openCents` on a whole project. */
+  costCents: number;
+  /** True for one costed line, false for "all of it" on a project. */
+  isItem: boolean;
+};
+
+export async function figureForAction(
+  value: string,
+): Promise<ChoiceFigure | null> {
+  const allowed = (await figuresRevealed()) || (await currentAsking()) !== null;
+  if (!allowed) return null;
+
+  const attempt = await consume(
+    `figure:${await callerKey()}`,
+    RATES.figureLookup,
+  );
+  if (!attempt.ok) return null;
+
+  try {
+    /*
+      A whole project. The figure is what is still open across it — the same
+      number /give puts on the "all of it" row and /needs prints beside the
+      project, off the same `buildProjects`, because three places quoting a
+      project's price from three sums is three chances to quote it differently.
+    */
+    const area = areaForValue(value);
+    if (area) {
+      const [needs, parts, projects] = await Promise.all([
+        getPublishedNeeds(),
+        getParts(),
+        getProjects(),
+      ]);
+
+      const group = buildProjects(needs, parts, projects).find(
+        (project) => project.area.id === area.id,
+      );
+      if (!group || group.stillAskingCents <= 0) return null;
+
+      return {
+        openCents: group.stillAskingCents,
+        costCents: group.stillAskingCents,
+        isItem: false,
+      };
+    }
+
+    /*
+      One costed line. `getNeedBySlug` is the same read the item's own page and
+      `giveAction` use, so the ceiling shown here is the ceiling enforced on
+      submit — a form that offered a figure its own action would refuse would be
+      worse than one that offered none.
+    */
+    const need = await getNeedBySlug(value);
+    if (!need || need.closed || need.ledger.openCents <= 0) return null;
+
+    return {
+      openCents: need.ledger.openCents,
+      costCents: need.costCents,
+      isItem: true,
+    };
+  } catch (error) {
+    console.error("Giving: could not read the figure for a choice.", error);
+    return null;
+  }
 }

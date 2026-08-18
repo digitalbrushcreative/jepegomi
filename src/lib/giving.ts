@@ -69,13 +69,17 @@ export type NeedArea = (typeof NEED_AREAS)[number]["id"];
 export type Area = (typeof NEED_AREAS)[number];
 
 /**
- * What to call this area where a gift is being asked for.
+ * What the first project inside this arm should be called.
  *
- * The project name where there is one, the area's own label where there is not.
- * Every giving surface goes through this — /needs, the form's picker, a
- * partner's dashboard — so that the thing somebody chooses on one page is the
- * thing that is named back to them on the next. The bare `label` is for the
- * programme itself, and belongs on the programme's page.
+ * Once the only answer to "what is this raise called", and now only the seed
+ * for it. Projects are rows (see lib/projects.ts), so a title is data Simon can
+ * edit, and every page reads it off the row through `projectTitle`. What is
+ * left here is the name the backfill in lib/db.ts gives an arm's first project
+ * when it makes one — "Bus Upgrade" rather than "School transport", so nobody
+ * has to go and rename four things by hand on the day this shipped.
+ *
+ * It is still read by `areaForDesignation`, because a gift can arrive written
+ * as either name and both mean the same money.
  */
 export function projectName(area: Area): string {
   return "project" in area ? area.project : area.label;
@@ -201,6 +205,11 @@ export type Need = {
    * running order matters, is in lib/projects.ts.
    */
   partId: string | null;
+  /**
+   * Which raise this belongs to. Null only on a row the backfill in lib/db.ts
+   * has not reached — every write sets it. See lib/projects.ts.
+   */
+  projectId: string | null;
   costCents: number;
   /**
    * What it was expected to cost, when that is a different figure from what it

@@ -7,17 +7,20 @@ import { formatDay } from "@/lib/dates";
 import { PLEDGE_LABELS, areaOf, pledgeTowards } from "@/lib/giving";
 import { usd } from "@/lib/money";
 import {
+  listProjects,
   listGeneralPledges,
   listNeeds,
   listOpenPledges,
   listParts,
 } from "@/lib/needs";
-import { buildProjects } from "@/lib/projects";
+import { buildProjects, projectTitle } from "@/lib/projects";
 import { PageHeader, Stat } from "../ui";
 import {
   EditPartForm,
+  EditProjectForm,
   NewNeedForm,
   NewPartForm,
+  NewProjectForm,
   PledgeActions,
   SeedKitchenButton,
 } from "./need-forms";
@@ -36,11 +39,14 @@ export default async function AdminNeedsPage() {
 
   await ensureSchema();
 
-  const [needs, open, general, parts] = await Promise.all([
+  const [needs, open, general, parts,
+    projectRows,
+  ] = await Promise.all([
     listNeeds(),
     listOpenPledges(),
     listGeneralPledges(),
     listParts(),
+    listProjects(),
   ]);
 
   /*
@@ -50,7 +56,7 @@ export default async function AdminNeedsPage() {
     is waiting, and on what — and it must be the same calculation, or /app will
     say a part is open on a day /needs does not offer it.
   */
-  const projects = buildProjects(needs, parts);
+  const projects = buildProjects(needs, parts, projectRows);
 
   /*
     The queue is only the claims that have an item to open. A gift towards
@@ -331,9 +337,9 @@ export default async function AdminNeedsPage() {
             if (sequenced.length === 0) return null;
 
             return (
-              <div key={project.area.id}>
+              <div key={project.project?.id ?? project.area.id}>
                 <h3 className="font-display text-lg font-bold">
-                  {project.area.label}
+                  {projectTitle(project)}
                 </h3>
 
                 <ul className="mt-3 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8">
@@ -373,6 +379,7 @@ export default async function AdminNeedsPage() {
                       <EditPartForm
                         part={group.part!}
                         itemCount={group.needs.length}
+                        projects={projectRows}
                       />
                     </li>
                   ))}
@@ -383,9 +390,61 @@ export default async function AdminNeedsPage() {
         </div>
       )}
 
+      {/* ------------------------------------------------------- the projects */}
+      <h2 className="font-display mt-14 text-2xl font-bold">Projects</h2>
+      <p className="mt-2 max-w-2xl leading-relaxed text-smoke">
+        One raise, inside one arm of the ministry — and an arm may have as many
+        as it is raising for. The academy can want a classroom block and a
+        library at once, and each gets its own heading, its own items and its own
+        finish line. Moving a project to another programme takes its parts and
+        items with it.
+      </p>
+
+      <ul className="mt-6 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8">
+        {projectRows.map((project) => (
+          <li key={project.id} className="bg-white">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-black/8 px-6 py-4">
+              <p className="font-medium">
+                {project.title}{" "}
+                <span className="text-sm text-smoke">
+                  · {areaOf(project.area).label}
+                </span>
+              </p>
+              <span
+                className={`eyebrow rounded-full px-3 py-1 ${
+                  project.closed
+                    ? "bg-green/12 text-green"
+                    : project.published
+                      ? "bg-marigold/20 text-charcoal"
+                      : "bg-sand text-smoke"
+                }`}
+              >
+                {project.closed
+                  ? "Finished"
+                  : project.published
+                    ? "On the site"
+                    : "Draft"}
+              </span>
+            </div>
+
+            <EditProjectForm
+              project={project}
+              itemCount={
+                needs.filter((need) => need.projectId === project.id).length
+              }
+            />
+          </li>
+        ))}
+      </ul>
+
+      <h3 className="font-display mt-10 text-lg font-bold">Add a project</h3>
+      <div className="max-w-2xl">
+        <NewProjectForm />
+      </div>
+
       <h3 className="font-display mt-10 text-lg font-bold">Add a part</h3>
       <div className="max-w-2xl">
-        <NewPartForm />
+        <NewPartForm projects={projectRows} />
       </div>
 
       {/* --------------------------------------------- adding another */}
@@ -396,7 +455,7 @@ export default async function AdminNeedsPage() {
         finish, and &ldquo;support the ministry&rdquo; is not.
       </p>
       <div className="max-w-2xl">
-        <NewNeedForm parts={parts} />
+        <NewNeedForm parts={parts} projects={projectRows} />
       </div>
     </div>
   );

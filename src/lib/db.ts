@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 import { Pool } from "pg";
+import { NEED_AREAS, projectName } from "@/lib/giving";
 
 /**
  * The content store, and the giving ledger.
@@ -144,6 +146,53 @@ export function ensureSchema() {
     `;
 
     /*
+      A project: one named raise, inside one arm of the ministry.
+
+      This is the rung the ledger did not have, and its absence was a ceiling.
+      A need carried an `area` — the kitchen, the academy, the church — and the
+      area was treated as the project, which works exactly as long as each arm
+      of the ministry is raising for one thing at a time. The academy is not.
+      It wants a classroom block and a library and a water tank, and under the
+      old shape those were one undifferentiated pile of items under "Jepegomi
+      Academy", with no way to say that a gift was for the library or to show
+      the library finished while the block was still going up.
+
+      So the area goes back to being what it always was — which arm of the
+      ministry this belongs to, the thing lib/disclosure.ts and the project
+      accounts and a gift's designation are all keyed on — and the project
+      becomes a row. An arm of the ministry may now hold as many as it has.
+
+      `area` is not a foreign key: the arms live in code (lib/giving.ts), not in
+      a table, because they have pages and copy of their own. It is duplicated
+      onto the parts and needs below rather than being read through a join,
+      which is the same trade `need_parts` already made — every query that
+      groups by area would otherwise have to reach through two tables, and the
+      writes that could desynchronise it all go through one function.
+
+      `sequence` orders projects inside an arm. Unlike a part's sequence it
+      gates nothing: two projects in the same programme are not steps of one
+      job, and a library nobody has started is not waiting on a classroom
+      block. It is running order on a page and nothing more.
+    */
+    await db`
+      CREATE TABLE IF NOT EXISTS projects (
+        id         TEXT PRIMARY KEY,
+        area       TEXT NOT NULL,
+        slug       TEXT UNIQUE NOT NULL,
+        title      TEXT NOT NULL,
+        summary    TEXT NOT NULL DEFAULT '',
+        sequence   INTEGER NOT NULL DEFAULT 0,
+        published  BOOLEAN NOT NULL DEFAULT false,
+        closed     BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `;
+
+    await db`
+      CREATE INDEX IF NOT EXISTS projects_area_idx ON projects (area, sequence)
+    `;
+
+    /*
       A part of a project: the middle rung between "the kitchen build" and "two
       tonnes of cement".
 
@@ -177,6 +226,84 @@ export function ensureSchema() {
     await db`
       CREATE INDEX IF NOT EXISTS need_parts_area_idx ON need_parts (area, sequence)
     `;
+
+    /*
+      Which project a part and an item belong to.
+
+      ON DELETE SET NULL rather than CASCADE, for the reason the part column
+      below gives about headings: deleting a project must not take the record of
+      what people paid for with it. The rows come loose, keep their area, and go
+      on being visible under the arm of the ministry they were always filed in.
+
+      Nullable, and briefly null on every row that existed before this: the
+      backfill just below is what closes that, and it has to run after the
+      column exists.
+    */
+    await db`
+      ALTER TABLE need_parts ADD COLUMN IF NOT EXISTS project_id TEXT
+        REFERENCES projects(id) ON DELETE SET NULL
+    `;
+    await db`
+      ALTER TABLE needs ADD COLUMN IF NOT EXISTS project_id TEXT
+        REFERENCES projects(id) ON DELETE SET NULL
+    `;
+    await db`
+      CREATE INDEX IF NOT EXISTS needs_project_idx ON needs (project_id)
+    `;
+
+    /*
+      Every item that predates projects, given one.
+
+      One project per arm of the ministry that has anything in it, named after
+      the arm, carrying everything that was filed there. That is precisely the
+      shape the data already had — an area *was* the project — so this renames
+      nothing and moves nothing; it writes down a grouping that was previously
+      implied by a column.
+
+      Guarded on there being rows with no project, so it runs once and then
+      never does anything again. It cannot run twice and make two projects for
+      one area: the second pass finds nothing to gather.
+
+      The titles come from NEED_AREAS rather than being spelled out here, so an
+      arm renamed in code does not leave a project named after what it used to
+      be called. Simon can rename any of them afterwards in /app — from here on
+      a project's title is data, and this is only its first value.
+    */
+    const orphans = await db`
+      SELECT DISTINCT area FROM needs WHERE project_id IS NULL
+      UNION
+      SELECT DISTINCT area FROM need_parts WHERE project_id IS NULL
+    `;
+
+    for (const row of orphans as { area: string }[]) {
+      const area = NEED_AREAS.find((one) => one.id === row.area);
+      const title = area ? projectName(area) : row.area;
+      const slug = area ? area.id : row.area;
+
+      /*
+        `ON CONFLICT (slug) DO NOTHING` and then a read, rather than a read and
+        then an insert. Two deploys warming at once would otherwise both see no
+        project and both make one.
+      */
+      await db`
+        INSERT INTO projects (id, area, slug, title, summary, sequence, published)
+        VALUES (${randomUUID()}, ${row.area}, ${slug}, ${title}, '', 0, true)
+        ON CONFLICT (slug) DO NOTHING
+      `;
+
+      const found = await db`SELECT id FROM projects WHERE slug = ${slug}`;
+      const projectId = (found[0] as { id: string } | undefined)?.id;
+      if (!projectId) continue;
+
+      await db`
+        UPDATE needs SET project_id = ${projectId}
+        WHERE area = ${row.area} AND project_id IS NULL
+      `;
+      await db`
+        UPDATE need_parts SET project_id = ${projectId}
+        WHERE area = ${row.area} AND project_id IS NULL
+      `;
+    }
 
     /*
       Which part an item sits in, or null for one that belongs to the project as

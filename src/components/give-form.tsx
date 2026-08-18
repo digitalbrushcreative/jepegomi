@@ -325,7 +325,18 @@ function GroupHeading({
   part,
   summary,
 }: {
-  project: string;
+  /**
+   * The project's name, on the first heading of a project and on no other.
+   *
+   * Undefined on the headings after it, which is the whole of the fix for a bug
+   * that read as duplicated projects. A project that has been broken into steps
+   * produces one heading for its "all of it" row and another for each part, and
+   * this used to print the project's name on every one of them — so the
+   * playground, which has two parts, appeared three times down the list, and
+   * Jepegomi Digital twice. Nothing was repeated but the eyebrow; it was enough
+   * to make a giver think they were being offered the same thing over again.
+   */
+  project?: string;
   part?: string;
   summary?: string;
 }) {
@@ -337,7 +348,7 @@ function GroupHeading({
   */
   return (
     <div className="sticky top-0 z-10 border-b border-sand-deep bg-sand px-4 py-2.5">
-      <p className="eyebrow text-plum">{project}</p>
+      {project && <p className="eyebrow text-plum">{project}</p>}
       {part && (
         <p className="mt-1 text-sm font-semibold text-charcoal">{part}</p>
       )}
@@ -710,7 +721,13 @@ export function GiveForm({
                     <Fragment key={choice.value}>
                       {newPart && (
                         <GroupHeading
-                          project={choice.areaLabel}
+                          /*
+                            Only where the project itself changed. `newProject`
+                            implies `newPart`, so a project whose first row is
+                            already inside a part still gets its name and the
+                            step's together on one heading.
+                          */
+                          project={newProject ? choice.areaLabel : undefined}
                           part={choice.partTitle}
                           summary={choice.partSummary}
                         />

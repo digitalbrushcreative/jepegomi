@@ -8,20 +8,25 @@ import { parseUsd } from "@/lib/money";
 import { NEED_ICONS } from "@/lib/giving";
 import { removeUpdatePhoto, saveUpdatePhoto } from "@/lib/need-photos";
 import {
+  defaultProjectForArea,
   NEEDS_TAG,
   attachUpdatePhoto,
   createNeed,
   createNeedUpdate,
   createPart,
+  createProject,
   deleteNeed,
   deleteNeedUpdate,
   deletePart,
+  deleteProject,
   getPartById,
+  getProjectById,
   needTag,
   setPledgeStatus,
   slugOfNeed,
   updateNeed,
   updatePart,
+  updateProject,
 } from "@/lib/needs";
 
 /**
@@ -111,6 +116,20 @@ async function readNeedForm(formData: FormData) {
   const part = rawPart ? await getPartById(rawPart) : null;
 
   /*
+    A part already belongs to a project, so an item in one takes both its
+    project and its area from the part and the boxes on the form are ignored.
+    That is the same rule the area has always followed, one rung up: an item
+    filed under a part of a different project would sit in a list it is not
+    part of.
+  */
+  const rawProject = String(formData.get("projectId") ?? "").trim();
+  const project = part
+    ? await getProjectById(part.projectId ?? "")
+    : rawProject
+      ? await getProjectById(rawProject)
+      : null;
+
+  /*
     Blank is not zero here. An estimate nobody recorded and an estimate of
     nothing are different facts, and only the first is ordinary — most items were
     never estimated at anything other than what they cost. `parseUsd` gives null
@@ -123,8 +142,13 @@ async function readNeedForm(formData: FormData) {
       title,
       summary: String(formData.get("summary") ?? "").trim(),
       detail: String(formData.get("detail") ?? "").trim(),
-      area: knownArea(part ? part.area : String(formData.get("area") ?? "other")),
+      area: knownArea(
+        part
+          ? part.area
+          : (project?.area ?? String(formData.get("area") ?? "other")),
+      ),
       partId: part?.id ?? null,
+      projectId: project?.id ?? part?.projectId ?? null,
       costCents,
       estimatedCents,
       note: String(formData.get("note") ?? "").trim(),
@@ -136,9 +160,34 @@ async function readNeedForm(formData: FormData) {
   };
 }
 
-function readPartForm(formData: FormData) {
+async function readPartForm(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Give the part a name — “walls up”." as const };
+
+  /*
+    A part is a step of one raise, so it takes its area from the project it is
+    put in rather than from a box of its own. Two fields that must agree are two
+    fields that will eventually disagree.
+  */
+  const rawProject = String(formData.get("projectId") ?? "").trim();
+  const project = rawProject ? await getProjectById(rawProject) : null;
+
+  return {
+    input: {
+      area: knownArea(project?.area ?? String(formData.get("area") ?? "other")),
+      projectId: project?.id ?? null,
+      title,
+      summary: String(formData.get("summary") ?? "").trim(),
+      sequence: Number(formData.get("sequence") ?? 0) || 0,
+    },
+  };
+}
+
+function readProjectForm(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) {
+    return { error: "Give the project a name — “New Classroom Block”." as const };
+  }
 
   return {
     input: {
@@ -146,8 +195,81 @@ function readPartForm(formData: FormData) {
       title,
       summary: String(formData.get("summary") ?? "").trim(),
       sequence: Number(formData.get("sequence") ?? 0) || 0,
+      published: formData.get("published") === "on",
+      closed: formData.get("closed") === "on",
     },
   };
+}
+
+/**
+ * A raise, inside one arm of the ministry.
+ *
+ * An arm may have as many as it is raising for, which is the whole reason this
+ * screen exists: the academy wants a classroom block and a library, and before
+ * projects were rows those were one undifferentiated pile of items under
+ * "Jepegomi Academy".
+ *
+ * Unpublished by default is the wrong default here and it is deliberate. A
+ * project is a heading; it shows up where its items do, and an item carries its
+ * own decision about whether the public may see it — so a project made and left
+ * alone changes nothing on the site, and one made and forgotten in draft would
+ * silently hide items somebody had published. The form ticks the box.
+ */
+export async function createProjectAction(_prev: FormState, formData: FormData) {
+  await requireUser();
+
+  const parsed = readProjectForm(formData);
+  if ("error" in parsed) return { error: parsed.error };
+
+  try {
+    await createProject(parsed.input);
+  } catch (error) {
+    console.error("Giving: could not create a project.", error);
+    return { error: "Could not save that. The database did not accept it." };
+  }
+
+  refresh();
+  return { saved: true };
+}
+
+export async function updateProjectAction(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+) {
+  await requireUser();
+
+  const parsed = readProjectForm(formData);
+  if ("error" in parsed) return { error: parsed.error };
+
+  try {
+    await updateProject(id, parsed.input);
+  } catch (error) {
+    console.error("Giving: could not update a project.", error);
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Could not save that. The database did not accept it.",
+    };
+  }
+
+  refresh();
+  return { saved: true };
+}
+
+/**
+ * Deleting a project, which is deleting a heading and nothing else.
+ *
+ * Its parts and items come loose rather than going with it — both columns are
+ * ON DELETE SET NULL — and `buildProjects` gathers whatever has no project into
+ * a group of its own, so nothing claimed against them disappears from a page.
+ */
+export async function deleteProjectAction(id: string) {
+  await requireUser();
+
+  await deleteProject(id);
+  refresh();
 }
 
 /**
@@ -160,7 +282,7 @@ function readPartForm(formData: FormData) {
 export async function createPartAction(_prev: FormState, formData: FormData) {
   await requireUser();
 
-  const parsed = readPartForm(formData);
+  const parsed = await readPartForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
   try {
@@ -186,7 +308,7 @@ export async function updatePartAction(_prev: FormState, formData: FormData) {
   await requireUser();
 
   const id = String(formData.get("id") ?? "");
-  const parsed = readPartForm(formData);
+  const parsed = await readPartForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
   try {
@@ -391,10 +513,13 @@ const neverReached: LetterLine[] = [
 export async function seedKitchenNeedsAction() {
   await requireUser();
 
+  const projectId = await defaultProjectForArea("kitchen");
+
   for (const [index, line] of neverReached.entries()) {
     await createNeed({
       title: line.item,
       summary: line.summary,
+      projectId,
       detail: [
         "One of the three items that would finish the kitchen project. The $8,000 gift built the kitchen itself and did everything it was given for; this is the next step.",
         line.note,

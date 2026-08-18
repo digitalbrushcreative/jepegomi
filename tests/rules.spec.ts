@@ -5,7 +5,19 @@ import {
   opensAccounts,
   stakeIn,
 } from "@/lib/disclosure";
-import type { Partner, PartnerProject } from "@/lib/giving";
+import type {
+  NeedWithLedger,
+  Partner,
+  PartnerProject,
+} from "@/lib/giving";
+import {
+  type NeedPart,
+  type Project,
+  buildProjects,
+  laterParts,
+  projectTitle,
+  readyParts,
+} from "@/lib/projects";
 import { sniffImage } from "@/lib/image-upload";
 import { recipientsFor } from "@/lib/letters";
 import { named, oneLine } from "@/lib/mail/send";
@@ -292,6 +304,138 @@ test.describe("names on their way into an email header", () => {
   test("a subject line stays one line", () => {
     const subject = oneLine("Gift\r\nBcc: someone@example.com");
     expect(subject).not.toMatch(/[\r\n]/);
+  });
+});
+
+/* ------------------------------------------------------- projects and parts */
+
+test.describe("more than one project in one programme", () => {
+  /*
+    The ceiling this rung was added to lift. An area used to *be* the project,
+    so an arm of the ministry could raise for exactly one thing — fine while the
+    kitchen was the only thing anybody was building, wrong the moment the
+    academy wants a classroom block and a library at once.
+  */
+  const projectRow = (id: string, area: string, sequence: number): Project => ({
+    id,
+    area,
+    slug: id,
+    title: id,
+    summary: "",
+    sequence,
+    published: true,
+    closed: false,
+    createdAt: new Date(0).toISOString(),
+  });
+
+  const part = (
+    id: string,
+    area: string,
+    projectId: string,
+    sequence: number,
+  ): NeedPart => ({
+    id,
+    area,
+    projectId,
+    title: id,
+    summary: "",
+    sequence,
+    createdAt: new Date(0).toISOString(),
+  });
+
+  const need = (
+    id: string,
+    area: string,
+    projectId: string | null,
+    partId: string | null,
+    costCents: number,
+    claimedCents = 0,
+  ): NeedWithLedger =>
+    ({
+      id,
+      slug: id,
+      title: id,
+      area,
+      projectId,
+      partId,
+      costCents,
+      closed: false,
+      published: true,
+      ledger: {
+        costCents,
+        receivedCents: 0,
+        promisedCents: claimedCents,
+        openCents: Math.max(0, costCents - claimedCents),
+        fullyClaimed: costCents > 0 && claimedCents >= costCents,
+      },
+    }) as unknown as NeedWithLedger;
+
+  test("two projects in one area come out as two", () => {
+    const groups = buildProjects(
+      [
+        need("cement", "academy", "block", null, 1000),
+        need("shelves", "academy", "library", null, 600),
+      ],
+      [],
+      [projectRow("block", "academy", 1), projectRow("library", "academy", 2)],
+    );
+
+    expect(groups).toHaveLength(2);
+    expect(groups.map((one) => one.project?.id)).toEqual(["block", "library"]);
+    // Each keeps its own money. This is the whole point of the rung.
+    expect(groups[0].stillAskingCents).toBe(1000);
+    expect(groups[1].stillAskingCents).toBe(600);
+  });
+
+  test("a sequence gates inside one project and never across two", () => {
+    /*
+      "Walls up" holding back "roof on" is a sequence. The academy's library
+      holding back the academy's classroom block never was one — and under the
+      old shape, where parts were numbered per area, it did exactly that.
+    */
+    const groups = buildProjects(
+      [
+        need("walls", "academy", "block", "block-1", 1000),
+        need("roof", "academy", "block", "block-2", 1000),
+        need("shelves", "academy", "library", "library-1", 600),
+      ],
+      [
+        part("block-1", "academy", "block", 1),
+        part("block-2", "academy", "block", 2),
+        part("library-1", "academy", "library", 1),
+      ],
+      [projectRow("block", "academy", 1), projectRow("library", "academy", 2)],
+    );
+
+    const block = groups.find((one) => one.project?.id === "block")!;
+    const library = groups.find((one) => one.project?.id === "library")!;
+
+    // Inside the block, the roof waits on the walls.
+    expect(readyParts(block).map((g) => g.part?.id)).toEqual(["block-1"]);
+    expect(laterParts(block).map((g) => g.part?.id)).toEqual(["block-2"]);
+
+    // The library is untouched by any of it.
+    expect(readyParts(library).map((g) => g.part?.id)).toEqual(["library-1"]);
+    expect(laterParts(library)).toHaveLength(0);
+  });
+
+  test("an item whose project is gone is still shown", () => {
+    /*
+      Both columns pointing at a project are ON DELETE SET NULL, so deleting one
+      leaves its items loose rather than taking them. Money has been claimed
+      against these; an item that appears on no page is the one outcome worse
+      than an untidy heading.
+    */
+    const groups = buildProjects(
+      [need("orphan", "academy", null, null, 500)],
+      [],
+      [projectRow("block", "academy", 1)],
+    );
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].project).toBeNull();
+    expect(projectTitle(groups[0])).toBe("Jepegomi Academy");
+    expect(groups[0].stillAskingCents).toBe(500);
   });
 });
 

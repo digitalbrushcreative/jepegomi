@@ -45,10 +45,40 @@ import { percentOf } from "@/lib/money";
  * three of them implementing this rule slightly differently.
  */
 
+/**
+ * One named raise, inside one arm of the ministry.
+ *
+ * The rung the ledger did not used to have. An `area` was doing this job, which
+ * caps a programme at one project — fine while the kitchen was the only thing
+ * anybody was building, wrong the moment the academy wants a classroom block
+ * and a library at once. See the note on the table in lib/db.ts.
+ *
+ * `area` is carried here as well as on the parts and needs below it. That is a
+ * duplication on purpose and the same one `need_parts` already made: every
+ * query that groups by arm of the ministry would otherwise reach through two
+ * joins, and the writes that could pull the copies apart all go through
+ * `updateProject`.
+ */
+export type Project = {
+  id: string;
+  /** Which arm of the ministry. Matches an id in NEED_AREAS. */
+  area: string;
+  slug: string;
+  title: string;
+  summary: string;
+  /** Running order inside its arm. Gates nothing — see the note in lib/db.ts. */
+  sequence: number;
+  published: boolean;
+  closed: boolean;
+  createdAt: string;
+};
+
 export type NeedPart = {
   id: string;
-  /** Which project. Matches an id in NEED_AREAS. */
+  /** Which arm of the ministry. Matches an id in NEED_AREAS. */
   area: string;
+  /** Which project it is a step of. Null only on a row not yet backfilled. */
+  projectId: string | null;
   title: string;
   summary: string;
   /** Lower comes first. Parts sharing a number open together. */
@@ -78,12 +108,25 @@ export type PartGroup = {
 };
 
 export type ProjectGroup = {
+  /**
+   * The raise itself. Null for items whose project row is missing — an area
+   * that has needs and no project yet, which the backfill in lib/db.ts closes
+   * on the next boot. Kept rather than dropped, because an item nobody can see
+   * is worse than one under a heading built from its area.
+   */
+  project: Project | null;
+  /** The arm of the ministry it sits in. */
   area: Area;
   /** In running order: the sequenced parts, then anything not in a part. */
   parts: PartGroup[];
   ledger: Ledger;
   stillAskingCents: number;
 };
+
+/** What to call one of these on a page, whether or not it has its row yet. */
+export function projectTitle(group: ProjectGroup): string {
+  return group.project ? group.project.title : group.area.label;
+}
 
 /** The parts of a project a gift can go to today. */
 export function readyParts(project: ProjectGroup) {
@@ -150,10 +193,18 @@ function group(part: NeedPart | null, needs: NeedWithLedger[]): PartGroup {
 /**
  * The whole ledger, gathered into projects and parts and put in order.
  *
- * Projects come out in the ministry's own running order — the order of
- * NEED_AREAS — rather than in whatever order the database handed the rows
- * back, for the same reason the partner dashboard does it: the kitchen build
- * is not more important than the academy because somebody typed it first.
+ * Two levels of ordering, and they mean different things. The arms of the
+ * ministry come out in the order of NEED_AREAS, for the reason the partner
+ * dashboard does the same: the kitchen build is not more important than the
+ * academy because somebody typed it first. Inside an arm the projects come out
+ * by their own `sequence`, which is running order on a page and gates nothing —
+ * a library nobody has started is not waiting on a classroom block.
+ *
+ * Parts are the level that *does* gate, and the rule is unchanged and still
+ * lives here. It now runs per project rather than per area, which is the whole
+ * point of the rung: "walls up" holding back "roof on" is a sequence, and the
+ * academy's library holding back the academy's water tank never was one. Under
+ * the old shape those shared a numbering and blocked each other.
  *
  * A project with nothing under it at all is dropped. A *part* with nothing
  * under it is kept, because /app has to be able to see a part that has just
@@ -162,73 +213,109 @@ function group(part: NeedPart | null, needs: NeedWithLedger[]): PartGroup {
 export function buildProjects(
   needs: NeedWithLedger[],
   parts: NeedPart[],
+  projects: Project[],
 ): ProjectGroup[] {
-  const projects: ProjectGroup[] = [];
+  const built: ProjectGroup[] = [];
 
   for (const area of NEED_AREAS) {
-    const mine = needs.filter((need) => areaOf(need.area).id === area.id);
-    const myParts = parts
-      .filter((part) => areaOf(part.area).id === area.id)
+    const areaNeeds = needs.filter((need) => areaOf(need.area).id === area.id);
+    const areaParts = parts.filter((part) => areaOf(part.area).id === area.id);
+
+    if (areaNeeds.length === 0 && areaParts.length === 0) continue;
+
+    /*
+      Every project in this arm that has anything in it, plus one standing for
+      whatever has no project at all. That last is not a normal state — the
+      backfill in lib/db.ts gives every row one — but a need whose project was
+      deleted comes loose, and an item nobody can see is worse than an item
+      under a heading built from its area. Same argument as the loose parts
+      below, one rung up.
+    */
+    const mine = projects
+      .filter((project) => project.area === area.id)
       .sort(
         (a, b) =>
           a.sequence - b.sequence || a.createdAt.localeCompare(b.createdAt),
       );
 
-    if (mine.length === 0 && myParts.length === 0) continue;
+    const known = new Set(mine.map((project) => project.id));
+    const orphaned =
+      areaNeeds.some((need) => !need.projectId || !known.has(need.projectId)) ||
+      areaParts.some((part) => !part.projectId || !known.has(part.projectId));
 
-    /*
-      Parts sharing a sequence number are one step and open together — two
-      trades that can run at the same time should not have to be given a false
-      order to sit in this list.
-    */
-    const steps = new Map<number, NeedPart[]>();
-    for (const part of myParts) {
-      steps.set(part.sequence, [...(steps.get(part.sequence) ?? []), part]);
+    const buckets: (Project | null)[] = orphaned ? [...mine, null] : mine;
+
+    for (const project of buckets) {
+      const inProject = (row: { projectId: string | null }) =>
+        project
+          ? row.projectId === project.id
+          : !row.projectId || !known.has(row.projectId);
+
+      const projectNeeds = areaNeeds.filter(inProject);
+      const projectParts = areaParts
+        .filter(inProject)
+        .sort(
+          (a, b) =>
+            a.sequence - b.sequence || a.createdAt.localeCompare(b.createdAt),
+        );
+
+      if (projectNeeds.length === 0 && projectParts.length === 0) continue;
+
+      /*
+        Parts sharing a sequence number are one step and open together — two
+        trades that can run at the same time should not have to be given a false
+        order to sit in this list.
+      */
+      const steps = new Map<number, NeedPart[]>();
+      for (const part of projectParts) {
+        steps.set(part.sequence, [...(steps.get(part.sequence) ?? []), part]);
+      }
+
+      const groups: PartGroup[] = [];
+
+      /*
+        The first part still asking for money. Once it is found, everything after
+        it in the running order waits on it — and waits on *it*, not on whatever
+        immediately precedes them, because that is the honest answer to "why can
+        I not give to this yet".
+      */
+      let blocker: NeedPart | null = null;
+
+      for (const [, step] of [...steps.entries()].sort(([a], [b]) => a - b)) {
+        const made = step.map((part) => ({
+          ...group(
+            part,
+            projectNeeds.filter((need) => need.partId === part.id),
+          ),
+          ready: blocker === null,
+          waitsOn: blocker,
+        }));
+
+        groups.push(...made);
+        blocker ??= made.find((one) => !one.settled)?.part ?? null;
+      }
+
+      /*
+        Anything not in a part — including an item whose part was deleted out from
+        under it, which is why this is a lookup against the parts we actually have
+        rather than a null check on `partId`. An orphan has to land somewhere
+        visible; the alternative is money quietly claimed against an item that
+        appears on no page.
+      */
+      const loose = projectNeeds.filter(
+        (need) => !projectParts.some((part) => part.id === need.partId),
+      );
+      if (loose.length > 0) groups.push(group(null, loose));
+
+      built.push({
+        project,
+        area,
+        parts: groups,
+        ledger: sumLedger(projectNeeds),
+        stillAskingCents: asking(projectNeeds),
+      });
     }
-
-    const groups: PartGroup[] = [];
-
-    /*
-      The first part still asking for money. Once it is found, everything after
-      it in the running order waits on it — and waits on *it*, not on whatever
-      immediately precedes them, because that is the honest answer to "why can
-      I not give to this yet".
-    */
-    let blocker: NeedPart | null = null;
-
-    for (const [, step] of [...steps.entries()].sort(([a], [b]) => a - b)) {
-      const made = step.map((part) => ({
-        ...group(
-          part,
-          mine.filter((need) => need.partId === part.id),
-        ),
-        ready: blocker === null,
-        waitsOn: blocker,
-      }));
-
-      groups.push(...made);
-      blocker ??= made.find((one) => !one.settled)?.part ?? null;
-    }
-
-    /*
-      Anything not in a part — including an item whose part was deleted out from
-      under it, which is why this is a lookup against the parts we actually have
-      rather than a null check on `partId`. An orphan has to land somewhere
-      visible; the alternative is money quietly claimed against an item that
-      appears on no page.
-    */
-    const loose = mine.filter(
-      (need) => !myParts.some((part) => part.id === need.partId),
-    );
-    if (loose.length > 0) groups.push(group(null, loose));
-
-    projects.push({
-      area,
-      parts: groups,
-      ledger: sumLedger(mine),
-      stillAskingCents: asking(mine),
-    });
   }
 
-  return projects;
+  return built;
 }

@@ -15,7 +15,7 @@ import type {
   ProjectBudget,
 } from "@/lib/giving";
 import { percentOf } from "@/lib/money";
-import type { NeedPart } from "@/lib/projects";
+import type { NeedPart, Project } from "@/lib/projects";
 
 /**
  * The giving ledger.
@@ -67,6 +67,7 @@ function toNeed(row: Row): Need {
     detail: str(row.detail),
     area: str(row.area),
     partId: row.part_id ? str(row.part_id) : null,
+    projectId: row.project_id ? str(row.project_id) : null,
     costCents: int(row.cost_cents),
     estimatedCents:
       row.estimated_cents === null || row.estimated_cents === undefined
@@ -106,9 +107,24 @@ function toPart(row: Row): NeedPart {
   return {
     id: str(row.id),
     area: str(row.area),
+    projectId: row.project_id ? str(row.project_id) : null,
     title: str(row.title),
     summary: str(row.summary),
     sequence: int(row.sequence),
+    createdAt: toIso(row.created_at),
+  };
+}
+
+function toProject(row: Row): Project {
+  return {
+    id: str(row.id),
+    area: str(row.area),
+    slug: str(row.slug),
+    title: str(row.title),
+    summary: str(row.summary),
+    sequence: int(row.sequence),
+    published: Boolean(row.published),
+    closed: Boolean(row.closed),
     createdAt: toIso(row.created_at),
   };
 }
@@ -344,6 +360,33 @@ export async function getParts(): Promise<NeedPart[]> {
   }
 }
 
+/**
+ * Every project, for the pages that draw the ledger.
+ *
+ * Unpublished ones included, and filtered by the caller rather than here. The
+ * public pages want only what is published; /app wants a project that has been
+ * made and not yet itemised, which is exactly the row a `WHERE published` would
+ * hide from the only screen that can fix it. One query, one cache entry, and
+ * the decision about who sees what stays where the audience is known.
+ */
+export async function getProjects(): Promise<Project[]> {
+  "use cache";
+  cacheTag(NEEDS_TAG);
+  cacheLife("max");
+
+  if (!isDatabaseConfigured()) return [];
+
+  try {
+    const rows = await sql()`
+      SELECT * FROM projects ORDER BY area, sequence, created_at
+    `;
+    return rows.map(toProject);
+  } catch (error) {
+    console.error("Giving: could not read the projects.", error);
+    return [];
+  }
+}
+
 /** The progress reported back on a need — newest first. */
 export async function getNeedUpdates(slug: string): Promise<NeedUpdate[]> {
   "use cache";
@@ -408,6 +451,18 @@ export async function listParts(): Promise<NeedPart[]> {
     SELECT * FROM need_parts ORDER BY area, sequence, created_at
   `;
   return rows.map(toPart);
+}
+
+export async function listProjects(): Promise<Project[]> {
+  const rows = await sql()`
+    SELECT * FROM projects ORDER BY area, sequence, created_at
+  `;
+  return rows.map(toProject);
+}
+
+export async function getProjectById(id: string): Promise<Project | null> {
+  const rows = await sql()`SELECT * FROM projects WHERE id = ${id}`;
+  return rows[0] ? toProject(rows[0]) : null;
 }
 
 export async function getNeedById(id: string): Promise<NeedWithLedger | null> {
@@ -628,6 +683,11 @@ export type NeedInput = {
    */
   area: string;
   partId: string | null;
+  /**
+   * The raise it belongs to. Taken from the part when it has one, so that an
+   * item can never sit in a part belonging to a different project.
+   */
+  projectId: string | null;
   costCents: number;
   /** What it was expected to cost, if that differs. Null is the ordinary answer. */
   estimatedCents: number | null;
@@ -645,10 +705,11 @@ export async function createNeed(input: NeedInput) {
   const slug = await uniqueSlug(input.title);
 
   await sql()`
-    INSERT INTO needs (id, slug, title, summary, detail, area, part_id, cost_cents,
+    INSERT INTO needs (id, slug, title, summary, detail, area, part_id, project_id,
+                       cost_cents,
                        estimated_cents, note, icon, published, closed, position)
     VALUES (${id}, ${slug}, ${input.title}, ${input.summary}, ${input.detail},
-            ${input.area}, ${input.partId}, ${input.costCents},
+            ${input.area}, ${input.partId}, ${input.projectId}, ${input.costCents},
             ${input.estimatedCents}, ${input.note}, ${input.icon},
             ${input.published}, ${input.closed}, ${input.position})
   `;
@@ -682,6 +743,7 @@ export async function updateNeed(id: string, input: NeedInput) {
     UPDATE needs SET
       slug = ${slug}, title = ${input.title}, summary = ${input.summary},
       detail = ${input.detail}, area = ${input.area}, part_id = ${input.partId},
+      project_id = ${input.projectId},
       cost_cents = ${input.costCents},
       estimated_cents = ${input.estimatedCents}, note = ${input.note},
       icon = ${input.icon},
@@ -692,10 +754,137 @@ export async function updateNeed(id: string, input: NeedInput) {
   return { id, slug, previousSlug: existing.slug };
 }
 
+/* ------------------------------------------------------------ whole projects */
+
+export type ProjectInput = {
+  area: string;
+  title: string;
+  summary: string;
+  sequence: number;
+  published: boolean;
+  closed: boolean;
+};
+
+/**
+ * Where a line created by something other than the needs screen should land.
+ *
+ * Three places write items nobody typed into the need form: a spending line, a
+ * budget line reconstructed from a partner's letter, an import. All of them
+ * know the arm of the ministry and none of them knows or should know which
+ * raise inside it — so they take the first project filed there, which is the
+ * one the backfill made and, for an arm with a single raise, the only answer
+ * there is.
+ *
+ * Null for an arm with no project at all, and null is a legitimate answer:
+ * `buildProjects` gathers projectless items under a heading of their own rather
+ * than dropping them, so a line written here is visible before anybody has got
+ * round to making the project it belongs in.
+ */
+export async function defaultProjectForArea(area: string): Promise<string | null> {
+  const rows = await sql()`
+    SELECT id FROM projects WHERE area = ${area}
+    ORDER BY sequence, created_at LIMIT 1
+  `;
+  return rows[0] ? str(rows[0].id) : null;
+}
+
+export async function createProject(input: ProjectInput) {
+  const id = randomUUID();
+  const slug = await uniqueProjectSlug(input.title);
+
+  await sql()`
+    INSERT INTO projects (id, area, slug, title, summary, sequence, published, closed)
+    VALUES (${id}, ${input.area}, ${slug}, ${input.title}, ${input.summary},
+            ${input.sequence}, ${input.published}, ${input.closed})
+  `;
+
+  return { id, slug };
+}
+
+/**
+ * Moving or renaming a project — including, sometimes, to a different arm of
+ * the ministry.
+ *
+ * When the area changes its parts and its items go with it, exactly as
+ * `updatePart` carries its items. The area is duplicated down the three tables
+ * so that nothing has to join to group by it, and the price of that is that a
+ * move has to be applied in three places or the ledger disagrees with itself:
+ * a project filed under the academy whose items are still filed under the
+ * church would show up in one list with no items and another with items and no
+ * heading.
+ *
+ * This is the door out of the decision not to re-parent anything when projects
+ * arrived. The kitchen and the playground are arms of the ministry today
+ * because they always were, and moving them by hand in a migration would have
+ * rewritten what existing gifts are filed under. Moving one here is a thing
+ * Simon can do deliberately, having looked at it.
+ */
+export async function updateProject(id: string, input: ProjectInput) {
+  const existing = await getProjectById(id);
+  if (!existing) throw new Error("That project no longer exists.");
+
+  // The slug is the project's name in a URL. It only moves if the title does.
+  const slug =
+    existing.title === input.title
+      ? existing.slug
+      : await uniqueProjectSlug(input.title, id);
+
+  await sql()`
+    UPDATE projects SET
+      area = ${input.area}, slug = ${slug}, title = ${input.title},
+      summary = ${input.summary}, sequence = ${input.sequence},
+      published = ${input.published}, closed = ${input.closed}
+    WHERE id = ${id}
+  `;
+
+  if (existing.area !== input.area) {
+    await sql()`
+      UPDATE need_parts SET area = ${input.area} WHERE project_id = ${id}
+    `;
+    await sql()`UPDATE needs SET area = ${input.area} WHERE project_id = ${id}`;
+  }
+
+  return { id, slug, previousSlug: existing.slug };
+}
+
+/**
+ * Deleting a project, whatever is claimed against its items.
+ *
+ * Allowed, like deleting a part and unlike deleting a need, and for the same
+ * reason: it destroys nothing. Both columns pointing here are ON DELETE SET
+ * NULL, so the parts and items come loose, keep their area, and go on being
+ * shown — `buildProjects` gathers whatever has no project into a group of its
+ * own rather than dropping it. Returns how many items were let go so /app can
+ * say what just happened.
+ */
+export async function deleteProject(id: string) {
+  const rows = await sql()`SELECT id FROM needs WHERE project_id = ${id}`;
+  await sql()`DELETE FROM projects WHERE id = ${id}`;
+  return rows.length;
+}
+
+/** A project slug nothing else is using, by adding -2, -3 … if it has to. */
+async function uniqueProjectSlug(base: string, exceptId?: string) {
+  const root = slugify(base) || "project";
+
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const candidate = attempt === 0 ? root : `${root}-${attempt + 1}`;
+    const rows = await sql()`
+      SELECT 1 FROM projects
+      WHERE slug = ${candidate} AND id <> ${exceptId ?? ""}
+    `;
+    if (rows.length === 0) return candidate;
+  }
+
+  return `${root}-${randomUUID().slice(0, 8)}`;
+}
+
 /* ------------------------------------------------------- parts of a project */
 
 export type PartInput = {
   area: string;
+  /** The raise this is a step of. The area above is derived from it. */
+  projectId: string | null;
   title: string;
   summary: string;
   sequence: number;
@@ -710,8 +899,9 @@ export async function createPart(input: PartInput) {
   const id = randomUUID();
 
   await sql()`
-    INSERT INTO need_parts (id, area, title, summary, sequence)
-    VALUES (${id}, ${input.area}, ${input.title}, ${input.summary}, ${input.sequence})
+    INSERT INTO need_parts (id, area, project_id, title, summary, sequence)
+    VALUES (${id}, ${input.area}, ${input.projectId}, ${input.title},
+            ${input.summary}, ${input.sequence})
   `;
 
   return id;
@@ -729,12 +919,22 @@ export async function createPart(input: PartInput) {
 export async function updatePart(id: string, input: PartInput) {
   await sql()`
     UPDATE need_parts SET
-      area = ${input.area}, title = ${input.title},
+      area = ${input.area}, project_id = ${input.projectId},
+      title = ${input.title},
       summary = ${input.summary}, sequence = ${input.sequence}
     WHERE id = ${id}
   `;
 
-  await sql()`UPDATE needs SET area = ${input.area} WHERE part_id = ${id}`;
+  /*
+    The project travels with the area, and for the same reason: both are
+    duplicated onto the items so that no query has to join two tables to group
+    them, and a half-moved part is a heading in one list and its items in
+    another. One statement each, so neither can be applied without the other.
+  */
+  await sql()`
+    UPDATE needs SET area = ${input.area}, project_id = ${input.projectId}
+    WHERE part_id = ${id}
+  `;
 }
 
 /**

@@ -7,13 +7,14 @@ import { LockedNote, Money, WhileHidden } from "@/components/money";
 import { NeedBar, NeedMeter } from "@/components/need-meter";
 import { ClothEdge } from "@/components/pattern";
 import { ButtonLink, PageHero, SectionTitle, Verse } from "@/components/ui";
-import { type NeedWithLedger, projectName } from "@/lib/giving";
-import { getParts, getPublishedNeeds } from "@/lib/needs";
+import type { NeedWithLedger } from "@/lib/giving";
+import { getParts, getProjects, getPublishedNeeds } from "@/lib/needs";
 import {
   type PartGroup,
   type ProjectGroup,
   buildProjects,
   laterParts,
+  projectTitle,
   readyParts,
 } from "@/lib/projects";
 import { pageMeta } from "@/lib/seo";
@@ -216,7 +217,7 @@ function WholeProjectLine({ project }: { project: ProjectGroup }) {
             Or take on the whole of it
           </h4>
           <p className="mt-2 leading-relaxed text-smoke">
-            Everything still open on {projectName(project.area).toLowerCase()},
+            Everything still open on {projectTitle(project).toLowerCase()},
             in one gift, including the work that comes later. Any part of it is
             a real answer — the rest goes on being asked for.
           </p>
@@ -251,7 +252,22 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
         <div className="flex items-center gap-4">
           <Icon name={project.area.icon} className="h-10 w-10 shrink-0 text-plum" />
           <div>
-            <SectionTitle>{projectName(project.area)}</SectionTitle>
+            {/*
+              The raise is the heading and the programme is the line above it,
+              which is the way round a reader needs them. "New Classroom Block"
+              is the thing being asked for; "Jepegomi Academy" is where it sits,
+              and on a page listing four raises inside three programmes the
+              second only makes sense as context for the first.
+
+              The eyebrow is dropped where it would only repeat the heading —
+              an arm of the ministry with a single raise named after it, which
+              is every one of them on the day projects arrived.
+            */}
+            {projectTitle(project).toLowerCase() !==
+              project.area.label.toLowerCase() && (
+              <p className="eyebrow text-smoke">{project.area.label}</p>
+            )}
+            <SectionTitle>{projectTitle(project)}</SectionTitle>
             <Link
               href={project.area.href}
               className="mt-1 inline-block text-sm font-medium text-plum underline underline-offset-4"
@@ -295,12 +311,22 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
 }
 
 export default async function NeedsPage() {
-  const [content, site, needs, parts] = await Promise.all([
+  const [content, site, needs, parts, allProjects] = await Promise.all([
     getContent("needs"),
     getContent("site"),
     getPublishedNeeds(),
     getParts(),
+    getProjects(),
   ]);
+
+  /*
+    Published projects only. An unpublished one is a raise Simon is still
+    writing, and its items are already kept off the page by their own
+    `published` flag — but a project row with no published items would
+    otherwise draw an empty heading, and one whose items were published before
+    the project was would put a draft's name on the site.
+  */
+  const projectRows = allProjects.filter((project) => project.published);
 
   /*
     The list, gathered into projects and put in the order the work has to
@@ -308,7 +334,7 @@ export default async function NeedsPage() {
     inside `buildProjects` — /app needs to see a part that has been created and
     not yet itemised, and this page would render it as a heading over nothing.
   */
-  const projects = buildProjects(needs, parts).filter((project) =>
+  const projects = buildProjects(needs, parts, projectRows).filter((project) =>
     project.parts.some((group) => group.needs.length > 0),
   );
 

@@ -9,9 +9,14 @@ import type { GiveChoice } from "@/components/give-form";
 import { GivePanel } from "@/components/give-panel";
 import { Money } from "@/components/money";
 import { ButtonLink, PageHero, SectionTitle, Verse } from "@/components/ui";
-import { isNeedArea, projectName, projectValue } from "@/lib/giving";
-import { getGivingSummary, getParts, getPublishedNeeds } from "@/lib/needs";
-import { buildProjects, readyParts } from "@/lib/projects";
+import { isNeedArea, projectValue } from "@/lib/giving";
+import {
+  getGivingSummary,
+  getParts,
+  getProjects,
+  getPublishedNeeds,
+} from "@/lib/needs";
+import { buildProjects, projectTitle, readyParts } from "@/lib/projects";
 import { isPesapalConfigured } from "@/lib/pesapal";
 import { pageMeta } from "@/lib/seo";
 
@@ -69,13 +74,17 @@ async function Pledge({
 }
 
 export default async function GivePage(props: PageProps<"/give">) {
-  const [giving, site, ledger, needs, parts] = await Promise.all([
+  const [giving, site, ledger, needs, parts, allProjects] = await Promise.all([
     getContent("giving"),
     getContent("site"),
     getGivingSummary(),
     getPublishedNeeds(),
     getParts(),
+    getProjects(),
   ]);
+
+  /* Published only, for the reason set out on /needs. */
+  const projectRows = allProjects.filter((project) => project.published);
 
   /*
     Read once, and used by both the form and the words around it. Asking twice
@@ -121,8 +130,8 @@ export default async function GivePage(props: PageProps<"/give">) {
     picker's own words above the list, and again in the hint under the amount
     box once one of these is picked.
   */
-  const choices: GiveChoice[] = buildProjects(needs, parts).flatMap((project) => {
-    const areaLabel = projectName(project.area);
+  const choices: GiveChoice[] = buildProjects(needs, parts, projectRows).flatMap((project) => {
+    const areaLabel = projectTitle(project);
 
     /*
       What is still open across the whole project, not what the job originally

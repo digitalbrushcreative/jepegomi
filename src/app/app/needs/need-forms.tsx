@@ -10,18 +10,21 @@ import {
   type PledgeStatus,
   areaOf,
 } from "@/lib/giving";
-import type { NeedPart } from "@/lib/projects";
+import type { NeedPart, Project } from "@/lib/projects";
 import {
   createNeedAction,
   createPartAction,
+  createProjectAction,
   deleteNeedAction,
   deletePartAction,
+  deleteProjectAction,
   deleteUpdateAction,
   postUpdateAction,
   seedKitchenNeedsAction,
   setPledgeStatusAction,
   updateNeedAction,
   updatePartAction,
+  updateProjectAction,
 } from "./actions";
 
 const inputClass =
@@ -84,9 +87,11 @@ function Notice({ error, saved }: { error?: string; saved?: boolean }) {
 function NeedFields({
   need,
   parts,
+  projects,
 }: {
   need?: NeedWithLedger;
   parts: NeedPart[];
+  projects: Project[];
 }) {
   return (
     <>
@@ -176,18 +181,25 @@ function NeedFields({
           />
         </Field>
 
+        {/*
+          Which raise this cost belongs to, and through it which arm of the
+          ministry — the area is read off the project rather than asked for
+          twice. Ignored entirely when the item is inside a part, because a part
+          already belongs to a project and an item that named a different one
+          would sit in a list it is not part of.
+        */}
         <Field
-          label="Part of the ministry"
-          hint="Ignored when the item is inside a part — the part decides which project it belongs to."
+          label="Which project"
+          hint="Ignored when the item is inside a part — the part decides."
         >
           <select
-            name="area"
-            defaultValue={need?.area ?? "other"}
+            name="projectId"
+            defaultValue={need?.projectId ?? projects[0]?.id ?? ""}
             className={inputClass}
           >
-            {NEED_AREAS.map((area) => (
-              <option key={area.id} value={area.id}>
-                {area.label}
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.title}
               </option>
             ))}
           </select>
@@ -294,12 +306,18 @@ function NeedFields({
   );
 }
 
-export function NewNeedForm({ parts }: { parts: NeedPart[] }) {
+export function NewNeedForm({
+  parts,
+  projects,
+}: {
+  parts: NeedPart[];
+  projects: Project[];
+}) {
   const [state, formAction, pending] = useActionState(createNeedAction, undefined);
 
   return (
     <form action={formAction} className="mt-6">
-      <NeedFields parts={parts} />
+      <NeedFields parts={parts} projects={projects} />
       <Notice error={state?.error} saved={state?.saved} />
       <button type="submit" disabled={pending} className={`${primaryButton} mt-6`}>
         {pending ? "Adding…" : "Add this item"}
@@ -311,20 +329,187 @@ export function NewNeedForm({ parts }: { parts: NeedPart[] }) {
 export function EditNeedForm({
   need,
   parts,
+  projects,
 }: {
   need: NeedWithLedger;
   parts: NeedPart[];
+  projects: Project[];
 }) {
   const [state, formAction, pending] = useActionState(updateNeedAction, undefined);
 
   return (
     <form action={formAction} className="mt-6">
       <input type="hidden" name="id" value={need.id} />
-      <NeedFields need={need} parts={parts} />
+      <NeedFields need={need} parts={parts} projects={projects} />
       <Notice error={state?.error} saved={state?.saved} />
       <button type="submit" disabled={pending} className={`${primaryButton} mt-6`}>
         {pending ? "Saving…" : "Save changes"}
       </button>
+    </form>
+  );
+}
+
+/* ------------------------------------------------------------ whole projects */
+
+/**
+ * The fields of a project, shared by the add form and the row editors.
+ *
+ * The arm of the ministry is the field that matters, and it is the one that
+ * cannot be inferred: a raise belongs to the church or the academy or the
+ * transport programme, and everything underneath it — its parts, its items —
+ * takes that answer from here rather than carrying an opinion of its own.
+ * Changing it moves the whole project, which is what `updateProject` is for.
+ */
+function ProjectFields({ project }: { project?: Project }) {
+  return (
+    <>
+      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_6rem]">
+        <Field label="Part of the ministry">
+          <select
+            name="area"
+            defaultValue={project?.area ?? "academy"}
+            className={inputClass}
+          >
+            {NEED_AREAS.map((area) => (
+              <option key={area.id} value={area.id}>
+                {area.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="What the raise is called">
+          <input
+            name="title"
+            required
+            defaultValue={project?.title}
+            placeholder="New Classroom Block"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Order" hint="Within its programme.">
+          <input
+            name="sequence"
+            type="number"
+            defaultValue={project?.sequence ?? 0}
+            className={`${inputClass} tabular`}
+          />
+        </Field>
+      </div>
+
+      <Field
+        label="One line about it"
+        hint="Shown under the heading on /needs."
+        className="mt-4"
+      >
+        <input
+          name="summary"
+          defaultValue={project?.summary}
+          className={inputClass}
+        />
+      </Field>
+
+      <div className="mt-4 flex flex-wrap gap-6">
+        {/*
+          Ticked by default on a new one. A project is a heading and shows up
+          where its items do, so publishing it asks for nothing by itself — but
+          leaving it unticked would hide items somebody had deliberately
+          published, which is a surprise in the wrong direction.
+        */}
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="published"
+            defaultChecked={project ? project.published : true}
+          />
+          On the site
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="closed"
+            defaultChecked={project?.closed ?? false}
+          />
+          Finished
+        </label>
+      </div>
+    </>
+  );
+}
+
+export function NewProjectForm() {
+  const [state, formAction, pending] = useActionState(
+    createProjectAction,
+    undefined,
+  );
+
+  return (
+    <form action={formAction} className="mt-6">
+      <ProjectFields />
+      <Notice error={state?.error} saved={state?.saved} />
+      <button type="submit" disabled={pending} className={`${primaryButton} mt-6`}>
+        {pending ? "Adding…" : "Add this project"}
+      </button>
+    </form>
+  );
+}
+
+export function EditProjectForm({
+  project,
+  itemCount,
+}: {
+  project: Project;
+  itemCount: number;
+}) {
+  const [state, formAction, pending] = useActionState(
+    updateProjectAction.bind(null, project.id),
+    undefined,
+  );
+  const [deleting, startDelete] = useTransition();
+
+  return (
+    <form action={formAction} className="p-6">
+      <ProjectFields project={project} />
+
+      <Notice error={state?.error} saved={state?.saved} />
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending} className={quietButton}>
+          {pending ? "Saving…" : "Save this project"}
+        </button>
+
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={() => {
+            /*
+              Allowed whatever is claimed against the items, like deleting a
+              part and unlike deleting an item, because it destroys nothing:
+              both columns pointing at a project are ON DELETE SET NULL, so its
+              parts and items come loose and go on being shown under their arm
+              of the ministry with their ledgers untouched. The message says the
+              number out loud — "delete" beside a list of funded costs should
+              never be a leap of faith.
+            */
+            if (
+              !confirm(
+                itemCount === 0
+                  ? `Delete “${project.title}”?`
+                  : `Delete “${project.title}”? Its ${itemCount} ${
+                      itemCount === 1 ? "item stays" : "items stay"
+                    } on the site, under ${project.area}, with everything claimed against them.`,
+              )
+            ) {
+              return;
+            }
+            startDelete(() => deleteProjectAction(project.id));
+          }}
+          className="text-sm font-medium text-clay underline underline-offset-4"
+        >
+          {deleting ? "Deleting…" : "Delete"}
+        </button>
+      </div>
     </form>
   );
 }
@@ -338,18 +523,29 @@ export function EditNeedForm({
  * The number is the whole feature and so it is the field with the explanation
  * on it. Everything else here is a label.
  */
-function PartFields({ part }: { part?: NeedPart }) {
+function PartFields({
+  part,
+  projects,
+}: {
+  part?: NeedPart;
+  projects: Project[];
+}) {
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_1fr_6rem]">
+      {/*
+        A project rather than an arm of the ministry. The part takes its area
+        from whichever project it is put in — see `readPartForm` — because two
+        fields that have to agree are two fields that will one day disagree.
+      */}
       <Field label="Which project">
         <select
-          name="area"
-          defaultValue={part?.area ?? "kitchen"}
+          name="projectId"
+          defaultValue={part?.projectId ?? projects[0]?.id ?? ""}
           className={inputClass}
         >
-          {NEED_AREAS.map((area) => (
-            <option key={area.id} value={area.id}>
-              {area.label}
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.title}
             </option>
           ))}
         </select>
@@ -385,12 +581,12 @@ function PartFields({ part }: { part?: NeedPart }) {
  * able to do in /app on a Tuesday without publishing a half-thought-through
  * budget to every partner church.
  */
-export function NewPartForm() {
+export function NewPartForm({ projects }: { projects: Project[] }) {
   const [state, formAction, pending] = useActionState(createPartAction, undefined);
 
   return (
     <form action={formAction} className="mt-6">
-      <PartFields />
+      <PartFields projects={projects} />
 
       <Field
         label="One line about it"
@@ -422,9 +618,11 @@ export function NewPartForm() {
 export function EditPartForm({
   part,
   itemCount,
+  projects,
 }: {
   part: NeedPart;
   itemCount: number;
+  projects: Project[];
 }) {
   const [state, formAction, pending] = useActionState(updatePartAction, undefined);
   const [deleting, startDelete] = useTransition();
@@ -432,7 +630,7 @@ export function EditPartForm({
   return (
     <form action={formAction} className="p-6">
       <input type="hidden" name="id" value={part.id} />
-      <PartFields part={part} />
+      <PartFields part={part} projects={projects} />
 
       <Field label="One line about it" className="mt-4">
         <input name="summary" defaultValue={part.summary} className={inputClass} />

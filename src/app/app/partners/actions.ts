@@ -12,6 +12,7 @@ import {
 import { partnerLoginIssued, partnerLoginRevoked, queue } from "@/lib/mail";
 import { parseUsd, usd } from "@/lib/money";
 import {
+  defaultProjectForArea,
   NEEDS_TAG,
   createNeed,
   getNeedById,
@@ -290,10 +291,13 @@ export async function seedEncounterChurchAction(rawEmail: string) {
       while the accounts lived in a source file and the ledger only had one money
       column; leaving it out now would quietly drop a line from Simon's letter.
     */
+    const projectId = await defaultProjectForArea("kitchen");
+
     for (const [index, line] of letter.entries()) {
       const need = await createNeed({
         title: line.item,
         summary: line.note,
+        projectId,
         /*
           The figures used to be written out in this paragraph as well, because
           the row had nowhere else to hold them. It has now: `estimatedCents` and

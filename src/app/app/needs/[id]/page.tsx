@@ -8,6 +8,7 @@ import { formatDay } from "@/lib/dates";
 import { PLEDGE_LABELS, areaOf } from "@/lib/giving";
 import { usd } from "@/lib/money";
 import {
+  listProjects,
   getNeedById,
   listParts,
   listPledgesForNeed,
@@ -49,10 +50,11 @@ export default async function AdminNeedPage({
   const need = await getNeedById(id);
   if (!need) notFound();
 
-  const [pledges, updates, parts] = await Promise.all([
+  const [pledges, updates, parts, projects] = await Promise.all([
     listPledgesForNeed(id),
     listUpdatesForNeed(id),
     listParts(),
+    listProjects(),
   ]);
 
   const claimed = pledges.some((pledge) => pledge.status !== "declined");
@@ -191,7 +193,7 @@ export default async function AdminNeedPage({
 
       {/* --------------------------------------------------- the fields */}
       <h2 className="font-display mt-14 text-2xl font-bold">Edit this item</h2>
-      <EditNeedForm need={need} parts={parts} />
+      <EditNeedForm need={need} parts={parts} projects={projects} />
 
       <div className="mt-12 border-t border-black/8 pt-8">
         <DeleteNeedButton

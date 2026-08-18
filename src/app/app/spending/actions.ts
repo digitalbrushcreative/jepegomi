@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { NEED_AREAS } from "@/lib/giving";
 import { parseUsd } from "@/lib/money";
 import {
+  defaultProjectForArea,
   NEEDS_TAG,
   createNeed,
   deleteNeed,
@@ -124,12 +125,15 @@ export async function recordSpendAction(
   const parsed = readForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
+  const area = knownArea(String(formData.get("area") ?? "other"));
+
   try {
     const { slug } = await createNeed({
       title: parsed.title,
       summary: "",
       detail: "",
-      area: knownArea(String(formData.get("area") ?? "other")),
+      area,
+      projectId: await defaultProjectForArea(area),
       /*
         Never in a part. A part is a step of work still being asked for, and its
         whole job is deciding what opens for giving next — something already
