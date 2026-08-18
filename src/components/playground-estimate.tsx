@@ -1,3 +1,4 @@
+import { Money, MoneyText } from "@/components/money";
 import type { Playground, QuoteLine } from "@/lib/playground";
 
 /**
@@ -19,7 +20,14 @@ import type { Playground, QuoteLine } from "@/lib/playground";
  * worked out, from lib/playground.ts; nothing is converted here.
  */
 
-const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
+/*
+  The playground is quoted in whole dollars, not cents — `usdFromKes` rounds to
+  the nearest ten on the way out of shillings, because a supplier's price at a
+  rate that moves daily has no business claiming cents. Every figure on this page
+  goes through `Money`, which speaks the site's currency unit, so the conversion
+  happens once here rather than at eight call sites.
+*/
+const cents = (dollars: number) => Math.round(dollars) * 100;
 const ksh = (amount: number) => `KSh ${amount.toLocaleString("en-US")}`;
 
 function QuoteTable({
@@ -58,10 +66,10 @@ function QuoteTable({
                   </p>
                 </td>
                 <td className="tabular px-6 py-4 text-right align-top text-sm whitespace-nowrap text-smoke">
-                  {ksh(line.priceKes)}
+                  <MoneyText text={ksh(line.priceKes)} />
                 </td>
                 <td className="font-display tabular px-6 py-4 text-right align-top font-semibold whitespace-nowrap">
-                  {usd(line.priceUsd)}
+                  <Money cents={cents(line.priceUsd)} />
                 </td>
               </tr>
             ))}
@@ -71,7 +79,7 @@ function QuoteTable({
               <td className="eyebrow px-6 py-4 text-smoke">{caption} total</td>
               <td />
               <td className="font-display tabular px-6 py-4 text-right text-xl font-semibold text-plum">
-                {usd(total)}
+                <Money cents={cents(total)} />
               </td>
             </tr>
           </tfoot>
@@ -98,7 +106,7 @@ export function PlaygroundEstimate({ quote }: { quote: Playground }) {
       <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
         <p className="eyebrow text-white/70">Estimated total</p>
         <p className="font-display tabular text-4xl font-semibold text-marigold">
-          {usd(quote.totalUsd)}
+          <Money cents={cents(quote.totalUsd)} />
         </p>
       </div>
     </div>

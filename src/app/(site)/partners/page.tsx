@@ -6,29 +6,48 @@ import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { Icon, type IconName } from "@/components/icons";
 import { ButtonLink, PageHero } from "@/components/ui";
+import { currentViewer } from "@/lib/door";
 import { CODE_LIFETIME } from "@/lib/partner-codes";
-import { currentPartner, isPartnerAreaConfigured } from "@/lib/partners";
+import { isPartnerAreaConfigured } from "@/lib/partners";
 import { PartnerLoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Partner sign in",
+  title: "Sign in",
   description:
-    "Anyone who has given can sign in to see everything they have supported, and the progress on it.",
+    "Sign in with a code to see what each item costs. Anyone who has given also sees everything they have supported, and the progress on it.",
   // Nothing here is for a search engine, and a church's giving is nobody's
   // business but theirs.
   robots: { index: false, follow: false },
 };
 
+/*
+  Four promises, and they are deliberately in this order.
+
+  The costings come first now. That is a change, and it is the honest one: most
+  people arriving at this page have not given anything and are here because a
+  figure somewhere else on the site was smudged out. Leading on "everything you
+  have given" would be answering a question they have not asked, with a promise
+  they cannot yet collect on.
+
+  The three below it are what the door has always opened, and they still only
+  open for somebody with giving behind their name. See lib/reveal.ts for why the
+  first rung is a turnstile and the rest are not.
+*/
 const promises: { icon: IconName; title: string; body: string }[] = [
+  {
+    icon: "give",
+    title: "What everything costs",
+    body: "Every price on the site, open — what each item comes to, what has been given towards it, and what is still short. This is what most people are here for, and giving is never required for it.",
+  },
   {
     icon: "globe",
     title: "A code, not a password",
-    body: "We email a code to the address on your gift. Type it in — that is the whole of it.",
+    body: "We email a six-digit code to any address you can read. Type it in — that is the whole of it. There is no account to make.",
   },
   {
     icon: "give",
     title: "Everything you have given",
-    body: "Every item you supported, what you put towards it, and what has been received against it.",
+    body: "If you have given before, the same code opens it: every item you supported, what you put towards it, and what has been received against it.",
   },
   {
     icon: "trowel",
@@ -54,8 +73,12 @@ async function PartnerEntrance() {
     getContent("site"),
   ]);
 
-  // Already signed in — no reason to make them read the door twice.
-  if (await currentPartner()) redirect("/partners/dashboard");
+  /*
+    Already signed in — no reason to make them read the door twice. Either kind
+    of session counts, because either one has already been through it; the page
+    they land on is what differs, and that is the dashboard's business.
+  */
+  if (await currentViewer()) redirect("/partners/dashboard");
 
   return (
     <div className="shell grid items-start gap-14 lg:grid-cols-[1fr_26rem] lg:gap-20">
@@ -94,7 +117,8 @@ async function PartnerEntrance() {
             >
               {site.email}
             </a>{" "}
-            and we will put it right. You never need to sign in to give.
+            and we will put it right. You never need to sign in to give, and you
+            never need to give to sign in.
           </p>
           <ButtonLink href="/needs" variant="secondary" className="mt-6">
             See what&apos;s needed
@@ -105,7 +129,8 @@ async function PartnerEntrance() {
       <div className="rounded-2xl bg-white p-8 shadow-warm-lg">
         <h2 className="font-display text-2xl font-semibold">Sign in</h2>
         <p className="mt-2 mb-7 text-sm leading-relaxed text-smoke">
-          No password. We email you a code that lasts {CODE_LIFETIME}.
+          No password, and no account to make. We email you a code that lasts{" "}
+          {CODE_LIFETIME}. Any address works.
         </p>
         <PartnerLoginForm />
 
@@ -147,8 +172,8 @@ export default function PartnersPage() {
   return (
     <>
       <PageHero
-        title="Your giving, in full"
-        intro="Every item you have supported, what has arrived against each one, and how the work is going."
+        title="Sign in to see the figures"
+        intro="What each thing costs, what has been given towards it, and what is still short. If you have given before, the same code opens everything you have supported and how the work is going."
       />
 
       <section className="px-6 py-20 sm:py-24">

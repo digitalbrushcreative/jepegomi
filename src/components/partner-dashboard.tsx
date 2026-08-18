@@ -21,6 +21,7 @@ import {
   areaOf,
   groupByProject,
   pledgeTowards,
+  projectName,
 } from "@/lib/giving";
 import { disclosureFor, showsAccounts, stakeIn } from "@/lib/disclosure";
 import { usd } from "@/lib/money";
@@ -347,7 +348,7 @@ export async function PartnerDashboard({
                   <ProjectAccounts
                     key={area.id}
                     budget={budget}
-                    title={`${area.label} — where the money went`}
+                    title={`${projectName(area)} — where the money went`}
                     note={note}
                     footnote={
                       <>
@@ -606,7 +607,7 @@ export async function PartnerDashboard({
 function OpenNeed({ need }: { need: NeedWithLedger }) {
   return (
     <li className="rounded-2xl bg-white p-6 shadow-warm">
-      <p className="eyebrow text-smoke">{areaOf(need.area).label}</p>
+      <p className="eyebrow text-smoke">{projectName(areaOf(need.area))}</p>
       <h4 className="font-display mt-2 text-lg font-semibold">
         <Link href={`/needs/${need.slug}`} className="hover:text-plum">
           {need.title}
@@ -656,7 +657,7 @@ function WholeProject({ appeal }: { appeal: Appeal }) {
       <Icon name={appeal.area.icon} className="h-8 w-8 text-plum" />
       <h4 className="font-display mt-4 text-xl leading-snug font-semibold">
         <Link href={appeal.area.href} className="hover:text-plum">
-          {appeal.area.label}
+          {projectName(appeal.area)}
         </Link>
       </h4>
       <p className="mt-2.5 flex-1 text-sm leading-relaxed text-smoke">
@@ -736,7 +737,7 @@ function Project({ project }: { project: PartnerProject }) {
           </p>
           <h3 className="font-display mt-2 text-2xl font-semibold">
             <Link href={area.href} className="hover:text-plum">
-              {area.label}
+              {projectName(area)}
             </Link>
           </h3>
         </div>
@@ -802,8 +803,8 @@ function Project({ project }: { project: PartnerProject }) {
       {project.gift && (
         <p className="mt-6 border-t border-sand-deep pt-5 text-sm leading-relaxed text-smoke">
           {usd(project.gift.yoursCents)} of this was given towards{" "}
-          {area.label.toLowerCase()} as a whole rather than against a single
-          item, so it went where it was needed most.
+          {projectName(area).toLowerCase()} as a whole rather than against a
+          single item, so it went where it was needed most.
         </p>
       )}
     </li>

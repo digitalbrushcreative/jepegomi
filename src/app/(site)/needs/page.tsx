@@ -3,12 +3,11 @@ import Link from "next/link";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { Icon } from "@/components/icons";
+import { LockedNote, Money, WhileHidden } from "@/components/money";
 import { NeedBar, NeedMeter } from "@/components/need-meter";
 import { ClothEdge } from "@/components/pattern";
 import { ButtonLink, PageHero, SectionTitle, Verse } from "@/components/ui";
-import { type Appeal, getAppeals } from "@/lib/appeals";
-import { usd } from "@/lib/money";
-import type { NeedWithLedger } from "@/lib/giving";
+import { type NeedWithLedger, projectName } from "@/lib/giving";
 import { getParts, getPublishedNeeds } from "@/lib/needs";
 import {
   type PartGroup,
@@ -54,11 +53,15 @@ function NeedCard({ need }: { need: NeedWithLedger }) {
       */}
       <div className="flex items-start justify-between gap-4">
         <span className="eyebrow rounded-full bg-sand px-3 py-1.5 text-smoke">
-          {need.closed
-            ? "Finished"
-            : settled
-              ? "Fully claimed"
-              : `${usd(need.ledger.openCents)} open`}
+          {need.closed ? (
+            "Finished"
+          ) : settled ? (
+            "Fully claimed"
+          ) : (
+            <>
+              <Money cents={need.ledger.openCents} /> open
+            </>
+          )}
         </span>
       </div>
 
@@ -99,9 +102,13 @@ function PartSection({ group }: { group: PartGroup }) {
               {group.part.title}
             </h4>
             <p className="tabular text-sm font-bold text-green">
-              {group.settled
-                ? "Fully claimed"
-                : `${usd(group.stillAskingCents)} still open`}
+              {group.settled ? (
+                "Fully claimed"
+              ) : (
+                <>
+                  <Money cents={group.stillAskingCents} /> still open
+                </>
+              )}
             </p>
           </div>
           {group.part.summary && (
@@ -150,7 +157,7 @@ function LaterSection({ groups }: { groups: PartGroup[] }) {
                 {group.part?.title}
               </h4>
               <p className="tabular text-sm font-medium text-smoke">
-                {usd(group.stillAskingCents)}
+                <Money cents={group.stillAskingCents} />
               </p>
             </div>
             {group.waitsOn && (
@@ -167,7 +174,7 @@ function LaterSection({ groups }: { groups: PartGroup[] }) {
                 >
                   <span className="text-sm">{need.title}</span>
                   <span className="tabular text-sm text-smoke">
-                    {usd(need.costCents)}
+                    <Money cents={need.costCents} />
                   </span>
                 </li>
               ))}
@@ -180,63 +187,54 @@ function LaterSection({ groups }: { groups: PartGroup[] }) {
 }
 
 /**
- * The projects costed as one job rather than broken into lines.
+ * The whole of one project, offered at the foot of its own section.
  *
- * The kitchen is the only project anybody has itemised, and for years that made
- * it the only one this page could ask for — the playground, the bus and the
- * streaming kit were priced on their own pages, with no way to give to them
- * except by writing their names into a box on a form. They are asks like any
- * other and they belong on the page that lists what is needed.
+ * This used to be a section of its own down at the bottom of the page — "Or
+ * take on a whole project" — holding the three projects nobody had itemised.
+ * That made sense while it was the only way to give to them and the kitchen was
+ * the only thing with lines. Now every project has both, and a separate bucket
+ * asks a reader to hold the same playground in two places at once: eight items
+ * up here, one card down there, and no way to tell from either that they are
+ * the same money.
  *
- * What each card carries is the price of the whole job and nothing else. There
- * is no meter, because a meter here would be a running total of what this
- * ministry is holding in the bank — see the note in lib/appeals.ts — and no
- * "still open", because that is a balance and only an itemised project has one.
+ * So it sits under the items it is the sum of. Read down a project and the last
+ * thing offered is all of it.
+ *
+ * The figure is what is *still open* across the project rather than what the
+ * whole job originally cost. Those are the same number on a project nobody has
+ * given to yet and different the moment somebody has, and of the two only this
+ * one can be handed over without asking a giver to pay for a swing that is
+ * already bought. It comes off the same ledger as the items above, so the sum
+ * and its parts cannot drift.
  */
-function WholeProjects({ appeals }: { appeals: Appeal[] }) {
+function WholeProjectLine({ project }: { project: ProjectGroup }) {
   return (
-    <section className="mt-20 border-t border-sand-deep pt-14">
-      <SectionTitle>Or take on a whole project</SectionTitle>
-      <p className="mt-6 max-w-2xl leading-relaxed text-smoke">
-        These are costed as one job rather than line by line. The figure is what
-        finishing the whole thing comes to — a gift can be any part of it, and
-        the rest goes on being asked for.
-      </p>
+    <div className="mt-14 rounded-2xl border border-dashed border-plum/30 bg-plum/[0.04] p-8">
+      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
+        <div className="max-w-xl">
+          <h4 className="font-display text-xl font-semibold">
+            Or take on the whole of it
+          </h4>
+          <p className="mt-2 leading-relaxed text-smoke">
+            Everything still open on {projectName(project.area).toLowerCase()},
+            in one gift, including the work that comes later. Any part of it is
+            a real answer — the rest goes on being asked for.
+          </p>
+        </div>
 
-      <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {appeals.map((appeal) => (
-          <div
-            key={appeal.area.id}
-            className="flex flex-col rounded-2xl bg-white p-8 shadow-warm"
-          >
-            <Icon name={appeal.area.icon} className="h-9 w-9 text-plum" />
-            <h3 className="font-display mt-5 text-2xl leading-snug font-semibold">
-              {appeal.area.label}
-            </h3>
-            <p className="mt-3 flex-1 leading-relaxed text-smoke">
-              {appeal.summary}
-            </p>
-
-            <p className="eyebrow mt-7 text-smoke">The whole job</p>
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+          <div>
+            <p className="eyebrow text-smoke">All of it</p>
             <p className="font-display tabular mt-1 text-3xl font-semibold text-plum">
-              {usd(appeal.costCents)}
+              <Money cents={project.stillAskingCents} />
             </p>
-
-            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <ButtonLink href={`/give?for=${appeal.area.id}#pledge`} icon="give">
-                Give to this
-              </ButtonLink>
-              <Link
-                href={appeal.area.href}
-                className="text-sm font-bold text-plum underline underline-offset-4"
-              >
-                See the work
-              </Link>
-            </div>
           </div>
-        ))}
+          <ButtonLink href={`/give?for=${project.area.id}#pledge`} icon="give">
+            Give to all of it
+          </ButtonLink>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -253,7 +251,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
         <div className="flex items-center gap-4">
           <Icon name={project.area.icon} className="h-10 w-10 shrink-0 text-plum" />
           <div>
-            <SectionTitle>{project.area.label}</SectionTitle>
+            <SectionTitle>{projectName(project.area)}</SectionTitle>
             <Link
               href={project.area.href}
               className="mt-1 inline-block text-sm font-medium text-plum underline underline-offset-4"
@@ -274,7 +272,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
             */}
             <p className="eyebrow text-smoke">Left on this project</p>
             <p className="font-display tabular mt-1 text-3xl font-semibold text-plum">
-              {usd(project.stillAskingCents)}
+              <Money cents={project.stillAskingCents} />
             </p>
           </div>
         )}
@@ -285,17 +283,23 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
       ))}
 
       {later.length > 0 && <LaterSection groups={later} />}
+
+      {/*
+        Last, under everything it is the sum of — and only where there is
+        anything left to take. A project with every line claimed would otherwise
+        end on an invitation to give nothing.
+      */}
+      {project.stillAskingCents > 0 && <WholeProjectLine project={project} />}
     </section>
   );
 }
 
 export default async function NeedsPage() {
-  const [content, site, needs, parts, appeals] = await Promise.all([
+  const [content, site, needs, parts] = await Promise.all([
     getContent("needs"),
     getContent("site"),
     getPublishedNeeds(),
     getParts(),
-    getAppeals(),
   ]);
 
   /*
@@ -349,14 +353,14 @@ export default async function NeedsPage() {
           whether somebody reads any further — and because a list of nine items
           with no sum at the top makes a reader do the arithmetic themselves.
         */}
-        {(readyCount > 0 || appeals.length > 0) && (
+        {(readyCount > 0 || projects.length > 0) && (
           <dl className="mt-12 flex flex-wrap gap-x-14 gap-y-6">
             {readyCount > 0 && (
               <>
                 <div>
                   <dt className="eyebrow text-white/50">Open right now</dt>
                   <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-marigold">
-                    {usd(stillNeeded)}
+                    <Money cents={stillNeeded} />
                   </dd>
                 </div>
                 <div>
@@ -371,16 +375,17 @@ export default async function NeedsPage() {
             )}
             {/*
               Counted, not summed. The figure beside "open right now" is a
-              balance — money nobody has claimed — and adding the price of a bus
-              to it would make one number out of two different kinds of thing.
+              balance across the parts that are ready, and adding a whole
+              project's outstanding total to it would make one number out of two
+              different kinds of thing.
             */}
-            {appeals.length > 0 && (
+            {projects.length > 0 && (
               <div>
                 <dt className="eyebrow text-white/50">
-                  {appeals.length === 1 ? "Whole project" : "Whole projects"}
+                  {projects.length === 1 ? "Project" : "Projects"}
                 </dt>
                 <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
-                  {appeals.length}
+                  {projects.length}
                 </dd>
               </div>
             )}
@@ -407,13 +412,29 @@ export default async function NeedsPage() {
             ))}
 
           {/*
+            Said once, at the top, on the one page whose entire subject is
+            prices. Every figure below it is smudged for a signed-out reader and
+            a page full of blurs with no explanation reads as a page that is
+            broken — this is the sentence that turns it into a door. It is not
+            repeated beside each item: the redaction is legible enough on its
+            own once somebody has been told what it is.
+          */}
+          <WhileHidden>
+            <LockedNote className="mt-8 max-w-2xl rounded-2xl border border-dashed border-smoke/25 bg-sand/60 p-6" />
+          </WhileHidden>
+
+          {/*
             The empty note is for a page with nothing on it at all. The itemised
             ledger and the whole projects fail independently — the first needs a
             database, the second needs only the CMS — so it is shown when both
             are empty and not merely when one is, or it would sit above three
             costed projects saying nothing has been costed.
+
+            One condition now rather than two. Every project on this page is
+            itemised, so there is no second source that could carry a costing
+            the ledger has not got — an empty `needs` is an empty page.
           */}
-          {needs.length === 0 && appeals.length === 0 ? (
+          {needs.length === 0 ? (
             /*
               Not an error state. The database being empty and the database
               being unreachable look the same from here, and in both cases the
@@ -441,8 +462,6 @@ export default async function NeedsPage() {
               {projects.map((project) => (
                 <ProjectSection key={project.area.id} project={project} />
               ))}
-
-              {appeals.length > 0 && <WholeProjects appeals={appeals} />}
             </>
           )}
         </div>

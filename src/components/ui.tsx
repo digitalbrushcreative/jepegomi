@@ -138,7 +138,8 @@ export function HubCard({
   icon,
 }: {
   href: string;
-  eyebrow: string;
+  /** May carry a money figure, which is an element rather than a string. */
+  eyebrow: ReactNode;
   title: string;
   blurb: string;
   cta: string;

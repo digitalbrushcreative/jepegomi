@@ -5,11 +5,11 @@ import { paragraphs } from "@/cms/prose";
 import { Icon, type IconName } from "@/components/icons";
 import { ClothEdge } from "@/components/pattern";
 import { GivingDetailsForm } from "@/app/(site)/give/details-form";
-import { GiveForm, type GiveChoice } from "@/components/give-form";
+import type { GiveChoice } from "@/components/give-form";
+import { GivePanel } from "@/components/give-panel";
+import { Money } from "@/components/money";
 import { ButtonLink, PageHero, SectionTitle, Verse } from "@/components/ui";
-import { getAppeals } from "@/lib/appeals";
-import { usd } from "@/lib/money";
-import { isNeedArea, projectValue } from "@/lib/giving";
+import { isNeedArea, projectName, projectValue } from "@/lib/giving";
 import { getGivingSummary, getParts, getPublishedNeeds } from "@/lib/needs";
 import { buildProjects, readyParts } from "@/lib/projects";
 import { isPesapalConfigured } from "@/lib/pesapal";
@@ -59,7 +59,7 @@ async function Pledge({
     typeof asked === "string" && isNeedArea(asked) ? projectValue(asked) : "";
 
   return (
-    <GiveForm
+    <GivePanel
       choices={choices}
       initialTowards={project}
       contactEmail={contactEmail}
@@ -69,13 +69,12 @@ async function Pledge({
 }
 
 export default async function GivePage(props: PageProps<"/give">) {
-  const [giving, site, ledger, needs, parts, appeals] = await Promise.all([
+  const [giving, site, ledger, needs, parts] = await Promise.all([
     getContent("giving"),
     getContent("site"),
     getGivingSummary(),
     getPublishedNeeds(),
     getParts(),
-    getAppeals(),
   ]);
 
   /*
@@ -101,45 +100,64 @@ export default async function GivePage(props: PageProps<"/give">) {
     Flattened in project-then-part order because the picker draws its headings
     off the seams in this list; see the note in the form.
   */
-  const items: GiveChoice[] = buildProjects(needs, parts).flatMap((project) =>
-    readyParts(project).flatMap((group) =>
+  /*
+    Each project's own lines, with "all of it" at the head of them.
+
+    The whole projects used to be a group of their own at the top of the picker,
+    under the heading "A whole project", because they were the ones nobody had
+    itemised — the bus and the kit had no lines to list, so the only thing to
+    offer was the job. Now every project has both, and a separate group asks
+    somebody to find the playground twice: once as a whole and once as eight
+    swings, with nothing on either to say they are the same money.
+
+    So the whole sits inside its project, first, above the lines it is the sum
+    of. A giver who came for the bus meets the bus; a giver who wants to buy one
+    swing scrolls two inches. The picker draws its headings off the seams in
+    this list, so project-then-part order is what makes the groups come out
+    right — see the note in the form.
+
+    No `partSummary` on the whole-project row. It used to explain the figures
+    underneath it, which is a sentence the form already says twice: once in the
+    picker's own words above the list, and again in the hint under the amount
+    box once one of these is picked.
+  */
+  const choices: GiveChoice[] = buildProjects(needs, parts).flatMap((project) => {
+    const areaLabel = projectName(project.area);
+
+    /*
+      What is still open across the whole project, not what the job originally
+      cost. The two are the same until somebody gives, and after that only this
+      one can be handed over without charging a giver for a swing that is
+      already bought. Same source as the figure on /needs, so the two pages
+      cannot come to different sums.
+    */
+    const whole: GiveChoice[] =
+      project.stillAskingCents > 0
+        ? [
+            {
+              value: projectValue(project.area.id),
+              title: "All of it — the whole project",
+              areaLabel,
+              costCents: project.stillAskingCents,
+            },
+          ]
+        : [];
+
+    const items: GiveChoice[] = readyParts(project).flatMap((group) =>
       group.needs
         .filter((need) => !need.closed && need.ledger.openCents > 0)
         .map((need) => ({
           value: need.slug,
           title: need.title,
-          areaLabel: project.area.label,
+          areaLabel,
           partTitle: group.part?.title,
           partSummary: group.part?.summary || undefined,
           openCents: need.ledger.openCents,
         })),
-    ),
-  );
+    );
 
-  /*
-    The whole projects, first, under a heading of their own.
-
-    First because the itemised list is the kitchen and only the kitchen — every
-    other project on this site is costed as one job — and a picker that opens
-    on cement and sand tells somebody who came for the bus that they are in the
-    wrong place. Underneath them the kitchen's own lines, where a giver can be
-    as specific as they like.
-  */
-  /*
-    No `partSummary`. It used to explain the figures underneath it — "What the
-    whole job costs. Any part of it is a real answer." — which is a sentence the
-    form says better twice over: the picker's own words above the list, and the
-    hint under the amount box once one of these is picked. Here it was a third
-    telling, sitting between somebody and the list they came to read.
-  */
-  const wholeProjects: GiveChoice[] = appeals.map((appeal) => ({
-    value: projectValue(appeal.area.id),
-    title: appeal.area.label,
-    areaLabel: "A whole project",
-    costCents: appeal.costCents,
-  }));
-
-  const choices = [...wholeProjects, ...items];
+    return [...whole, ...items];
+  });
 
   return (
     <>
@@ -217,7 +235,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                 <div className="bg-white px-8 py-7">
                   <dt className="eyebrow text-smoke">Still open</dt>
                   <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-plum">
-                    {usd(ledger.totalOpenCents)}
+                    <Money cents={ledger.totalOpenCents} />
                   </dd>
                   <p className="mt-2 text-sm text-smoke">
                     across {ledger.openCount}{" "}
@@ -227,7 +245,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                 <div className="bg-white px-8 py-7">
                   <dt className="eyebrow text-smoke">Received so far</dt>
                   <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-green">
-                    {usd(ledger.totalReceivedCents)}
+                    <Money cents={ledger.totalReceivedCents} />
                   </dd>
                   <p className="mt-2 text-sm text-smoke">
                     reconciled by hand, item by item

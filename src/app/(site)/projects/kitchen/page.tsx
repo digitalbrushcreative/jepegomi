@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getContent } from "@/cms/content";
 import { Icon, type IconName } from "@/components/icons";
+import { Money } from "@/components/money";
 import { ProjectAccounts } from "@/components/project-accounts";
 import { FoodAtSchoolLogo } from "@/components/logos";
 import { ClothEdge } from "@/components/pattern";
@@ -26,8 +27,6 @@ import {
 import { site } from "@/lib/site";
 import { pageMeta } from "@/lib/seo";
 import { RelatedLinks } from "@/components/related-links";
-
-const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
 
 export const metadata: Metadata = pageMeta({
   title: "Kitchen Build",
@@ -451,7 +450,7 @@ export default async function KitchenPage() {
           <div className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
             <p className="eyebrow text-white/70">Still needed to finish</p>
             <p className="font-display tabular text-4xl font-semibold text-marigold">
-              {usd(stillNeededCents / 100)}
+              <Money cents={stillNeededCents} />
             </p>
           </div>
         </div>
@@ -497,13 +496,22 @@ export default async function KitchenPage() {
                 <div className="mx-auto mt-12 max-w-3xl">
                   <ProjectAccounts
                     budget={budget}
-                    title={`Where the ${usd(report.giftCents / 100)} went`}
+                    /*
+                      The size of the gift has come out of the heading rather
+                      than gone behind a blur in it. A heading is the one line a
+                      reader uses to decide whether a section is worth their
+                      time, and "Where the $•,••• went" makes that decision
+                      harder while protecting nothing — the figure is still in
+                      the paragraph below, where it can be smudged without
+                      costing the page its signposting.
+                    */
+                    title="Where the gift went"
                     note={accountNote}
                     intro={
                       <p>
                         {report.donorTitled} in {report.donorLocation} gave{" "}
                         <strong className="text-charcoal">
-                          {usd(report.giftCents / 100)}
+                          <Money cents={report.giftCents} />
                         </strong>{" "}
                         to build the kitchen and dining area. Below is Pastor
                         Simon&apos;s own reconciliation of what was estimated
@@ -513,7 +521,8 @@ export default async function KitchenPage() {
                     footnote={
                       <p>
                         Figures in USD, as reported by Pastor Simon to the donor.
-                        The {usd(report.giftCents / 100)} gift is fully spent.
+                        The <Money cents={report.giftCents} /> gift is fully
+                        spent.
                         {budget.outstanding.length > 0 &&
                           " The items in the second table were never reached."}
                       </p>
@@ -557,7 +566,8 @@ export default async function KitchenPage() {
             are sent, and it is the one place that explanation lives.
           */}
             <p className="mt-6 leading-relaxed text-white/65">
-              {usd(stillNeededCents / 100)} finishes it. Gifts can be marked
+              <Money cents={stillNeededCents} /> finishes it. Gifts can be
+              marked
               for the kitchen, and we will send you the giving details
               ourselves.
             </p>

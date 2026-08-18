@@ -9,6 +9,7 @@ import { getKitchenReport } from "@/lib/kitchen";
 import { listNeeds } from "@/lib/needs";
 import { readersByPartner } from "@/lib/partner-readers";
 import { listPartners } from "@/lib/partners";
+import { listSupporters } from "@/lib/supporters";
 import { PageHeader } from "../ui";
 import {
   AddPartnerForm,
@@ -38,12 +39,13 @@ export default async function AdminPartnersPage() {
   if (!user) redirect("/app");
 
   await ensureSchema();
-  const [partners, needs, kitchen, readers] = await Promise.all([
+  const [partners, needs, kitchen, readers, supporters] = await Promise.all([
     listPartners(),
     listNeeds(),
     getKitchenReport(),
     // One query for the whole page rather than one per card — see the note on it.
     readersByPartner(),
+    listSupporters(),
   ]);
 
   const unverified = partners.filter((partner) => !partner.verified);
@@ -284,6 +286,68 @@ export default async function AdminPartnersPage() {
           ))}
         </ul>
       )}
+
+      <SupporterList supporters={supporters} />
     </div>
+  );
+}
+
+/**
+ * Everybody who signed in just to see what things cost.
+ *
+ * These are not partners and the page is careful not to let them look like ones.
+ * They have given nothing, nothing is filed against them, and no tick here opens
+ * anything — a supporter is an address somebody proved they could read, and the
+ * only thing it buys is the ministry's prices. See lib/supporters.ts.
+ *
+ * It is at the foot of this page rather than on one of its own because that is
+ * honestly what it is: a list of addresses, at the bottom of the page about the
+ * people who give. Worth having — somebody who went to the trouble of asking
+ * what a water tank costs is a warmer name than any newsletter box has ever
+ * produced — and not worth a heading in the nav.
+ *
+ * Confirmed and unconfirmed are shown together, labelled. An unconfirmed row is
+ * somebody who asked for a code and never typed it back, which is usually a
+ * mistyped address and occasionally somebody entering other people's. Averaging
+ * the two into one count would hide both.
+ */
+function SupporterList({
+  supporters,
+}: {
+  supporters: Awaited<ReturnType<typeof listSupporters>>;
+}) {
+  if (supporters.length === 0) return null;
+
+  const confirmed = supporters.filter((supporter) => supporter.confirmed);
+
+  return (
+    <details className="mt-12 rounded border border-black/8 bg-white p-6">
+      <summary className="cursor-pointer font-medium hover:text-plum">
+        Signed in for the figures · {confirmed.length}
+      </summary>
+
+      <p className="mt-4 max-w-prose text-sm leading-relaxed text-smoke">
+        Addresses that proved themselves to see what things cost. They have given
+        nothing and nothing is recorded against them — this is a list of people
+        who wanted to know the price, which is the closest thing this site has to
+        a warm list. Nothing here needs doing.
+      </p>
+
+      <ul className="mt-6 divide-y divide-black/8 border-t border-black/8">
+        {supporters.map((supporter) => (
+          <li
+            key={supporter.id}
+            className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3"
+          >
+            <span className="font-mono text-sm">{supporter.email}</span>
+            <span className="text-xs text-smoke">
+              {supporter.confirmed
+                ? `signed in ${formatDay(supporter.confirmedAt ?? supporter.createdAt)}`
+                : `asked ${formatDay(supporter.createdAt)} — never typed the code`}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

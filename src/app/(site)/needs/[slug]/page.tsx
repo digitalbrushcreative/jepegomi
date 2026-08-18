@@ -4,12 +4,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
-import { GiveForm } from "@/components/give-form";
+import { GivePanel } from "@/components/give-panel";
 import { Icon } from "@/components/icons";
+import { Money } from "@/components/money";
 import { NeedMeter } from "@/components/need-meter";
 import { NeedUpdates } from "@/components/need-updates";
 import { ButtonLink, PageHero, SectionTitle } from "@/components/ui";
-import { usd } from "@/lib/money";
 import { areaOf } from "@/lib/giving";
 import { getNeedBySlug, getNeedUpdates } from "@/lib/needs";
 import { isPesapalConfigured } from "@/lib/pesapal";
@@ -27,11 +27,19 @@ export async function generateMetadata({
 
   if (!need) return { title: "Not found" };
 
+  /*
+    No figures in the fallback description, and that is the point of the change
+    rather than an oversight. A meta description is served to anybody who asks
+    for the page and reprinted verbatim in search results and link previews —
+    which would have made it the one place on the site where the ledger stayed
+    public after everything else went behind the door, and the easiest place of
+    all to scrape.
+  */
   return pageMeta({
     title: need.title,
     description:
       need.summary ||
-      `${usd(need.ledger.openCents)} of ${usd(need.costCents)} is still open on this.`,
+      `One of the costed items the ministry is asking for. Sign in to see what it comes to and how much of it is still open.`,
     path: `/needs/${need.slug}`,
   });
 }
@@ -81,14 +89,14 @@ function ClaimPanel({
               Take part of this
             </h2>
             <p className="mt-2 mb-7 leading-relaxed text-smoke">
-              Any amount up to {usd(need.ledger.openCents)}.
+              Any amount up to <Money cents={need.ledger.openCents} />.
             </p>
             {/*
               The same form /give uses, with the choosing already done: this
               page is *about* one item, so it hands the form that one item and
               the picker never appears.
             */}
-            <GiveForm
+            <GivePanel
               fixed
               choices={[
                 {

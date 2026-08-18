@@ -293,8 +293,8 @@ const needs = {
     },
     partnerNote: {
       type: "prose",
-      label: "Note about partner logins",
-      help: "Shown beside the sign-in link, explaining what a church gets a login for.",
+      label: "Note about signing in",
+      help: "Shown beside the sign-in form, explaining what signing in opens — the costings for anybody, and their own giving for somebody who has given.",
     },
     ...verseFields,
   },
@@ -326,7 +326,7 @@ const needs = {
       },
     ],
     partnerNote:
-      "No account to make. Sign in with the email you gave from and see everything you have given, and what it paid for.",
+      "No account to make and no password. We email a code to any address you can read, and the figures open up. If you have given before, use the address the gift came from and you will also see everything it paid for.",
     verse:
       "He who has pity on the poor lends to the Lord, And He will pay back what he has given.",
     verseRef: "Proverbs 19:17 NKJV",
@@ -1265,14 +1265,14 @@ const projects = {
       },
       {
         eyebrow: "The school run",
-        title: "School Transport",
+        title: "Bus Upgrade",
         blurb:
           "The van the school has outgrown, on roads that carry lorries. What a 26-seater bus costs, and how many children are waiting on one.",
         cta: "See what it costs",
       },
       {
         eyebrow: "Streaming",
-        title: "Jepegomi Digital",
+        title: "Service Livestream",
         blurb:
           "Services recorded on a phone and sent to the people who cannot get to the building. What a camera, a laptop that can edit and a year of connection would cost.",
         cta: "See the kit",

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { ProjectBudget } from "@/lib/giving";
-import { usd } from "@/lib/money";
+import { Money } from "@/components/money";
 
 /**
  * One project's accounts: what it bought, what each thing was estimated at, and
@@ -53,7 +53,8 @@ function Row({
 }: {
   item: string;
   estimated: number;
-  actual: string;
+  /** A node, because a figure may be a blur. See components/money.tsx. */
+  actual: ReactNode;
   note: string;
   muted?: boolean;
 }) {
@@ -70,7 +71,7 @@ function Row({
         )}
       </td>
       <td className="tabular border-b border-sand-deep py-3.5 text-right align-top text-sm text-smoke">
-        {usd(estimated)}
+        <Money cents={estimated} />
       </td>
       <td
         className={`tabular border-b border-sand-deep py-3.5 pl-4 text-right align-top text-sm font-medium ${
@@ -133,7 +134,11 @@ export function ProjectAccounts({
                       as "it cost nothing". See the note in `getProjectBudget`.
                     */
                     actual={
-                      line.actualCents === null ? "Used" : usd(line.actualCents)
+                      line.actualCents === null ? (
+                        "Used"
+                      ) : (
+                        <Money cents={line.actualCents} />
+                      )
                     }
                     note={line.note}
                   />
@@ -149,10 +154,10 @@ export function ProjectAccounts({
                     page.
                   */}
                   <td className="tabular py-4 text-right text-sm font-bold">
-                    {usd(budget.estimatedCents)}
+                    <Money cents={budget.estimatedCents} />
                   </td>
                   <td className="tabular py-4 pl-4 text-right text-sm font-bold text-green">
-                    {usd(budget.spentCents)}
+                    <Money cents={budget.spentCents} />
                   </td>
                 </tr>
               </tbody>
@@ -176,7 +181,8 @@ export function ProjectAccounts({
         {budget.outstanding.length > 0 && (
           <>
             <h4 className="font-display mt-10 text-xl font-semibold">
-              Never reached — {usd(budget.stillNeededCents)} still needed
+              Never reached — <Money cents={budget.stillNeededCents} /> still
+              needed
             </h4>
             <div className="overflow-x-auto">
               <table className="mt-4 w-full min-w-[30rem] border-collapse">
@@ -197,7 +203,7 @@ export function ProjectAccounts({
                       Still needed to finish
                     </td>
                     <td className="tabular py-4 text-right text-sm font-bold text-plum">
-                      {usd(budget.stillNeededCents)}
+                      <Money cents={budget.stillNeededCents} />
                     </td>
                     <td className="py-4" />
                   </tr>

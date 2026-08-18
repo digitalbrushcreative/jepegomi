@@ -5,6 +5,7 @@ import { paragraphs } from "@/cms/prose";
 import { EditorOnly } from "@/components/editor-only";
 import { Icon } from "@/components/icons";
 import { JepegomiLogo } from "@/components/logos";
+import { Money } from "@/components/money";
 import { PhotoStrip } from "@/components/photos";
 import {
   ButtonLink,
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui";
 import { LatestVideos } from "@/components/videos";
 import { getAppeal } from "@/lib/appeals";
-import { usd } from "@/lib/money";
 import { latestVideos } from "@/lib/youtube";
 import { pageMeta } from "@/lib/seo";
 import { RelatedLinks } from "@/components/related-links";
@@ -273,7 +273,7 @@ export default async function DigitalPage() {
                 ))}
               </div>
               <p className="font-display tabular text-4xl font-semibold text-marigold">
-                {usd(kit.costCents)}
+                <Money cents={kit.costCents} />
               </p>
             </div>
           )}

@@ -19,12 +19,38 @@ import type { IconName } from "@/components/icons";
   rather than being a field Simon fills in, for the same reason the front page
   picks its own icons: he writes what is needed and what it costs, and the site
   decides what it looks like.
+
+  `project` is the second name some of these have, and it exists because two of
+  them are two things at once. School Transport is a programme — a van, a
+  driver, a run that happens twice a day whether or not anybody gives. The Bus
+  Upgrade is a project: one purchase, with a price, that is either bought or is
+  not. The same is true of Jepegomi Digital, which streams services every week,
+  and the Service Livestream kit, which is a camera and a laptop somebody has
+  to buy.
+
+  Running them together made both harder to read. "Give to School transport"
+  sounds like a subscription to a bus route; the page it lands on is asking for
+  a bus. So a project that is a raise inside a wider programme names the raise,
+  and the programme keeps its own name on its own page. Areas with nothing to
+  raise for — the church, the college — have no `project` and never needed one.
 */
 export const NEED_AREAS = [
   { id: "kitchen", label: "The kitchen build", icon: "trowel", href: "/projects/kitchen" },
   { id: "playground", label: "The playground", icon: "child", href: "/projects/playground" },
-  { id: "transport", label: "School transport", icon: "bus", href: "/programs/transport" },
-  { id: "digital", label: "Jepegomi Digital", icon: "globe", href: "/programs/digital" },
+  {
+    id: "transport",
+    label: "School transport",
+    project: "Bus Upgrade",
+    icon: "bus",
+    href: "/programs/transport",
+  },
+  {
+    id: "digital",
+    label: "Jepegomi Digital",
+    project: "Service Livestream",
+    icon: "globe",
+    href: "/programs/digital",
+  },
   { id: "food", label: "Food at School", icon: "pot", href: "/programs/food-at-school" },
   { id: "academy", label: "Jepegomi Academy", icon: "book", href: "/academy" },
   { id: "church", label: "The church", icon: "church", href: "/church" },
@@ -33,12 +59,27 @@ export const NEED_AREAS = [
 ] as const satisfies {
   id: string;
   label: string;
+  /** The raise inside this programme, where it is one. See the note above. */
+  project?: string;
   icon: IconName;
   href: string;
 }[];
 
 export type NeedArea = (typeof NEED_AREAS)[number]["id"];
 export type Area = (typeof NEED_AREAS)[number];
+
+/**
+ * What to call this area where a gift is being asked for.
+ *
+ * The project name where there is one, the area's own label where there is not.
+ * Every giving surface goes through this — /needs, the form's picker, a
+ * partner's dashboard — so that the thing somebody chooses on one page is the
+ * thing that is named back to them on the next. The bare `label` is for the
+ * programme itself, and belongs on the programme's page.
+ */
+export function projectName(area: Area): string {
+  return "project" in area ? area.project : area.label;
+}
 
 /** Falls back to "across the ministry" rather than throwing on an unknown area. */
 export function areaOf(id: string) {
@@ -98,12 +139,22 @@ export function areaForValue(value: string): Area | null {
  * Matching is on the whole string, not a substring. "Not the kitchen build"
  * contains the label and means the opposite of it, and a ledger that guesses is
  * worse than one that leaves the field null and lets Simon set it in /app.
+ *
+ * Both names count, where an area has two. The buttons on /give offer the
+ * project — "Bus Upgrade" — so that is what most of these arrive as, but
+ * "School transport" is what somebody writing in their own words is likely to
+ * put, and it is the same money either way. Filing one and not the other would
+ * make the ledger depend on which page a giver happened to start from.
  */
 export function areaForDesignation(designation: string): NeedArea | null {
   const written = designation.trim().toLowerCase();
   if (!written) return null;
 
-  const match = NEED_AREAS.find((area) => area.label.toLowerCase() === written);
+  const match = NEED_AREAS.find(
+    (area) =>
+      area.label.toLowerCase() === written ||
+      projectName(area).toLowerCase() === written,
+  );
   return match ? match.id : null;
 }
 
@@ -283,7 +334,7 @@ export const PLEDGE_LABELS: Record<PledgeStatus, string> = {
 */
 export const GIVING_SUGGESTIONS = [
   "Wherever it does the most",
-  ...NEED_AREAS.filter((area) => area.id !== "other").map((area) => area.label),
+  ...NEED_AREAS.filter((area) => area.id !== "other").map(projectName),
 ];
 
 export type Pledge = {

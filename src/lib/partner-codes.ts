@@ -69,12 +69,27 @@ const MAX_ATTEMPTS = 5;
 export const CODE_LIFETIME = `${LIFETIME_MINUTES} minutes`;
 export const CODE_LENGTH = DIGITS;
 
-function digest(email: string, partnerId: string, code: string) {
+/**
+ * What a code opens, once it is typed back.
+ *
+ * Two kinds now, and the kind is part of the identity rather than something the
+ * claiming code infers. A partner reads giving; a supporter reads nothing but
+ * the site's own prices (see lib/supporters.ts). They are wildly different
+ * powers, so a code issued for one must be incapable of being spent for the
+ * other — which is guaranteed below by folding `kind` into the digest, the same
+ * way lib/session.ts folds a scope into a cookie's signature so that a partner's
+ * cookie cannot be pasted into the admin cookie's name.
+ */
+export type CodeOpens =
+  | { kind: "partner"; id: string }
+  | { kind: "supporter"; id: string };
+
+function digest(email: string, opens: CodeOpens, code: string) {
   const key = process.env.APP_SESSION_SECRET;
   if (!key) throw new Error("APP_SESSION_SECRET is not set.");
 
   return createHmac("sha256", key)
-    .update(`partner-code:${email}:${partnerId}:${code}`)
+    .update(`partner-code:${opens.kind}:${email}:${opens.id}:${code}`)
     .digest("hex");
 }
 
@@ -130,13 +145,35 @@ function ensureTable() {
     await sql()`
       CREATE TABLE IF NOT EXISTS partner_codes (
         email      TEXT PRIMARY KEY,
-        partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+        partner_id TEXT REFERENCES partners(id) ON DELETE CASCADE,
         code_hash  TEXT NOT NULL,
         expires_at TIMESTAMPTZ NOT NULL,
         attempts   INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `;
+
+    /*
+      Widened rather than dropped, unlike the migration above, because this time
+      the old rows *can* be carried: a row with a partner_id means exactly what
+      it always meant, and the new column is simply null on it.
+
+      `partner_id` loses its NOT NULL because a code issued to a stranger opens
+      no partner at all. Exactly one of the two columns is set on any row, which
+      is enforced by the single writer below rather than by a CHECK — a
+      constraint here would be a second place for the rule to live, and the rule
+      is one line of one function.
+
+      `supporter_id` carries no foreign key, and that is deliberate. The
+      supporters table is created lazily by lib/supporters.ts on its own first
+      use, and a REFERENCES clause here would make this table's creation depend
+      on the order two unrelated modules happened to be reached in. The cost of
+      going without is a code row that outlives a supporter Simon deleted, for
+      up to a quarter of an hour — and spending it starts a session for an id
+      that no longer resolves, which `currentSupporter` reads as signed out.
+    */
+    await sql()`ALTER TABLE partner_codes ALTER COLUMN partner_id DROP NOT NULL`;
+    await sql()`ALTER TABLE partner_codes ADD COLUMN IF NOT EXISTS supporter_id TEXT`;
   })().catch((error) => {
     // Let the next caller try again rather than caching the failure for the life
     // of the process.
@@ -159,21 +196,25 @@ function ensureTable() {
  * between a CSPRNG and a PRNG seeded from the clock is the difference between
  * guessing one in a million and guessing when somebody asked.
  */
-export async function issueCode(email: string, partnerId: string): Promise<string> {
+export async function issueCode(email: string, opens: CodeOpens): Promise<string> {
   await ensureTable();
 
   const code = String(randomInt(0, 10 ** DIGITS)).padStart(DIGITS, "0");
+  const partnerId = opens.kind === "partner" ? opens.id : null;
+  const supporterId = opens.kind === "supporter" ? opens.id : null;
 
   await sql()`
-    INSERT INTO partner_codes (email, partner_id, code_hash, expires_at, attempts)
-    VALUES (${email}, ${partnerId}, ${digest(email, partnerId, code)},
+    INSERT INTO partner_codes
+      (email, partner_id, supporter_id, code_hash, expires_at, attempts)
+    VALUES (${email}, ${partnerId}, ${supporterId}, ${digest(email, opens, code)},
             now() + ${`${LIFETIME_MINUTES} minutes`}::interval, 0)
     ON CONFLICT (email) DO UPDATE SET
-      partner_id = EXCLUDED.partner_id,
-      code_hash  = EXCLUDED.code_hash,
-      expires_at = EXCLUDED.expires_at,
-      attempts   = 0,
-      created_at = now()
+      partner_id   = EXCLUDED.partner_id,
+      supporter_id = EXCLUDED.supporter_id,
+      code_hash    = EXCLUDED.code_hash,
+      expires_at   = EXCLUDED.expires_at,
+      attempts     = 0,
+      created_at   = now()
   `;
 
   /*
@@ -198,7 +239,7 @@ export async function issueCode(email: string, partnerId: string): Promise<strin
  */
 export async function claimCode(
   email: string,
-  partnerId: string,
+  opens: CodeOpens,
   code: string,
 ): Promise<boolean> {
   const typed = code.replace(/\D/g, "");
@@ -207,20 +248,28 @@ export async function claimCode(
   await ensureTable();
 
   /*
-    `partner_id` is in the condition as well as the digest. The caller has just
-    worked out, from the ledger as it stands *now*, whose giving this address
-    may read; a code issued against a different answer — a reader Simon has
-    since moved, or removed and added elsewhere — is not the code for this
+    What the code opens is in the condition as well as the digest. The caller has
+    just worked out, from the ledger as it stands *now*, whose giving this
+    address may read; a code issued against a different answer — a reader Simon
+    has since moved, or removed and added elsewhere — is not the code for this
     sign-in, and must miss rather than quietly open the old dashboard.
+
+    The same column decides the *kind*. An address that has started giving since
+    its code was sent resolves to a partner now and was issued a supporter's
+    code, and the mismatch closes it: they ask again and come back to their own
+    dashboard, which is the answer that is true today.
   */
+  const column = opens.kind === "partner" ? "partner" : "supporter";
   const live = await sql()`
     SELECT code_hash FROM partner_codes
-    WHERE email = ${email} AND partner_id = ${partnerId}
+    WHERE email = ${email}
+      AND CASE WHEN ${column} = 'partner' THEN partner_id ELSE supporter_id END
+          = ${opens.id}
       AND expires_at > now() AND attempts < ${MAX_ATTEMPTS}
   `;
 
   const stored = live[0]?.code_hash;
-  if (typeof stored !== "string" || !sameDigest(stored, digest(email, partnerId, typed))) {
+  if (typeof stored !== "string" || !sameDigest(stored, digest(email, opens, typed))) {
     /*
       Counted against the code rather than the caller, and the code is burned
       once the count is up. Somebody guessing has to go back to the giver's inbox

@@ -25,7 +25,7 @@ See [SETUP.md](SETUP.md) to run, configure, and deploy it.
 | `/projects/kitchen`        | **The report** — photos, before/after, budget, give |
 | `/needs`                   | **The giving ledger** — costed items, and what is left on each |
 | `/needs/[slug]`            | One item: its figures, its progress, and the claim form |
-| `/partners`                | Partner sign-in — an emailed code, no password       |
+| `/partners`                | Sign-in — an emailed code, no password, any address  |
 | `/partners/dashboard`      | A giver's own giving, and updates on what it paid for |
 | `/partners/password`       | The older door, for churches issued a password by hand |
 | `/app`                     | The CMS (sign-in)                                   |
@@ -59,6 +59,59 @@ today; adding a second is a new entry in the array at the top of
 `/give` asks for the ministry as a whole. `/needs` asks for one thing at a time,
 with the price on it and the books open beside it.
 
+### The figures are behind a sign-in
+
+**No price on this site is public.** Every figure the ledger owns — what an item
+costs, what has arrived, what is promised, what is still open, and the
+line-by-line budgets on the project pages — is drawn as a blur until somebody
+signs in, with the invitation to do so beside it. `src/lib/reveal.ts` asks the
+one question and `src/components/money.tsx` is the only thing that asks it.
+
+The blur is over a **placeholder**, never over the real figure. A number printed
+into the page and smudged with `filter: blur()` is a number anybody reads with
+Ctrl-U, or with curl, which is how a scraper reads it anyway — it would look
+exactly like a lock and be none. So the response a signed-out visitor gets
+contains `$•,•••` and nothing else; the price is not in the document, the RSC
+payload or the cache. There is a test per public page asserting exactly that,
+against the response rather than against what is visible.
+
+What stays public is the **shape of the ask**: every item's name and summary, the
+project and the step of the work it belongs to, the progress bars and the
+percentage claimed. You can see that a water tank is nearly paid for without
+learning what a water tank costs, and the first of those is the part that makes
+somebody want to finish it. The arithmetic in the giving form stays public too —
+the box, what you type, the total on the button — because a form that would not
+tell you what you had just typed is not a careful form, it is a broken one.
+
+**Anybody can pass the gate**, which is the point and also its limit. The door at
+`/partners` takes any address, emails a code, and opens the figures — a person
+with no giving behind their name becomes a *supporter* (`src/lib/supporters.ts`),
+which is an address somebody proved they could read and nothing more. It is a
+turnstile, not security: what it stops is the ministry's prices being scraped and
+skimmed, and what it buys in return is a confirmed address belonging to somebody
+who cared enough to ask what a thing costs. Simon sees that list at the foot of
+`/app` → Partners.
+
+Nothing genuinely private may ever be moved behind this rung. A partner's own
+giving and a project's reconciliation stay behind `src/lib/disclosure.ts`, whose
+every input is money that *arrived* — see below. Two gates, deliberately in two
+files, so the weak one is never mistaken for the strong one.
+
+`src/lib/door.ts` is where the two kinds of person are told apart. One form, one
+code, and the site works out which room the address opens, because the site is
+the one that knows. That also closed a hole the old door could only paper over:
+it said the same sentence to a stranger and to a giver while emailing only the
+giver, so anybody who could watch an inbox could still tell them apart. Every
+address gets a code now, and the difference is only visible to somebody who has
+already proved they can read the inbox.
+
+The header carries an **initials badge** when somebody is signed in
+(`src/components/viewer-badge.tsx`), because being signed in now changes every
+page rather than one, and a partner whose month-old cookie has quietly expired
+would otherwise watch the site go smudged with nothing anywhere saying why.
+
+### The ledger itself
+
 A **need** is a single item with a single cost — a water tank, $850. A church or
 a person can claim **all of it or part of it**; whatever they leave stays open
 for somebody else, and the page says so in dollars. Three figures are public on
@@ -75,9 +128,10 @@ these pages where the numbers mean what they say.
 
 **Anybody who has given can sign in**, and there is no account to make: the
 email address on a gift *is* the account, because that is already what the ledger
-keys on. `/partners` emails a six-digit code to an address it has a gift against,
-and typing it back starts the session — no password to issue, to remember, or to
-reset. Proving you control the address is exactly the claim being made, which is
+keys on. `/partners` emails a six-digit code to any address, and typing it back
+starts the session — no password to issue, to remember, or to reset. An address
+with giving behind it opens that giving; an address without opens the figures and
+says so. Proving you control the address is exactly the claim being made, which is
 "the gifts filed under it are mine". The code lives in `src/lib/partner-codes.ts`;
 the door it opens is in `src/lib/partners.ts`. A handful of churches were issued a
 password before this existed and it still works, at `/partners/password`.

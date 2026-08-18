@@ -209,7 +209,19 @@ async function openPayment(input: {
       }
       if (input.amountCents > need.ledger.openCents) {
         return {
-          error: `Only ${usd(need.ledger.openCents)} of that item is still open. Try that, or less.`,
+          /*
+            The balance used to be in this sentence — "only $850 of that item is
+            still open" — and it cannot be now that the figure is behind a sign-in.
+            A form that refuses an amount and then prints the exact number it was
+            checked against is a way to read the whole ledger by submitting it one
+            guess at a time.
+          
+            So the refusal says what happened rather than what the answer is. It
+            costs an honest giver one more attempt, or a sign-in, and it is the only
+            wording that does not quietly undo the door.
+          */
+          error:
+            "That is more than is still open on this item. Try a smaller amount, or sign in to see what is left on it.",
         };
       }
 
@@ -476,7 +488,19 @@ export async function giveAction(
   }
   if (amountCents > need.ledger.openCents) {
     return {
-      error: `Only ${usd(need.ledger.openCents)} of that item is still open. Try that, or less.`,
+      /*
+        The balance used to be in this sentence — "only $850 of that item is
+        still open" — and it cannot be now that the figure is behind a sign-in.
+        A form that refuses an amount and then prints the exact number it was
+        checked against is a way to read the whole ledger by submitting it one
+        guess at a time.
+      
+        So the refusal says what happened rather than what the answer is. It
+        costs an honest giver one more attempt, or a sign-in, and it is the only
+        wording that does not quietly undo the door.
+      */
+      error:
+        "That is more than is still open on this item. Try a smaller amount, or sign in to see what is left on it.",
     };
   }
 

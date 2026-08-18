@@ -2,6 +2,7 @@
 
 import {
   Fragment,
+  type ReactNode,
   useActionState,
   useRef,
   useState,
@@ -18,6 +19,7 @@ import {
   buttonClass,
   inputClass,
 } from "@/components/form";
+import { HiddenFigure } from "@/components/hidden-figure";
 import { Icon } from "@/components/icons";
 import { GIVING_SUGGESTIONS, PARTNER_KINDS } from "@/lib/giving";
 import { parseUsd, usd } from "@/lib/money";
@@ -276,7 +278,8 @@ function Choice({
   checked: boolean;
   onChoose: () => void;
   title: string;
-  figure?: string;
+  /** A node, because the figure may be a blur rather than a price. */
+  figure?: ReactNode;
 }) {
   return (
     <label
@@ -352,9 +355,32 @@ export function GiveForm({
   initialTowards,
   contactEmail,
   canPay = false,
+  revealed = false,
 }: {
   /** The costed items still open. On a need's own page this is that one need. */
   choices: GiveChoice[];
+  /**
+   * Whether the person filling this in may read the ledger's figures.
+   *
+   * The form is the one place on the site where a price and a text box sit next
+   * to each other, which makes it the easiest place to get a gate wrong in both
+   * directions. Hide too much and giving stops working — nobody can decide what
+   * to type. Hide too little and this becomes the hole in the wall: every
+   * balance on the ledger, listed, on a page anybody can open.
+   *
+   * The line drawn is *the ledger's figures out, the giver's own arithmetic in*.
+   * What an item has left, and the chips built from it, are behind the door. The
+   * box, the amount somebody types, the running total on the button and every
+   * sentence about their own gift are not — those are theirs, not ours, and a
+   * form that would not tell you what you had just typed would be absurd.
+   *
+   * A prop and not a hook, because this is a client component. It arrives with
+   * the amounts already stripped out of `choices` rather than merely unrendered
+   * — see components/give-panel.tsx — so a `false` here always comes with an
+   * array that has no figures in it, and there is nothing left in the payload
+   * for this flag to be wrong about.
+   */
+  revealed?: boolean;
   /** True when the item is already decided, so the picker is not shown at all. */
   fixed?: boolean;
   /**
@@ -708,7 +734,13 @@ export function GiveForm({
                           once, about the row that was actually picked, at the
                           moment somebody is deciding what to type.
                         */
-                        figure={usd(choice.openCents ?? choice.costCents ?? 0)}
+                        figure={
+                          revealed ? (
+                            usd(choice.openCents ?? choice.costCents ?? 0)
+                          ) : (
+                            <HiddenFigure />
+                          )
+                        }
                       />
                     </Fragment>
                   );
@@ -775,13 +807,24 @@ export function GiveForm({
           <Field
             label="How much would you like to give?"
             hint={
+              /*
+                The first two branches recite a ledger figure, so they are only
+                reachable when there is one to recite: `openCents` and
+                `costCents` are stripped from the choices for anybody signed out,
+                which drops the sentence through to the plainer wording below.
+                The distinction those two draw — a balance that runs out, against
+                a target that does not — is only worth drawing beside the number
+                it is about.
+              */
               openCents !== undefined
                 ? `${usd(openCents)} of this is still open. You can give any part of it.`
-                : chosen
-                  ? `The whole of this comes to ${usd(chosen.costCents ?? 0)}. You can give any part of it.`
-                  : canPay
-                    ? "Whatever you can. You choose on the next step whether to pay it now or send it another way."
-                    : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
+                : chosen?.costCents !== undefined
+                  ? `The whole of this comes to ${usd(chosen.costCents)}. You can give any part of it.`
+                  : chosen
+                    ? "Any part of it is a real answer — whatever you can."
+                    : canPay
+                      ? "Whatever you can. You choose on the next step whether to pay it now or send it another way."
+                      : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
             }
           >
             <div className="mt-2 flex items-center gap-2 rounded-md border border-black/15 bg-white px-4 py-3 focus-within:border-plum focus-within:ring-2 focus-within:ring-plum/20">

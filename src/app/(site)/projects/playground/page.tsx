@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getContent } from "@/cms/content";
+import { Money } from "@/components/money";
 import { Icon } from "@/components/icons";
 import { PlaygroundEstimate } from "@/components/playground-estimate";
 import { ClothEdge } from "@/components/pattern";
@@ -16,7 +17,14 @@ import { RelatedLinks } from "@/components/related-links";
  * way out of shillings (see `usdFromKes`), so there is never a cent to print —
  * which is why this is not the ledger's `usd`, which counts in cents.
  */
-const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
+/*
+  The playground is quoted in whole dollars, not cents — `usdFromKes` rounds to
+  the nearest ten on the way out of shillings, because a supplier's price at a
+  rate that moves daily has no business claiming cents. Every figure on this page
+  goes through `Money`, which speaks the site's currency unit, so the conversion
+  happens once here rather than at eight call sites.
+*/
+const cents = (dollars: number) => Math.round(dollars) * 100;
 
 export const metadata: Metadata = pageMeta({
   title: "The Playground",
@@ -72,19 +80,19 @@ export default async function PlaygroundPage() {
           <div>
             <dt className="eyebrow text-white/50">The whole job</dt>
             <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-marigold">
-              {usd(totalUsd)}
+              <Money cents={cents(totalUsd)} />
             </dd>
           </div>
           <div>
             <dt className="eyebrow text-white/50">Equipment</dt>
             <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
-              {usd(quote.equipmentUsd)}
+              <Money cents={cents(quote.equipmentUsd)} />
             </dd>
           </div>
           <div>
             <dt className="eyebrow text-white/50">Safe surface</dt>
             <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
-              {usd(quote.groundUsd)}
+              <Money cents={cents(quote.groundUsd)} />
             </dd>
           </div>
         </dl>
@@ -185,7 +193,7 @@ export default async function PlaygroundPage() {
                 <Icon name={half.icon} className="h-9 w-9 text-plum" />
                 <p className="eyebrow mt-5 text-smoke">{half.eyebrow}</p>
                 <p className="font-display tabular mt-2 text-4xl leading-none font-semibold text-plum">
-                  {usd(half.total)}
+                  <Money cents={cents(half.total)} />
                 </p>
                 <p className="mt-5 flex-1 leading-relaxed text-smoke">
                   {half.body}
@@ -226,7 +234,7 @@ export default async function PlaygroundPage() {
           <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
             <p className="eyebrow text-white/70">The whole job</p>
             <p className="font-display tabular text-4xl font-semibold text-marigold">
-              {usd(totalUsd)}
+              <Money cents={cents(totalUsd)} />
             </p>
           </div>
 
@@ -258,8 +266,8 @@ export default async function PlaygroundPage() {
               Give the children a safe place to play
             </h2>
             <p className="mt-6 leading-relaxed text-white/65">
-              The whole job is {usd(totalUsd)}, and nothing has to arrive all at
-              once — {usd(quote.groundUsd)} surfaces the yard on its own.
+              The whole job is <Money cents={cents(totalUsd)} />, and nothing has to arrive all at
+              once — <Money cents={cents(quote.groundUsd)} /> surfaces the yard on its own.
             </p>
 
             {/*

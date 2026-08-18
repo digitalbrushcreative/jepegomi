@@ -1,5 +1,6 @@
+import type { ReactNode } from "react";
+import { Money } from "@/components/money";
 import type { Ledger } from "@/lib/giving";
-import { usd } from "@/lib/money";
 
 /**
  * A need's ledger, drawn.
@@ -15,6 +16,21 @@ import { usd } from "@/lib/money";
  * Deliberately no donor count and no donor names anywhere in here. Whether the
  * $400 came from one church or from eight is not the reader's business and,
  * more to the point, is not their decision to be swayed by.
+ *
+ * ## The bar stays; the figures do not
+ *
+ * Every amount in here goes through `Money`, which shows it to somebody signed
+ * in and a blur to everybody else (see components/money.tsx). The drawing does
+ * not: the segments, the percentage and the word "claimed" are all still there
+ * for a signed-out reader, because a proportion is not a price. You can see that
+ * a water tank is most of the way paid for without learning what a water tank
+ * costs this ministry, and the first of those is the part that makes somebody
+ * want to finish it.
+ *
+ * That split is also why the bar's `aria-label` had to be rewritten. It used to
+ * recite all four figures, which would have handed the entire ledger to anybody
+ * reading the page source — a redaction with the answer key stapled to it. It
+ * describes the shape now, in the same terms the sighted version is drawn in.
  */
 
 type Tone = "light" | "dark";
@@ -57,9 +73,11 @@ export function NeedBar({
       className={`h-3 w-full overflow-hidden rounded-full ${tones[tone].track} ${className}`}
       role="img"
       aria-label={
-        `${usd(ledger.receivedCents)} received` +
-        (ledger.promisedCents > 0 ? `, ${usd(ledger.promisedCents)} promised` : "") +
-        `, of ${usd(ledger.costCents)}. ${usd(ledger.openCents)} still open.`
+        `${percentReceived}% of the cost received` +
+        (percentClaimed > percentReceived
+          ? `, ${percentClaimed}% claimed in all`
+          : "") +
+        `. ${100 - percentClaimed}% still open.`
       }
     >
       {/*
@@ -91,7 +109,8 @@ function Figure({
   emphasis,
 }: {
   label: string;
-  value: string;
+  /** A `Money` element, not a string — the figure may not be ours to print. */
+  value: ReactNode;
   tone: Tone;
   emphasis?: boolean;
 }) {
@@ -132,21 +151,29 @@ export function NeedMeter({
           {settled ? "Fully claimed" : `${ledger.percentClaimed}% claimed`}
         </p>
         <p className={`tabular text-sm font-medium ${colours.muted}`}>
-          of {usd(ledger.costCents)}
+          of <Money cents={ledger.costCents} />
         </p>
       </div>
 
       <NeedBar ledger={ledger} tone={tone} className="mt-3" />
 
       <dl className="mt-5 flex flex-wrap gap-x-10 gap-y-4">
-        <Figure label="Received" value={usd(ledger.receivedCents)} tone={tone} />
+        <Figure
+          label="Received"
+          value={<Money cents={ledger.receivedCents} />}
+          tone={tone}
+        />
         {ledger.promisedCents > 0 && (
-          <Figure label="Promised" value={usd(ledger.promisedCents)} tone={tone} />
+          <Figure
+            label="Promised"
+            value={<Money cents={ledger.promisedCents} />}
+            tone={tone}
+          />
         )}
         {!settled && (
           <Figure
             label="Still open"
-            value={usd(ledger.openCents)}
+            value={<Money cents={ledger.openCents} />}
             tone={tone}
             emphasis
           />

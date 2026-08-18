@@ -3,6 +3,7 @@ import { Analytics } from "@/components/analytics";
 import { LiveSiteHeader, SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MinistryStructuredData } from "@/components/structured-data";
+import { ViewerBadge } from "@/components/viewer-badge";
 
 /**
  * The public site: everything a visitor sees.
@@ -32,7 +33,23 @@ export default function SiteLayout({
         page instead of holding the page back to underline something.
       */}
       <Suspense fallback={<SiteHeader pathname="" />}>
-        <LiveSiteHeader />
+        {/*
+          Two boundaries, one inside the other, because the bar and the badge
+          wait on different things. The outer one waits on the URL, which only a
+          route with a dynamic segment lacks. The inner one waits on a cookie,
+          which every route lacks until a request arrives — so it is nested
+          rather than merged: a signed-out visitor to /about must not be made to
+          wait for a session lookup to be told there is no session, and with the
+          reads separated they are not, because the badge's own fallback is
+          nothing at all and nothing at all is the answer for most people.
+        */}
+        <LiveSiteHeader
+          badge={
+            <Suspense fallback={null}>
+              <ViewerBadge />
+            </Suspense>
+          }
+        />
       </Suspense>
       <main id="main" className="flex-1">
         {children}

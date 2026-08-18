@@ -672,6 +672,80 @@ ${textFooter()}`,
 }
 
 /**
+ * The same six digits, sent to somebody who has not given yet.
+ *
+ * A separate message rather than a branch inside the one above, because it is
+ * addressed to a different person about a different thing. That one says "here
+ * is the code for seeing everything your church has given" to somebody with a
+ * ledger behind their name. This one goes to a stranger who clicked *show me
+ * what this costs* — there is no giving to describe, nobody's name to put in
+ * bold, and the honest subject of the email is the figures themselves.
+ *
+ * It is also the first thing this ministry ever says to them, which is worth
+ * more than the two dozen lines it takes to say it properly: what the code
+ * opens, that nothing has been signed up for, and that no gift is expected.
+ */
+export function supporterSignInCode(input: {
+  email: string;
+  code: string;
+  lifetime: string;
+}): Message {
+  const heading = "Your code for the figures";
+
+  const opens =
+    "Here is the code that opens the costings on our site — what each thing we are asking for comes to, what has already been given towards it, and what is still short. Type it into the page you asked from.";
+
+  const nothingOwed =
+    "This is not an account and you have not signed up for anything. We ask for an address because these are the ministry's own prices and we would rather know who is reading them than publish them to the whole internet. You are under no obligation to give.";
+
+  const unexpected =
+    "If you did not ask for this, somebody typed your address into our site and nothing has happened — the code is useless to them without this email. You do not need to do anything.";
+
+  return {
+    to: [named("", input.email)],
+    replyTo: publicInbox(),
+    subject: `${input.code} — your Jepegomi code`,
+    tag: "supporter-sign-in-code",
+    html: renderEmail({
+      preheader: `Your code is ${input.code}. It lasts ${input.lifetime}.`,
+      eyebrow: "The figures",
+      heading,
+      body:
+        lead("Hello,") +
+        p(escape(opens)) +
+        panel(
+          `<p style="margin:0 0 16px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;line-height:42px;font-weight:700;letter-spacing:8px;color:#7a1b5c;">${escape(input.code)}</p>`,
+          { tone: "plum" },
+        ) +
+        p(`It lasts ${escape(input.lifetime)}, and works once.`, {
+          small: true,
+          muted: true,
+        }) +
+        p(escape(nothingOwed), { small: true, muted: true }) +
+        rule() +
+        p(escape(unexpected), { small: true, muted: true }) +
+        signoff(),
+      footerNote: `You are getting this because somebody asked to see the costings on ${escape(site.domain)} with this address.`,
+    }),
+    text: `Hello,
+
+${opens}
+
+    ${input.code}
+
+It lasts ${input.lifetime}, and works once.
+
+${nothingOwed}
+
+${unexpected}
+
+${site.leaders}
+${site.longName}
+${textFooter()}`,
+  };
+}
+
+/**
  * A partner church being handed the key to its own dashboard.
  *
  * The password is in the email, in plain text, because that is how the system

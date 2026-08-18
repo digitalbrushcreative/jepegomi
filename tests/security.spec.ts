@@ -257,11 +257,18 @@ test.describe("the sign-in forms", () => {
     page,
   }) => {
     /*
-      The front door emails a code to an address that has given, and this is the
-      one place the whole scheme could leak the giver list: an answer that reads
-      differently for an address on it. So the assertion is on the *shape* of the
-      reply to an address that certainly is not — a conditional sentence, and the
-      second step offered regardless, exactly as somebody real would see.
+      The front door is the one place the whole scheme could leak the giver list:
+      an answer that reads differently for an address on it. So the assertion is
+      on the *shape* of the reply to an address that certainly is not on it — a
+      code announced, and the second step offered, exactly as somebody real
+      would see.
+
+      The sentence used to hedge ("if that address has given…") because a code
+      only ever went to an address in the ledger, and the hedge was the only
+      thing standing between this form and an enumeration oracle. Every address
+      gets one now — a stranger's opens the figures rather than a dashboard, see
+      lib/door.ts — so the reply can be flat, and the two cases are no longer
+      merely worded alike, they are the same thing happening.
 
       Runs without a database. Issuing the code needs one, and the point here is
       that failing to reach it changes nothing about what is said.
@@ -274,10 +281,12 @@ test.describe("the sign-in forms", () => {
     await form.getByRole("button", { name: "Email me a code" }).click();
 
     await expect(form.getByLabel("Your code")).toBeVisible();
-    await expect(form).toContainText(/If that address has given/i);
+    await expect(form).toContainText(/a code is on its way to that address/i);
     await expect(form).not.toContainText(
       /no such|not found|unknown|we don't have|do not have/i,
     );
+    // And nothing that sorts the address into one of the two kinds behind it.
+    await expect(form).not.toContainText(/if that address|partner|your giving/i);
   });
 
   test("a wrong code is refused without saying which part was wrong", async ({
@@ -333,6 +342,91 @@ test.describe("a project's line-by-line figures", () => {
       appearing means the tables are being drawn.
     */
     await expect(page.getByText(/KSh\s?[\d,]+/).first()).toHaveCount(0);
+  });
+});
+
+/*
+  The prices, and the turnstile in front of them.
+
+  Distinct from the project accounts above, and the difference is the whole
+  reason lib/reveal.ts is a separate file from lib/disclosure.ts. Those are a
+  partner's books, behind a rule earned by money that arrived. These are the
+  ministry's shop window — what a water tank costs, what is still short — behind
+  a gate anybody can pass by proving an email address.
+
+  A weak gate still has to be a real one, and the way this one could stop being
+  real is quiet: a figure that is printed into the page and then blurred with
+  CSS. That looks identical in a screenshot and is no gate at all, because the
+  number is in the source. So every assertion here is against the *response*,
+  never against what is visible — `toHaveCount(0)` on a locator would pass just
+  as happily for a figure hidden under a filter.
+*/
+test.describe("the figures, signed out", () => {
+  /**
+   * A money figure in the response, ignoring the noise.
+   *
+   * Comma-formatted only — `$1,138` and not `$50`. Minified CSS and webpack
+   * chunk names are full of `$` followed by digits, and the four suggested
+   * amounts on the giving form are deliberately public constants rather than
+   * anything off the ledger. A thousands separator is the shape of a figure this
+   * ministry actually prints and nothing else on the page has it.
+   */
+  function figuresIn(html: string) {
+    return [...new Set(html.match(/\$[0-9]{1,3},[0-9]{3}/g) ?? [])];
+  }
+
+  const pages = [
+    "/",
+    "/needs",
+    "/give",
+    "/projects",
+    "/projects/kitchen",
+    "/projects/playground",
+    "/programs/transport",
+    "/programs/digital",
+  ];
+
+  for (const path of pages) {
+    test(`${path} carries no ledger figure in its response`, async ({
+      request,
+    }) => {
+      const html = await (await request.get(path)).text();
+
+      expect(figuresIn(html), `${path} leaked a figure`).toEqual([]);
+      // The shilling half of the playground estimate, by the same argument.
+      expect(html).not.toMatch(/KSh\s?[0-9][0-9,]*/);
+    });
+  }
+
+  test("says what is behind the blur, rather than looking broken", async ({
+    page,
+  }) => {
+    await page.goto("/needs");
+
+    /*
+      A page of smudges with no explanation reads as a fault, and a reader who
+      thinks the site is broken does not go looking for a sign-in. The invitation
+      is the difference between a redaction and a door.
+    */
+    await expect(
+      page.getByRole("link", { name: /sign in to reveal the total cost/i }),
+    ).toBeVisible();
+  });
+
+  test("keeps the shape of the ask, which is the part that still works", async ({
+    page,
+  }) => {
+    await page.goto("/needs");
+
+    /*
+      The gate is on prices, not on the appeal. Item titles, the projects they
+      belong to and how far along each one is are all still public — you can see
+      that a thing is nearly paid for without being told what it cost, and the
+      first of those is what makes somebody want to finish it. A gate that took
+      the whole page with it would be the wrong gate.
+    */
+    await expect(page.getByText(/% claimed/).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /give/i }).first()).toBeVisible();
   });
 });
 

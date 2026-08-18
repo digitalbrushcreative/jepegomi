@@ -6,7 +6,8 @@ import { PhotoStrip } from "@/components/photos";
 import { SchoolBus } from "@/components/school-bus";
 import { ButtonLink, Eyebrow, SectionTitle } from "@/components/ui";
 import { getKitchenReport } from "@/lib/kitchen";
-import { busPrice, usd } from "@/lib/money";
+import { Money, MoneyText } from "@/components/money";
+import { busPrice } from "@/lib/money";
 import { pageMeta } from "@/lib/seo";
 import { RelatedLinks } from "@/components/related-links";
 
@@ -52,9 +53,20 @@ export default async function TransportPage() {
   */
   const figures = [
     {
-      value: usd(bus.usdCents),
+      value: <Money cents={bus.usdCents} />,
       label: `A ${transport.busSeats}-seater bus`,
-      detail: `${bus.shillings} — converted at today's rate, rounded`,
+      /*
+        Both halves of the price, and both behind the door. The shilling figure
+        is the dealer's actual quote and the dollar one is it converted, so
+        showing either alone would be a redaction anybody could undo with a
+        calculator and today's rate.
+      */
+      detail: (
+        <>
+          <MoneyText text={bus.shillings} /> — converted at today&apos;s rate,
+          rounded
+        </>
+      ),
     },
   ];
 

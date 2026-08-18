@@ -19,7 +19,12 @@ export type Need = {
   giveCta: string;
 };
 
-export type Figure = { label: string; value: string };
+/**
+ * `value` is a node rather than a string because a money figure on this slider
+ * may be a blur rather than a number — see components/money.tsx. The slider does
+ * not know or care which it got; it just puts it in the box.
+ */
+export type Figure = { label: string; value: ReactNode };
 
 /**
  * The contents of the white card beside a need — not the card itself, which is

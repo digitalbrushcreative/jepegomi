@@ -168,6 +168,23 @@ export const navLinks: NavLink[] = [
         href: "/projects/playground",
         blurb: "Welded on site, standing on bare earth. What replacing it costs.",
       },
+      /*
+        These two point into /programs, which is where the work they belong to
+        is written up. The programme runs whether or not anybody gives; the
+        project is the one purchase that would change it, and this menu is a
+        list of those. Naming them apart is what stops "give to school
+        transport" reading like a subscription to a bus route.
+      */
+      {
+        label: "Bus Upgrade",
+        href: "/programs/transport",
+        blurb: "The van the school has outgrown, and what a 26-seater costs.",
+      },
+      {
+        label: "Service Livestream",
+        href: "/programs/digital",
+        blurb: "The camera, the laptop and the connection the services go out on.",
+      },
     ],
   },
   {

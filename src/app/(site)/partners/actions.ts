@@ -1,14 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { partnerSignInCode, queue } from "@/lib/mail";
+import { enterWithCode, leave, requestCode as codeForAddress } from "@/lib/door";
+import { partnerSignInCode, queue, supporterSignInCode } from "@/lib/mail";
 import { CODE_LIFETIME } from "@/lib/partner-codes";
-import {
-  issueSignInCode,
-  signInPartner,
-  signInPartnerWithCode,
-  signOutPartner,
-} from "@/lib/partners";
+import { signInPartner } from "@/lib/partners";
 import {
   RATES,
   callerKey,
@@ -31,6 +27,14 @@ import {
  * code request says the same thing as a success. It costs a little clarity for
  * the one person in fifty who mistyped their address, and the alternative costs
  * everybody.
+ *
+ * The code door now keeps that rule properly rather than nearly. It used to
+ * *say* the same sentence either way while sending an email only to addresses
+ * that give, so anybody who could watch an inbox could still tell — the promise
+ * was kept in the words and broken in the traffic. Every address gets a code
+ * now, because there is somewhere for a stranger to be let into: the figures.
+ * See lib/door.ts, which decides which of the two rooms an address opens, and
+ * lib/supporters.ts for what the smaller one is.
  */
 
 /* ---------------------------------------------------------- the code door */
@@ -81,15 +85,15 @@ async function requestCode(formData: FormData): Promise<CodeSignInState> {
   }
 
   try {
-    const issued = await issueSignInCode(email);
+    const arrival = await codeForAddress(email);
 
     /*
       `queue`, not `send`: the message goes out after the response has already
       left, so the page moves on at the speed of a database write. It also means
-      the reply takes the same time whether or not there was anybody to send to,
-      which is the timing half of saying the same sentence either way.
+      the reply takes the same time whichever message it was, which is the timing
+      half of saying the same sentence either way.
     */
-    if (issued) {
+    if (arrival.kind === "partner") {
       /*
         The code goes to the address that asked for it, which is not always the
         partner's own — Simon can add a treasurer or a missions pastor to a
@@ -97,16 +101,31 @@ async function requestCode(formData: FormData): Promise<CodeSignInState> {
         lib/partner-readers.ts. What the message says changes with that; who it
         is addressed to is the part that must not be got wrong.
       */
-      const to = issued.reader
-        ? { name: issued.reader.name, email: issued.reader.email }
-        : { name: issued.partner.contactName, email: issued.partner.email };
+      const { partner, reader } = arrival.at;
+      const to = reader
+        ? { name: reader.name, email: reader.email }
+        : { name: partner.contactName, email: partner.email };
 
       queue(
         partnerSignInCode({
-          partnerName: issued.partner.name,
+          partnerName: partner.name,
           to,
-          onBehalf: Boolean(issued.reader),
-          code: issued.code,
+          onBehalf: Boolean(reader),
+          code: arrival.code,
+          lifetime: CODE_LIFETIME,
+        }),
+      );
+    } else {
+      /*
+        A different message for somebody with no giving behind their name, not a
+        branch inside the partner one: it is the first thing this ministry ever
+        says to them, and "here is everything your church has given" would be
+        addressed to a church that does not exist. See mail/messages.ts.
+      */
+      queue(
+        supporterSignInCode({
+          email: arrival.supporter.email,
+          code: arrival.code,
           lifetime: CODE_LIFETIME,
         }),
       );
@@ -138,7 +157,7 @@ async function signInWithCode(formData: FormData): Promise<CodeSignInState> {
 
   let ok = false;
   try {
-    ok = await signInPartnerWithCode(email, code);
+    ok = await enterWithCode(email, code);
   } catch (error) {
     console.error("Partners: code sign-in failed.", error);
     return {
@@ -151,10 +170,11 @@ async function signInWithCode(formData: FormData): Promise<CodeSignInState> {
   if (!ok) {
     /*
       One message for every way of getting here: wrong digits, a code that has
-      expired, one already spent, one burned by five wrong guesses, and an
-      address nobody gives from. The tries are counted on the code's own row —
-      see lib/partner-codes.ts — so there is nothing to gain by being specific
-      about which of those it was.
+      expired, one already spent, one burned by five wrong guesses, and one
+      issued against an answer that has since changed — a reader Simon moved, or
+      a supporter who has given in the meantime and is a partner now. The tries
+      are counted on the code's own row — see lib/partner-codes.ts — so there is
+      nothing to gain by being specific about which of those it was.
     */
     return {
       step: "code",
@@ -164,6 +184,12 @@ async function signInWithCode(formData: FormData): Promise<CodeSignInState> {
     };
   }
 
+  /*
+    Everybody lands on the dashboard, including a supporter who has never given
+    a penny — that page is where it is explained what their sign-in did and did
+    not do, and dropping them back on the door they just came through would read
+    as a sign-in that failed. See partners/dashboard/page.tsx.
+  */
   redirect("/partners/dashboard");
 }
 
@@ -234,6 +260,6 @@ export async function partnerSignInAction(
 }
 
 export async function partnerSignOutAction() {
-  await signOutPartner();
+  await leave();
   redirect("/partners");
 }

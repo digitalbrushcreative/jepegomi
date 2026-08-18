@@ -247,12 +247,15 @@ export async function signInPartner(email: string, password: string) {
 export async function issueSignInCode(
   email: string,
 ): Promise<{ partner: Partner; reader: PartnerReader | null; code: string } | null> {
-  const resolved = await resolveSignIn(email);
+  const resolved = await partnerAtDoor(email);
   if (!resolved) return null;
 
   return {
     ...resolved,
-    code: await issueCode(email.trim().toLowerCase(), resolved.partner.id),
+    code: await issueCode(email.trim().toLowerCase(), {
+      kind: "partner",
+      id: resolved.partner.id,
+    }),
   };
 }
 
@@ -271,9 +274,11 @@ export async function issueSignInCode(
  * that moment this returns their own giving instead of the church's. They lose
  * a view they had, which is worth knowing about; they do not lose their own.
  */
-async function resolveSignIn(
+export type PartnerAtDoor = { partner: Partner; reader: PartnerReader | null };
+
+export async function partnerAtDoor(
   email: string,
-): Promise<{ partner: Partner; reader: PartnerReader | null } | null> {
+): Promise<PartnerAtDoor | null> {
   const address = email.trim().toLowerCase();
 
   const partner = await getPartnerByEmail(address);
@@ -311,15 +316,30 @@ export async function signInPartnerWithCode(email: string, code: string) {
     `claimCode` is given the fresh answer and will miss if the code was issued
     against a different one.
   */
-  const resolved = await resolveSignIn(address);
+  const resolved = await partnerAtDoor(address);
   if (!resolved) return false;
 
-  if (!(await claimCode(address, resolved.partner.id, code))) return false;
+  if (
+    !(await claimCode(address, { kind: "partner", id: resolved.partner.id }, code))
+  ) {
+    return false;
+  }
 
+  await startPartnerSession(resolved);
+  return true;
+}
+
+/**
+ * Starts the session for a partner who has already been let through.
+ *
+ * Exported so lib/door.ts can finish a sign-in it began — the door serves two
+ * kinds of person now and has to decide which session to start, but the shape of
+ * a partner's cookie is this file's business and stays in it.
+ */
+export async function startPartnerSession(resolved: PartnerAtDoor) {
   await partnerSession.start(
     sessionValue(resolved.partner.id, resolved.reader?.id),
   );
-  return true;
 }
 
 export async function signOutPartner() {

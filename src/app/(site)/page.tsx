@@ -6,6 +6,7 @@ import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { HeroSlider } from "@/components/hero-slider";
 import { Icon, type IconName } from "@/components/icons";
+import { Money } from "@/components/money";
 import { NeedsSlider } from "@/components/needs-slider";
 import { ClothEdge } from "@/components/pattern";
 import { PhotoStrip } from "@/components/photos";
@@ -14,7 +15,7 @@ import { SchoolBus } from "@/components/school-bus";
 import { ButtonLink, SectionTitle } from "@/components/ui";
 import { getChildrenFed } from "@/lib/enrolment";
 import { getKitchenReport, kitchenStats } from "@/lib/kitchen";
-import { busPrice, usd } from "@/lib/money";
+import { busPrice } from "@/lib/money";
 import { getGivingSummary, getStillNeededCents } from "@/lib/needs";
 import { pageMeta } from "@/lib/seo";
 import { site } from "@/lib/site";
@@ -229,7 +230,10 @@ export default async function HomePage() {
        used to carry "Held in the bank" alongside — see the bus fields in
        cms/schema.ts. */
     "/programs/transport": [
-      { label: `A ${transport.busSeats}-seater bus`, value: usd(bus.usdCents) },
+      {
+        label: `A ${transport.busSeats}-seater bus`,
+        value: <Money cents={bus.usdCents} />,
+      },
     ],
     /*
       The middle tile was the size of the gift that built it. What a partner
@@ -243,7 +247,7 @@ export default async function HomePage() {
       { label: stats[1].label, value: stats[1].value },
       {
         label: "Still needed to finish",
-        value: usd(kitchenStillNeeded),
+        value: <Money cents={kitchenStillNeeded} />,
       },
     ],
   };
@@ -470,10 +474,16 @@ export default async function HomePage() {
                 Only once there is a costed item to point at. An empty ledger
                 behind a button promising "what's needed" is the one thing this
                 whole feature exists not to do.
+
+                The total used to be in the label — "see what's needed, $4,200
+                open" — and it has come off rather than gone behind a blur. A
+                button is a place for one clear instruction, and "see what's
+                needed — $•,••• open" is a button apologising for itself at the
+                exact moment somebody is deciding whether to press it.
               */}
               {giving.openCount > 0 && (
                 <ButtonLink href="/needs" variant="ghost" className="text-plum">
-                  See what&apos;s needed — {usd(giving.totalOpenCents)} open
+                  See what&apos;s needed
                 </ButtonLink>
               )}
             </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { JepegomiLogo } from "@/components/logos";
 import { type NavLink, navLinks } from "@/lib/site";
 
@@ -30,13 +30,28 @@ import { type NavLink, navLinks } from "@/lib/site";
  * to seven — but seven plus the logo and the Give button still will not sit in
  * 768px. Below that it is the mobile menu, which does not care how many there are.
  *
+ * The signed-in mark arrives as a prop for a different reason: this is a client
+ * component, and who is signed in is a cookie only the server can read. It comes
+ * in as an already-rendered element (see components/viewer-badge.tsx), wrapped
+ * by the layout in its own Suspense boundary, so the bar stays in the static
+ * shell and only the badge waits on a request. `null` on a signed-out visit,
+ * which is nearly all of them, and the layout's fallback while it resolves — so
+ * the header never reflows under somebody scrolling.
+ *
  * The path arrives as a prop rather than out of usePathname(), so that the bar
  * can be drawn without one. On a route whose address is not known until a
  * request arrives — /needs/[slug], /app/needs/[id] — the pathname is runtime
  * data, and a header that insisted on it would keep the entire page out of the
  * static shell to decide which nav link to underline. See SiteHeaderBar below.
  */
-export function SiteHeader({ pathname }: { pathname: string }) {
+export function SiteHeader({
+  pathname,
+  badge = null,
+}: {
+  pathname: string;
+  /** The signed-in mark, or nothing. Rendered on the server; see above. */
+  badge?: ReactNode;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -143,6 +158,13 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               </Link>
             ),
           )}
+          {/*
+            `empty:hidden` because `badge` is an element either way — it is a
+            server component that renders nothing for a signed-out visitor, and
+            an element is truthy however little it draws. Without this the nav
+            would carry a stray 8px of margin for everybody who is not signed in.
+          */}
+          <div className="ml-2 flex items-center empty:hidden">{badge}</div>
           <Link
             href="/give"
             className="ml-2 rounded-full bg-green px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-green-light"
@@ -152,6 +174,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
         </nav>
 
         <div className="flex items-center gap-3 lg:hidden">
+          {badge}
           <Link
             href="/give"
             className="rounded-full bg-green px-4 py-2 text-sm font-bold text-white"
@@ -227,6 +250,6 @@ export function SiteHeader({ pathname }: { pathname: string }) {
  * ship the bar immediately and light the right link a moment later, instead of
  * holding the whole page back for it.
  */
-export function LiveSiteHeader() {
-  return <SiteHeader pathname={usePathname()} />;
+export function LiveSiteHeader({ badge }: { badge?: ReactNode }) {
+  return <SiteHeader pathname={usePathname()} badge={badge} />;
 }

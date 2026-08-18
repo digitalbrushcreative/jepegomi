@@ -12,13 +12,19 @@ const buttonClass =
 /**
  * The sentence shown once a code has been asked for.
  *
- * "If that address" and not "we have sent", and it is the same sentence whether
- * or not anything was sent. The form cannot say "we don't know that address"
- * without becoming a way to ask which churches give to this ministry — so it
- * never says it, and this is the wording that stays true either way. The
- * matching reasoning, from the server's side, is at the top of ./actions.ts.
+ * It used to hedge — "*if* that address has given to Jepegomi, a code is on its
+ * way" — because a code only ever went to an address in the ledger, and saying
+ * plainly that one had been sent would have turned this form into a way of
+ * asking which churches give here.
+ *
+ * It can be said plainly now, because it is now true for everybody: every
+ * address gets a code, and which of the two rooms it opens is settled after
+ * somebody has proved they can read the inbox. See lib/door.ts. The hedge is
+ * gone and nothing was given up to lose it — which is the good kind of fix,
+ * where the privacy stops resting on careful wording and starts resting on
+ * there being nothing to tell apart.
  */
-const SENT = "If that address has given to Jepegomi, a code is on its way to it now.";
+const SENT = "A code is on its way to that address now.";
 
 export function PartnerLoginForm() {
   const [state, formAction, pending] = useActionState<CodeSignInState, FormData>(
@@ -87,7 +93,8 @@ export function PartnerLoginForm() {
             className={inputClass}
           />
           <span className="mt-2 block text-sm leading-relaxed text-smoke">
-            The address you gave with. We will send a code to it.
+            Any address you can read. If you have given before, use the one the
+            gift came from and you will see it all.
           </span>
         </label>
       )}

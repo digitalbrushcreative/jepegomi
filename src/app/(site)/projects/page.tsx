@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { getContent } from "@/cms/content";
+import { Money } from "@/components/money";
 import { HubCard, PageHero, Verse } from "@/components/ui";
 import { getAppeals } from "@/lib/appeals";
 import { getKitchenReport } from "@/lib/kitchen";
 import { pageMeta } from "@/lib/seo";
-
-const usd = (amount: number) => `$${amount.toLocaleString("en-US")}`;
 
 export const metadata: Metadata = pageMeta({
   title: "Projects",
@@ -51,10 +51,16 @@ export default async function ProjectsPage() {
     rather than as an ask. Those show what the whole job comes to, which is the
     same figure /needs prints for them, off the same function.
   */
-  const figureFor = (area: string) => {
+  const figureFor = (area: string): ReactNode => {
     if (area === "kitchen") return `${kitchen.percentComplete}% complete`;
     const appeal = appeals.find((entry) => entry.area.id === area);
-    return appeal ? `${usd(appeal.costCents / 100)} for the whole job` : "";
+    if (!appeal) return "";
+
+    return (
+      <>
+        <Money cents={appeal.costCents} /> for the whole job
+      </>
+    );
   };
 
   return (
@@ -79,7 +85,15 @@ export default async function ProjectsPage() {
                 key={link.href}
                 href={link.href}
                 {...card}
-                eyebrow={figure ? `${card.eyebrow} · ${figure}` : card.eyebrow}
+                eyebrow={
+                  figure ? (
+                    <>
+                      {card.eyebrow} · {figure}
+                    </>
+                  ) : (
+                    card.eyebrow
+                  )
+                }
               />
             );
           })}
