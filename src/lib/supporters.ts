@@ -69,11 +69,60 @@ import { hasSessionSecret, session } from "@/lib/session";
 
 const supporterSession = session("supporter", "jepegomi_supporter");
 
+/**
+ * The third rung, and the weakest — somebody who typed their name into the
+ * giving form and has proved nothing at all.
+ *
+ * ## Why there is a rung below "supporter"
+ *
+ * A supporter proved they can read an inbox. That is not much, and it is not
+ * nothing, and it is more than a giver in the middle of giving can be asked for:
+ * the only way to prove an address is to send a code to it, and a form that
+ * stops halfway through to send somebody to their email is a form a good number
+ * of people never come back to. The gift is worth more than the proof.
+ *
+ * So the giving form asks who is giving — which it has always asked, just later
+ * on — and takes the answer on trust. That opens the figures a giver actually
+ * needs, and nothing else.
+ *
+ * ## What it does not open
+ *
+ * The site. `figuresRevealed` in lib/reveal.ts does not consult this session and
+ * must never be made to: every price on /needs and the project pages stays shut
+ * to somebody who has only typed a name. What this opens is one figure, for the
+ * item they have selected, inside the form that asked — see `figureForAction` in
+ * (site)/give/actions.ts.
+ *
+ * That narrowness is the entire security argument, because the details behind it
+ * are unverifiable and a script can produce as many as it likes. A rung that
+ * unlocked the list would be a rung that let anybody read the ledger by filling
+ * in a form; a rung that unlocks one row at a time, rate-limited, is a turnstile
+ * that costs a scraper more than it costs an honest giver.
+ *
+ * Its own cookie rather than a flag on the supporter one, for the reason
+ * lib/session.ts gives about scopes: two levels of access sharing a cookie is
+ * one relaxed condition away from being the same level.
+ */
+const askingSession = session("asking", "jepegomi_asking");
+
+/**
+ * How an address came to be on this list.
+ *
+ * `code` asked to see the figures at /partners; `giving` typed their details
+ * into the giving form. Kept apart rather than flattened into "unconfirmed",
+ * because they are not the same person to Simon: somebody who filled in a giving
+ * form and stopped is a warmer name than somebody who asked for a code and never
+ * opened the email, and a list that could not tell them apart would be a list
+ * nobody could act on.
+ */
+export type SupporterSource = "code" | "giving";
+
 export type Supporter = {
   id: string;
   email: string;
   /** Set the first time a code issued to this address was actually spent. */
   confirmed: boolean;
+  source: SupporterSource;
   createdAt: string;
   confirmedAt: string | null;
 };
@@ -87,6 +136,7 @@ function toSupporter(row: Row): Supporter {
     id: str(row.id),
     email: str(row.email),
     confirmed: Boolean(row.confirmed_at),
+    source: str(row.source) === "giving" ? "giving" : "code",
     createdAt: toIso(row.created_at),
     confirmedAt: row.confirmed_at ? toIso(row.confirmed_at) : null,
   };
@@ -109,6 +159,16 @@ function ensureTable() {
         created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
         confirmed_at TIMESTAMPTZ
       )
+    `;
+
+    /*
+      Added rather than built in, so a database that already holds this table
+      keeps its rows. Everything already in it arrived by asking for a code,
+      which is what the default says.
+    */
+    await sql()`
+      ALTER TABLE supporters
+      ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'code'
     `;
   })().catch((error) => {
     // Let the next caller retry rather than caching the failure for the life of
@@ -135,16 +195,66 @@ export function isSupporterAreaConfigured() {
  * never be quietly demoted to one. That ordering lives at the single call site
  * so it cannot be got wrong twice.
  */
-export async function findOrCreateSupporter(email: string): Promise<Supporter> {
+export async function findOrCreateSupporter(
+  email: string,
+  source: SupporterSource = "code",
+): Promise<Supporter> {
   await ensureTable();
   const address = email.trim().toLowerCase();
 
+  /*
+    `source` is written once and never overwritten. It records how we first met
+    somebody, and the first meeting is the one worth keeping: an address that
+    asked for a code in March and filled in a giving form in June is still an
+    address that came looking for the figures, and flipping the label on the
+    later visit would quietly rewrite that.
+  */
   const rows = await sql()`
-    INSERT INTO supporters (id, email) VALUES (${randomUUID()}, ${address})
+    INSERT INTO supporters (id, email, source)
+    VALUES (${randomUUID()}, ${address}, ${source})
     ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
-    RETURNING id, email, created_at, confirmed_at
+    RETURNING id, email, source, created_at, confirmed_at
   `;
   return toSupporter(rows[0]);
+}
+
+/* ------------------------------------------------------------ the third rung */
+
+/**
+ * Remembers that somebody said who they were in the giving form.
+ *
+ * Deliberately not `signInSupporter`: nothing has been confirmed, so
+ * `confirmed_at` stays null and the site stays shut. All this buys is the right
+ * to ask what one selected item costs, for as long as the cookie lasts.
+ */
+export async function startAsking(id: string) {
+  await askingSession.start(id);
+}
+
+/**
+ * The supporter who is part-way through the giving form, or null.
+ *
+ * Read only by the action that hands back a single figure. Nothing else may call
+ * it — and in particular `figuresRevealed` may not, which is said here as well
+ * as at the top of this file because it is the one line holding the three tiers
+ * apart.
+ */
+export async function currentAsking(): Promise<Supporter | null> {
+  if (!isSupporterAreaConfigured()) return null;
+
+  const id = await askingSession.read();
+  if (!id) return null;
+
+  try {
+    await ensureTable();
+    const rows = await sql()`
+      SELECT id, email, source, created_at, confirmed_at
+      FROM supporters WHERE id = ${id}
+    `;
+    return rows[0] ? toSupporter(rows[0]) : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -164,6 +274,12 @@ export async function signInSupporter(id: string) {
 
 export async function signOutSupporter() {
   await supporterSession.clear();
+  /*
+    The weaker cookie goes too. Somebody signing out on a shared machine means
+    all of it, and leaving the rung that opens figures standing would be a
+    sign-out that looked complete and was not.
+  */
+  await askingSession.clear();
 }
 
 /**
@@ -182,7 +298,7 @@ export async function currentSupporter(): Promise<Supporter | null> {
   try {
     await ensureTable();
     const rows = await sql()`
-      SELECT id, email, created_at, confirmed_at FROM supporters WHERE id = ${id}
+      SELECT id, email, source, created_at, confirmed_at FROM supporters WHERE id = ${id}
     `;
     return rows[0] ? toSupporter(rows[0]) : null;
   } catch {
@@ -211,7 +327,7 @@ export async function listSupporters(): Promise<Supporter[]> {
   try {
     await ensureTable();
     const rows = await sql()`
-      SELECT id, email, created_at, confirmed_at FROM supporters
+      SELECT id, email, source, created_at, confirmed_at FROM supporters
       ORDER BY confirmed_at DESC NULLS LAST, created_at DESC
     `;
     return rows.map(toSupporter);

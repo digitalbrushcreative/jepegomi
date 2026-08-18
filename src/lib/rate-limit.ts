@@ -103,6 +103,32 @@ export const RATES = {
   */
   codeRequest: { limit: 3, windowSeconds: 60 * 60 },
   codeRequestByIp: { limit: 20, windowSeconds: 60 * 60 },
+  /*
+    Saying who you are at the top of the giving form.
+
+    Generous, because this is not a door and hitting the limit costs a real giver
+    their gift. It exists to stop the step being used as a way to write rows into
+    the supporters table a thousand at a time — the details behind it are
+    unverifiable, so the table is the only thing to protect here.
+  */
+  givingDetails: { limit: 20, windowSeconds: 60 * 60 },
+  /*
+    Asking what one selected item costs.
+
+    The tightest thing to reason about in this file, because it is by definition
+    an enumeration endpoint: it answers "what is the balance on this item" to
+    somebody who has proved nothing but typing. What keeps it honest is that it
+    answers about *one* item per call, and this counter is the only thing
+    bounding how many calls there are — so the figure is roughly the number of
+    costed items on the site, which is what an honest giver could conceivably
+    click through in an hour of indecision, and far short of a useful scrape as
+    the ledger grows.
+
+    Per caller only, deliberately. There is no address to key on that anybody had
+    to prove, so a per-address counter would be a counter an attacker resets by
+    typing a different name.
+  */
+  figureLookup: { limit: 40, windowSeconds: 60 * 60 },
 } as const satisfies Record<string, Rate>;
 
 /* ------------------------------------------------------------- the caller */
