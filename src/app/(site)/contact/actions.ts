@@ -1,7 +1,7 @@
 "use server";
 
 import { STRICT, checkCaptcha } from "@/lib/captcha";
-import { isEmail, looksAutomated, text } from "@/lib/forms";
+import { hasGarbledText, humanCheck, isEmail, looksAutomated, text } from "@/lib/forms";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import {
   contactAcknowledgement,
@@ -52,6 +52,18 @@ export async function sendContactAction(
     that comes back without the honeypot; a bot told "thank you" goes away.
   */
   if (looksAutomated(formData)) return { done: true };
+
+  /*
+    The question, and the garbled text no browser sends — see lib/forms.ts. A
+    missing answer and a mangled message are scripts, and are thanked like the
+    honeypot; a wrong answer is a person, and is told.
+  */
+  const check = humanCheck(formData);
+  if (check === "missing") return { done: true };
+  if (hasGarbledText(enquiry.name, enquiry.message)) return { done: true };
+  if (check === "wrong") {
+    return { error: "That answer to the question at the end is not right. Have another go." };
+  }
 
   /*
     The honeypot above catches a script that fills every field it finds. It does

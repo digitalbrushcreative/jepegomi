@@ -144,6 +144,7 @@ test.describe("the captcha", () => {
     await form
       .getByLabel("Your message")
       .fill("This one should not reach anybody, because no token can be minted.");
+    await form.getByLabel(/three plus four/i).fill("7");
 
     /* The mint has had its chance and failed, so the field is still empty. */
     await expect(form.locator('input[name="captchaToken"]')).toHaveValue("");

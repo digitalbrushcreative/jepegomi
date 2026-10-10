@@ -8,6 +8,7 @@ import {
   Done,
   Field,
   FormError,
+  HumanCheck,
   SpamTraps,
   Submit,
   inputClass,
@@ -80,6 +81,8 @@ export function ContactForm({ email }: { email: string }) {
       <Field label="Your message">
         <textarea name="message" rows={6} required className={inputClass} />
       </Field>
+
+      <HumanCheck />
 
       <FormError>{state?.error}</FormError>
 

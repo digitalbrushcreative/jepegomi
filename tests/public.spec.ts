@@ -175,6 +175,30 @@ test.describe("the CMS, signed out", () => {
   anyway. The form now asks who they are first — which it always asked, just at
   the end — and hands back the figure for the one thing they picked.
 */
+test.describe("the contact form", () => {
+  /*
+    The wrong answer is the one worth pinning down: it must be told plainly,
+    since the person giving it is far more likely to be a person than a bot, and
+    it must be refused before anything reaches a mailbox. The right answer is not
+    tested here because it would send real mail.
+  */
+  test("refuses a wrong answer to the question, and says so", async ({ page }) => {
+    await page.goto("/contact");
+
+    const form = page.locator("form").filter({ visible: true }).first();
+    await form.getByLabel("Your name").fill("Ruth Wanjiku");
+    await form.getByLabel("Your email").fill("ruth@example.invalid");
+    await form.getByLabel("Your message").fill("Checking the question at the end works.");
+    await form.getByLabel(/three plus four/i).fill("eight");
+
+    // Past the two-second clock in lib/forms.ts, which would thank us silently.
+    await page.waitForTimeout(2_500);
+    await form.getByRole("button", { name: /send message/i }).click();
+
+    await expect(form.getByRole("alert")).toContainText(/not right/i);
+  });
+});
+
 test.describe("giving, signed out", () => {
   test("names each project once in the picker", async ({ page }) => {
     await page.goto("/give");

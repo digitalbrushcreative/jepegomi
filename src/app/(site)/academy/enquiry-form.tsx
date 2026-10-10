@@ -10,6 +10,7 @@ import {
   Done,
   Field,
   FormError,
+  HumanCheck,
   SpamTraps,
   Submit,
   inputClass,
@@ -98,6 +99,8 @@ export function EnrolmentEnquiryForm({ email }: { email: string }) {
       >
         <textarea name="message" rows={4} className={inputClass} />
       </Field>
+
+      <HumanCheck />
 
       <FormError>{state?.error}</FormError>
 

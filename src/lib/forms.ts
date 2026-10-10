@@ -41,6 +41,45 @@ export const TRAP = "website";
 export const CAPTCHA_FIELD = "captchaToken";
 
 /**
+ * The question a person answers before the contact and enrolment forms send.
+ *
+ * Neither the honeypot nor the clock had anything to say about the spam that
+ * kept arriving — sales pitches posted straight at the action by a script that
+ * knew which fields were real. A question it was never written to answer is a
+ * field it does not send, and the server refuses a submission without it.
+ *
+ * It is deliberately easy, and deliberately fixed. Easy, because the people
+ * writing in include parents on old phones and grandparents on a shared
+ * computer. Fixed, because varying it needs state kept between the page and the
+ * action, and the scripts this stops are not reading the question at all.
+ */
+export const CHECK_FIELD = "check";
+export const CHECK_QUESTION = "To show you are a person: what is three plus four?";
+const CHECK_ANSWERS = ["7", "seven"];
+
+/**
+ * `missing` is a submission that never had the field — a script, since the
+ * browser will not send the form with it blank — and is answered like the
+ * honeypot. `wrong` is most likely a person who mistyped, and is told so.
+ */
+export function humanCheck(formData: FormData): "right" | "wrong" | "missing" {
+  const answer = text(formData, CHECK_FIELD, 20).toLowerCase().replace(/[.!\s]+$/, "");
+  if (!answer) return "missing";
+  return CHECK_ANSWERS.includes(answer) ? "right" : "wrong";
+}
+
+/**
+ * Whether any of these values carries U+FFFD, the character a decoder puts in
+ * place of bytes that were not valid UTF-8. A browser always posts a form as
+ * well-formed UTF-8, so it cannot arrive from a person typing into the page —
+ * it is the fingerprint of a script that mangled its own emoji on the way in,
+ * which is exactly what the spam that prompted this looked like.
+ */
+export function hasGarbledText(...values: string[]) {
+  return values.some((value) => value.includes("�"));
+}
+
+/**
  * Whether a submission looks automated.
  *
  * Two cheap signals, both of which a real submission passes without noticing:

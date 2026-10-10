@@ -2,7 +2,7 @@
 
 import { STRICT, checkCaptcha } from "@/lib/captcha";
 import { recordEnrolmentEnquiry } from "@/lib/enquiries";
-import { isEmail, looksAutomated, text } from "@/lib/forms";
+import { hasGarbledText, humanCheck, isEmail, looksAutomated, text } from "@/lib/forms";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import {
   enrolmentAcknowledgement,
@@ -58,6 +58,16 @@ export async function sendEnrolmentEnquiryAction(
   }
 
   if (looksAutomated(formData)) return { done: true };
+
+  /* The question and the garbled-text check, exactly as on the contact form. */
+  const check = humanCheck(formData);
+  if (check === "missing") return { done: true };
+  if (hasGarbledText(enquiry.parentName, enquiry.childName, enquiry.message)) {
+    return { done: true };
+  }
+  if (check === "wrong") {
+    return { error: "That answer to the question at the end is not right. Have another go." };
+  }
 
   /*
     Same reasoning as the contact form, and one more besides: this one writes a

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { CAPTCHA_FIELD, TRAP } from "@/lib/forms";
+import { CAPTCHA_FIELD, CHECK_FIELD, CHECK_QUESTION, TRAP } from "@/lib/forms";
 
 /**
  * The parts every form on the site is built from.
@@ -234,6 +234,26 @@ async function token(siteKey: string, action: string) {
       grecaptcha.execute(siteKey, { action }).then(resolve, reject);
     });
   });
+}
+
+/**
+ * The question in lib/forms.ts, as a field. Plain HTML and `required`, so it
+ * works with no JavaScript and the browser will not send the form without an
+ * answer — which is what lets the server read a missing one as a script.
+ */
+export function HumanCheck() {
+  return (
+    <Field label={CHECK_QUESTION} className="sm:max-w-xs">
+      <input
+        name={CHECK_FIELD}
+        required
+        autoComplete="off"
+        inputMode="text"
+        maxLength={20}
+        className={inputClass}
+      />
+    </Field>
+  );
 }
 
 /**
