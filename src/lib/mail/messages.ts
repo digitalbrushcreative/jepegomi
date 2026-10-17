@@ -3,15 +3,19 @@ import { copyToMinistry, inboxes, publicInbox } from "./inboxes";
 import { type Message, named, oneLine } from "./send";
 import {
   button,
+  code,
+  detail,
   escape,
   facts,
   lead,
+  link,
   p,
   panel,
   paragraphs,
   quote,
   renderEmail,
   rule,
+  secret,
   signoff,
   textFooter,
 } from "./template";
@@ -68,7 +72,7 @@ export function contactNotification(enquiry: ContactEnquiry): Message {
           ["Name", escape(enquiry.name)],
           [
             "Email",
-            `<a href="mailto:${escape(enquiry.email)}" style="color:#7a1b5c;">${escape(enquiry.email)}</a>`,
+            link(`mailto:${enquiry.email}`, enquiry.email),
           ],
           ["About", escape(enquiry.subject)],
         ]) +
@@ -101,7 +105,7 @@ export function contactAcknowledgement(enquiry: ContactEnquiry): Message {
         quote(enquiry.message) +
         rule() +
         p(
-          "In the meantime, you are very welcome to look around the site — the school, the church, the feeding programme and the kitchen it cooks in are all there.",
+          "The church, the academy, Food at School and the projects under way are all on the site, with what each one costs and where it stands.",
           { small: true, muted: true },
         ) +
         button(site.url, "Visit jepegomi.org") +
@@ -148,12 +152,9 @@ export function givingDetails({ email }: { email: string }): Message {
   const heading = "How to give to Jepegomi";
 
   const known =
-    panel(
-      `<div style="font-family:Georgia,'Times New Roman',Times,serif;font-size:16px;line-height:26px;color:#2a1c24;">${escape(details).replace(/\n/g, "<br />")}</div><div style="height:16px;"></div>`,
-      { tone: "green" },
-    ) +
+    panel(detail(details), { tone: "forest" }) +
     p(
-      `Please send us a note when you have given, so we can thank you properly and tell you what your gift did. Write to <a href="mailto:${escape(publicInbox())}" style="color:#7a1b5c;">${escape(publicInbox())}</a>.`,
+      `Please let us know when you have given, so we can confirm it and report back on what it funded. Write to ${link(`mailto:${publicInbox()}`, publicInbox())}.`,
     );
 
   const unknown =
@@ -161,7 +162,7 @@ export function givingDetails({ email }: { email: string }): Message {
       p(
         `${escape(site.leaders)} will reply to this address with the right account for wherever you are giving from — usually within a day or two.`,
       ),
-      { tone: "marigold" },
+      { tone: "gold" },
     ) +
     p(
       "We keep this step by hand on purpose. Giving from Kenya, from the United States and from Europe each go a different way, and we would rather send you the one that works than publish a list and let you guess.",
@@ -186,30 +187,30 @@ export function givingDetails({ email }: { email: string }): Message {
       heading,
       body:
         lead(
-          "Thank you for wanting to give. Everything that comes to the ministry goes to the same three things: feeding the children, teaching them, and the church that holds it all together.",
+          "Thank you for partnering with the ministry. Gifts fund the church, Jepegomi Academy and Food at School, and the projects that are expanding them.",
         ) +
         (details ? known : unknown) +
         rule() +
         p(
-          `If you would rather give towards one particular thing — a term of a teacher's pay, the kitchen, a water tank — the needs are costed and listed at <a href="${escape(site.url)}/needs" style="color:#7a1b5c;">${escape(site.domain)}/needs</a>, and you can take part of one.`,
+          `To fund one particular thing — a teacher's term, a piece of the kitchen, a water tank — every project is costed at ${link(`${site.url}/needs`, `${site.domain}/needs`)}, with what is raised and what is still to raise, and you can take part of any item.`,
           { small: true, muted: true },
         ) +
-        button(`${site.url}/needs`, "See what is needed", "green") +
+        button(`${site.url}/needs`, "See the costed projects", "forest") +
         signoff(),
       footerNote: `You are getting this because this address was entered on the giving page at ${escape(site.domain)}. If that was not you, ignore it — nothing has been set up and no money is owed.`,
     }),
     text: `${heading}
 
-Thank you for wanting to give. Everything that comes to the ministry goes to the same three things: feeding the children, teaching them, and the church that holds it all together.
+Thank you for partnering with the ministry. Gifts fund the church, Jepegomi Academy and Food at School, and the projects that are expanding them.
 
 ${
   details
-    ? `${details}\n\nPlease send us a note when you have given, so we can thank you properly and tell you what your gift did: ${publicInbox()}`
+    ? `${details}\n\nPlease let us know when you have given, so we can confirm it and report back on what it funded: ${publicInbox()}`
     : `${site.leaders} will reply to this address with the right account for wherever you are giving from — usually within a day or two.\n\nWe keep this step by hand on purpose. Giving from Kenya, from the United States and from Europe each go a different way, and we would rather send you the one that works than publish a list and let you guess.`
 }
 
-If you would rather give towards one particular thing, the needs are costed and
-listed at ${site.url}/needs, and you can take part of one.
+To fund one particular thing, every project is costed at ${site.url}/needs,
+with what is raised and what is still to raise, and you can take part of any item.
 
 ${site.leaders}
 ${site.longName}
@@ -271,7 +272,7 @@ export function giftNotification(gift: GiftDetails): Message {
     ? `${gift.partnerName} has given ${gift.amount}`
     : `${gift.partnerName} has promised ${gift.amount}`;
   const towards = gift.needUrl
-    ? `<a href="${escape(gift.needUrl)}" style="color:#7a1b5c;">${escape(gift.towards)}</a>`
+    ? link(gift.needUrl, gift.towards)
     : escape(gift.towards);
 
   /*
@@ -286,13 +287,13 @@ export function giftNotification(gift: GiftDetails): Message {
         p(
           `The money has already arrived through Pesapal, and the ledger has marked it received — there is nothing to send them. Replying to this email goes straight back to them if you would like to say thank you.`,
         ),
-        { tone: "green" },
+        { tone: "forest" },
       )
     : panel(
         p(
           "They are waiting on you for the account details — the site does not publish them. Replying to this email goes straight back to them.",
         ),
-        { tone: "marigold" },
+        { tone: "gold" },
       );
 
   return {
@@ -321,7 +322,7 @@ export function giftNotification(gift: GiftDetails): Message {
           ["Contact", escape(gift.contactName || nothing)],
           [
             "Email",
-            `<a href="mailto:${escape(gift.partnerEmail)}" style="color:#7a1b5c;">${escape(gift.partnerEmail)}</a>`,
+            link(`mailto:${gift.partnerEmail}`, gift.partnerEmail),
           ],
           ["Kind", escape(gift.partnerKind)],
         ]) +
@@ -369,10 +370,10 @@ export function giftReceipt(gift: GiftDetails): Message {
   const opening = paid
     ? gift.remaining
       ? `Your gift has arrived and now shows as received on the website. The balance — ${escape(gift.remaining)} — stays open for somebody else to pick up.`
-      : "Your gift has arrived, it is written down against your name, and Dr Simon will make sure it goes where you have asked."
+      : "Your gift has arrived and is recorded against your name, and it will go to the work you have chosen."
     : gift.remaining
       ? `That amount now shows as promised on the website, so nobody else will be asked for it. The balance — ${escape(gift.remaining)} — stays open for somebody else to pick up.`
-      : "That is written down against your name, and Dr Simon will make sure it goes where you have asked.";
+      : "That is recorded against your name, and it will go to the work you have chosen.";
 
   /*
     A paid gift is never sent account details. That is the whole point of the
@@ -383,24 +384,21 @@ export function giftReceipt(gift: GiftDetails): Message {
   const sending = paid
     ? p("This is what was taken, for your records:") +
       panel(
-        `<div style="font-family:Georgia,'Times New Roman',Times,serif;font-size:16px;line-height:26px;color:#2a1c24;">${escape(
+        detail(
           `${paid.charged} · ${paid.method}${paid.confirmationCode ? `\nConfirmation ${paid.confirmationCode}` : ""}`,
-        ).replace(/\n/g, "<br />")}</div><div style="height:16px;"></div>`,
-        { tone: "green" },
+        ),
+        { tone: "forest" },
       )
     : details
       ? p("These are the details for sending it:") +
-        panel(
-          `<div style="font-family:Georgia,'Times New Roman',Times,serif;font-size:16px;line-height:26px;color:#2a1c24;">${escape(details).replace(/\n/g, "<br />")}</div><div style="height:16px;"></div>`,
-          { tone: "green" },
-        )
+        panel(detail(details), { tone: "forest" })
       : p(
           `We do not publish bank or M-Pesa details on the site. ${escape(site.leaders)} will reply to this address with the right account for wherever you are giving from — usually within a day or two.`,
         );
 
   const following = paid
-    ? "You will be able to follow what it paid for — including photographs — as the work goes on."
-    : "Once the gift arrives it is marked received on the site, and you will be able to follow what it paid for — including photographs — as the work goes on.";
+    ? "We report on every project as it goes, with photographs, so you can see what your gift has built."
+    : "Once the gift arrives it is marked received on the site. We report on every project as it goes, with photographs, so you can see what your gift has built.";
 
   return {
     to: [named(gift.partnerName, gift.partnerEmail)],
@@ -422,7 +420,7 @@ export function giftReceipt(gift: GiftDetails): Message {
           [
             "Towards",
             gift.needUrl
-              ? `<a href="${escape(gift.needUrl)}" style="color:#7a1b5c;">${escape(gift.towards)}</a>`
+              ? link(gift.needUrl, gift.towards)
               : escape(gift.towards),
           ],
           ["Your part", escape(gift.amount)],
@@ -431,7 +429,7 @@ export function giftReceipt(gift: GiftDetails): Message {
         rule() +
         sending +
         p(following) +
-        button(gift.needUrl ?? `${site.url}/needs`, gift.needUrl ? "Follow this item" : "See the other needs", "green") +
+        button(gift.needUrl ?? `${site.url}/needs`, gift.needUrl ? "Follow this item" : "See the costed projects", "forest") +
         signoff(),
       footerNote: paid
         ? `You are getting this because this address was used to give at ${escape(site.domain)}. The payment was taken by Pesapal on the ministry's behalf and will show on your statement under ${escape(site.longName)}. If anything about it looks wrong, reply to this email.`
@@ -443,10 +441,10 @@ ${
   paid
     ? gift.remaining
       ? `Your gift has arrived and now shows as received on the website. The balance —\n${gift.remaining} — stays open for somebody else to pick up.`
-      : "Your gift has arrived, it is written down against your name, and Dr Simon\nwill make sure it goes where you have asked."
+      : "Your gift has arrived and is recorded against your name, and it will go to\nthe work you have chosen."
     : gift.remaining
       ? `That amount now shows as promised on the website, so nobody else will be asked\nfor it. The balance — ${gift.remaining} — stays open for somebody else to pick up.`
-      : "That is written down against your name, and Dr Simon will make sure it goes\nwhere you have asked."
+      : "That is recorded against your name, and it will go to the work you have\nchosen."
 }
 
 Towards:   ${gift.towards}${gift.needUrl ? `  (${gift.needUrl})` : ""}
@@ -498,7 +496,7 @@ export function enrolmentNotification(enquiry: EnrolmentEnquiry): Message {
           ["Parent or guardian", escape(enquiry.parentName)],
           [
             "Email",
-            `<a href="mailto:${escape(enquiry.email)}" style="color:#7a1b5c;">${escape(enquiry.email)}</a>`,
+            link(`mailto:${enquiry.email}`, enquiry.email),
           ],
           ["Phone", escape(enquiry.phone || nothing)],
           ["Child", escape(enquiry.childName || nothing)],
@@ -539,16 +537,16 @@ export function enrolmentAcknowledgement(enquiry: EnrolmentEnquiry): Message {
       body:
         lead(`Dear ${escape(enquiry.parentName)},`) +
         p(
-          `Thank you for asking about a place for ${child}. Your enquiry has reached the school in ${escape(site.location)}, and someone will be in touch to talk it through and arrange a time for you to visit.`,
+          `Thank you for asking about a place for ${child}. Your enquiry has reached the academy in ${escape(site.location)}, and the school office will be in touch to talk it through and arrange a visit.`,
         ) +
         panel(
           p(
-            "Every child at the academy eats — porridge in the morning and a hot lunch every school day. That is not an extra; it is part of what the school is.",
+            "Jepegomi Academy teaches from kindergarten to Grade 6. Every pupil has porridge in the morning and a hot lunch each school day through Food at School, as part of the school day rather than an extra.",
           ),
-          { tone: "green" },
+          { tone: "plum" },
         ) +
         p(
-          "The best thing is to come and see it: the classrooms, the teachers, and the children at lunch. You are welcome any school day.",
+          "The best way to decide is to visit: see the classrooms, meet the teachers, and stay for lunch. You are welcome any school day.",
         ) +
         button(`${site.url}/academy`, "About the academy") +
         signoff(),
@@ -557,14 +555,15 @@ export function enrolmentAcknowledgement(enquiry: EnrolmentEnquiry): Message {
     text: `Dear ${enquiry.parentName},
 
 Thank you for asking about a place for ${enquiry.childName || "your child"}. Your enquiry has reached
-the school in ${site.location}, and someone will be in touch to talk it through
-and arrange a time for you to visit.
+the academy in ${site.location}, and the school office will be in touch to talk
+it through and arrange a visit.
 
-Every child at the academy eats — porridge in the morning and a hot lunch every
-school day. That is not an extra; it is part of what the school is.
+Jepegomi Academy teaches from kindergarten to Grade 6. Every pupil has porridge
+in the morning and a hot lunch each school day through Food at School, as part
+of the school day rather than an extra.
 
-The best thing is to come and see it: the classrooms, the teachers, and the
-children at lunch. You are welcome any school day.
+The best way to decide is to visit: see the classrooms, meet the teachers, and
+stay for lunch. You are welcome any school day.
 
 ${site.leaders}
 ${site.longName}
@@ -641,10 +640,7 @@ export function partnerSignInCode(input: {
       body:
         lead(`Dear ${escape(input.to.name || input.partnerName)},`) +
         p(opensHtml) +
-        panel(
-          `<p style="margin:0 0 16px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;line-height:42px;font-weight:700;letter-spacing:8px;color:#7a1b5c;">${escape(input.code)}</p>`,
-          { tone: "plum" },
-        ) +
+        panel(code(input.code), { tone: "plum" }) +
         p(`It lasts ${escape(input.lifetime)}, and works once.`, {
           small: true,
           muted: true,
@@ -713,10 +709,7 @@ export function supporterSignInCode(input: {
       body:
         lead("Hello,") +
         p(escape(opens)) +
-        panel(
-          `<p style="margin:0 0 16px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:34px;line-height:42px;font-weight:700;letter-spacing:8px;color:#7a1b5c;">${escape(input.code)}</p>`,
-          { tone: "plum" },
-        ) +
+        panel(code(input.code), { tone: "plum" }) +
         p(`It lasts ${escape(input.lifetime)}, and works once.`, {
           small: true,
           muted: true,
@@ -780,11 +773,11 @@ export function partnerLoginIssued(partner: {
           `${escape(site.leaders)} have set up a login for ${escape(partner.name)}, so you can see everything ${escape(partner.name)} has given, what it went to, and how each piece of work is going.`,
         ) +
         facts([
-          ["Sign in at", `<a href="${site.url}/partners/password" style="color:#7a1b5c;">${escape(site.domain)}/partners/password</a>`],
+          ["Sign in at", link(`${site.url}/partners/password`, `${site.domain}/partners/password`)],
           ["Email", escape(partner.email)],
           [
             "Password",
-            `<span style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:17px;letter-spacing:0.5px;background:#f5ecdd;padding:4px 10px;border-radius:6px;">${escape(partner.password)}</span>`,
+            secret(partner.password),
           ],
         ]) +
         button(`${site.url}/partners/password`, "Sign in") +
@@ -872,7 +865,7 @@ export function cmsAccountCreated(user: { name: string; email: string; invitedBy
           `${escape(user.invitedBy)} has set up an account for you on the ${escape(site.domain)} website, so you can change the wording on the pages, add photographs, and keep the list of needs up to date.`,
         ) +
         facts([
-          ["Sign in at", `<a href="${site.url}/app" style="color:#7a1b5c;">${escape(site.domain)}/app</a>`],
+          ["Sign in at", link(`${site.url}/app`, `${site.domain}/app`)],
           ["Email", escape(user.email)],
           ["Password", "The one you were given in person — it is not in this email."],
         ]) +
