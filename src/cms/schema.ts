@@ -789,16 +789,16 @@ const home = {
     evidenceNote:
       "The number of pupils is the academy's current enrolment. The school feeds every child it teaches, so it is also the number fed each day.",
 
-    storyLabel: "The kitchen",
-    storyHeading: "How the school stopped cooking over open fires",
+    storyLabel: "Current project",
+    storyHeading: "The kitchen upgrade",
     storyBody: [
-      `For years the academy's meals were cooked over open fires in the school yard. A partner church in the United States paid for a kitchen and store room, and it has cooked for all ${pupilsEnrolled} pupils every school day since.`,
-      "The dining area beside it is not finished yet. The kitchen page shows the build from the foundations up, and what is left to do.",
+      `The academy's new kitchen and store room are built and in use, cooking for all ${pupilsEnrolled} pupils every school day. A partner church in the United States funded the build.`,
+      "The last stage is the dining area beside it: a water tank, a proper floor, and plaster and power in the hall.",
     ].join("\n\n"),
     storyPhoto: "/photos/kitchen/16.jpg",
     storyPhotoAlt: "A wood fire burning in the new kitchen's stove, two cooking plates above it",
     storyHref: "/projects/kitchen",
-    storyCta: "Read about the kitchen build",
+    storyCta: "See the kitchen project",
 
     leadershipLabel: "Leadership",
     leadershipHeading: siteDefaults.leaders,
