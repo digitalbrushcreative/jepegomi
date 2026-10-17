@@ -80,7 +80,7 @@ export async function getAppeals(): Promise<Appeal[]> {
     },
     {
       id: "transport",
-      summary: `A ${transport.busSeats}-seater bus for the school run — the school has outgrown its van, and a bus carries the children still to come.`,
+      summary: `A ${transport.busSeats}-seater bus for the school run — a bus sized for the school as it grows, with room for the children still to come.`,
       costCents: bus.usdCents,
     },
     {

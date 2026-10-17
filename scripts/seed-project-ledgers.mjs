@@ -52,7 +52,7 @@ const FALLBACK = {
     equipment: [
       {
         item: "Swing set — four seats, galvanised steel frame",
-        note: "Replaces the two welded frames standing there now",
+        note: "Four seats on a galvanised frame, replacing the current two",
         priceKes: "150000",
       },
       {
@@ -217,7 +217,7 @@ function plan(content, rate) {
             {
               title: `${transport.busSeats}-seater bus for the school run`,
               summary:
-                "The school has outgrown its van, and a bus carries the children still to come.",
+                "A bus sized for the school as it grows, with room for the children still to come.",
               costCents: usdCentsFromKes(kes(transport.busPriceKes), rate),
             },
           ],

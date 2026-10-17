@@ -1590,7 +1590,7 @@ const playground = {
     equipment: [
       {
         item: "Swing set — four seats, galvanised steel frame",
-        note: "Replaces the two welded frames standing there now",
+        note: "Four seats on a galvanised frame, replacing the current two",
         priceKes: "150000",
       },
       {

@@ -232,9 +232,9 @@ export default async function GivePage(props: PageProps<"/give">) {
                   Or pick something, and see it through
                 </SectionTitle>
                 <p className="mt-6 max-w-xl leading-relaxed text-smoke">
-                  Every item is one thing the ministry is short of, with the
-                  price on it. Take all of one or part of one, and watch the work
-                  it pays for.
+                  Every item is a costed part of the ministry's next stage of
+                  work, with the price on it. Take all of one or part of one, and
+                  watch the work it pays for.
                 </p>
                 <ButtonLink href="/needs" icon="give" className="mt-8">
                   See what&apos;s needed
