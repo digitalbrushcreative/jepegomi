@@ -21,32 +21,21 @@ const graduation = {
 };
 
 /*
-  The growth story, in three photographs, oldest first.
-
-  The first one is years old and was previously captioned as though it were the
-  present — "the academy, as it stands on the road" — which quietly undersold
-  the school by about a decade of work. It earns its place as the *start* of the
-  sequence and nowhere else, so the captions carry the dates the photographs
-  cannot.
+  Where the buildings are now, and what is going up next. Present and future
+  only: the site describes a school that is growing, not where it started.
 */
 const growth = [
-  {
-    src: "/photos/academy/signboard.jpg",
-    alt: "An iron-sheet building painted with the words Jepegomi Academy, Value Based Education, and Day Care Baby Class",
-    caption:
-      "Where it began. A row of iron-sheet rooms on the roadside, the name painted on by hand.",
-  },
   {
     src: "/photos/academy/classroom-block.jpg",
     alt: "A long semi-permanent classroom block, stone to the window sills and iron sheet above, under a pitched roof with yellow fascia boards",
     caption:
-      "Where it is now. Semi-permanent blocks: stone to the sill, iron sheet above, a proper roof over both.",
+      "Today. Semi-permanent blocks: stone to the sill, iron sheet above, a proper roof over both.",
   },
   {
     src: "/photos/academy/classrooms.jpg",
     alt: "A man on the roof timbers of a half-built classroom block, iron sheets stacked on the grass below",
     caption:
-      "And still going up. The bigger classrooms the government now requires.",
+      "Next. The larger permanent classrooms the government requires, going up now.",
   },
 ];
 

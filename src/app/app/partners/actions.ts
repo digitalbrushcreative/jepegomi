@@ -133,7 +133,7 @@ export async function addPartnerAction(input: {
 /* ------------------------------------------------ one-time installation data */
 
 /*
-  Pastor Simon's letter to the donor, transcribed once.
+  Dr Simon's letter to the donor, transcribed once.
 
   This is not the site's copy of the reconciliation — that is in the `needs`
   table, where Simon can correct it, and `getProjectBudget` reads it back. This
@@ -162,7 +162,7 @@ type LetterLine = {
  * marks "Used" without giving a figure, so it stays null rather than guessed.
  *
  * Lines 1–6 came in over estimate; the roofing-and-labour line came in *under*
- * because Pastor Simon did the building he knew how to do himself, as his own
+ * because Dr Simon did the building he knew how to do himself, as his own
  * giving to the ministry, and put the saved labour into materials.
  */
 const letter: LetterLine[] = [
@@ -200,7 +200,7 @@ const letter: LetterLine[] = [
     item: "Roofing & labour",
     estimatedUsd: 1554,
     actualUsd: 1120,
-    note: "Came in under — Pastor Simon did the building he could himself, as his giving to the ministry",
+    note: "Came in under — Dr Simon did the building he could himself, as his giving to the ministry",
   },
   {
     item: "Transport",
@@ -275,7 +275,7 @@ export async function seedEncounterChurchAction(rawEmail: string) {
       kind: "church",
       location: report.donorLocation,
       contactName: "",
-      note: `Gave the $${giftUsd.toLocaleString("en-US")} that built the kitchen, reconciled in Pastor Simon's letter. Not named on the public site.`,
+      note: `Gave the $${giftUsd.toLocaleString("en-US")} that built the kitchen, reconciled in Dr Simon's letter. Not named on the public site.`,
       verified: true,
     });
 
@@ -306,7 +306,7 @@ export async function seedEncounterChurchAction(rawEmail: string) {
           numbers in two places again, free to disagree the first time Simon
           corrects one in /app.
         */
-        detail: `One of the lines the $${giftUsd.toLocaleString("en-US")} kitchen gift was spent on, as reconciled in Pastor Simon's letter.`,
+        detail: `One of the lines the $${giftUsd.toLocaleString("en-US")} kitchen gift was spent on, as reconciled in Dr Simon's letter.`,
         area: "kitchen",
         // Work that was finished before the ledger existed, so it is a record
         // rather than a step in anything still to come.

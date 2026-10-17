@@ -37,7 +37,7 @@ const promises: { icon: IconName; title: string; body: string }[] = [
   {
     icon: "give",
     title: "What everything costs",
-    body: "Every price on the site, open — what each item comes to, what has been given towards it, and what is still short. This is what most people are here for, and giving is never required for it.",
+    body: "Every price on the site, open — what each item comes to, what has been given towards it, and what is still to raise. This is what most people are here for, and giving is never required for it.",
   },
   {
     icon: "globe",
@@ -173,7 +173,7 @@ export default function PartnersPage() {
     <>
       <PageHero
         title="Sign in to see the figures"
-        intro="What each thing costs, what has been given towards it, and what is still short. If you have given before, the same code opens everything you have supported and how the work is going."
+        intro="What each thing costs, what has been given towards it, and what is still to raise. If you have given before, the same code opens everything you have supported and how the work is going."
       />
 
       <section className="px-6 py-20 sm:py-24">

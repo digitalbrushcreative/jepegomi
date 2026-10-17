@@ -29,7 +29,7 @@ const cents = (dollars: number) => Math.round(dollars) * 100;
 export const metadata: Metadata = pageMeta({
   title: "The Playground",
   description:
-    "The school playground at Jepegomi Academy — built by hand at the church, and what it would cost to give the children lasting equipment and a soft surface to land on.",
+    "The playground at Jepegomi Academy, and what lasting equipment and a safe surface would cost.",
   path: "/projects/playground",
 });
 
@@ -74,7 +74,7 @@ export default async function PlaygroundPage() {
     <>
       <PageHero
         title="A better place to play"
-        intro="The academy already has a playground, built by hand at the church and well used every day. The next step is equipment that will last and a soft surface underneath — room to play freely, and somewhere safe to land."
+        intro="The academy's playground is used every day. The next step is equipment built to last and a safe surface under it."
       >
         <dl className="mt-12 flex flex-wrap gap-x-14 gap-y-6">
           <div>
@@ -116,14 +116,13 @@ export default async function PlaygroundPage() {
         <div className="shell grid gap-14 lg:grid-cols-2 lg:gap-16">
           <div>
             <SectionTitle>
-              Made by hand, and ready for the next step
+              The upgrade
             </SectionTitle>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke">
-              Nothing in that yard was bought. Somebody at the church cut it,
-              welded it and painted it, and it has given the children somewhere
-              to play for years. Galvanised equipment is what carries that
-              forward — built to stand in the weather, and to serve the classes
-              still to come.
+              The playground is in daily use. The upgrade replaces the current
+              frames with galvanised equipment built to last, adds two new
+              pieces, and lays a rubber safety surface under all of it — sized
+              for the school as it grows.
             </p>
             <ul className="mt-8">
               {asItStands.map((item) => (
@@ -302,13 +301,13 @@ export default async function PlaygroundPage() {
             href: "/projects/kitchen",
             label: "Kitchen Build",
             blurb:
-              "The other thing built in this yard: a kitchen that replaced open fires, and what is left to finish it.",
+              "The kitchen in the same yard — built, cooking daily, with the dining area next.",
           },
           {
             href: "/needs",
             label: "What's needed",
             blurb:
-              "The open ledger — the playground alongside every other costed ask, with what is still short.",
+              "The open ledger — the playground alongside every other costed project, with what is still to raise.",
           },
         ]}
       />

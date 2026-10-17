@@ -95,7 +95,7 @@ export default async function AboutPage() {
             href: "/church",
             label: "The church",
             blurb:
-              "The congregation in Kahawa Sukari, and the oldest thing the ministry does.",
+              "The congregation in Kahawa Sukari, at the centre of the ministry.",
           },
           {
             href: "/education",
@@ -107,7 +107,7 @@ export default async function AboutPage() {
             href: "/needs",
             label: "What's needed",
             blurb:
-              "What the ministry is short of right now, costed and open to anyone who wants to take part of it.",
+              "Every costed item in the ministry's next stage of work, and what is still open on each.",
           },
         ]}
       />

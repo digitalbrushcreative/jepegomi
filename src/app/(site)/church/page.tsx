@@ -225,7 +225,7 @@ export default async function ChurchPage() {
             href: "/needs",
             label: "What's needed",
             blurb:
-              "What the ministry is short of right now, itemised and costed, with what is still open on each.",
+              "Every costed item in the ministry's next stage of work, and what is still open on each.",
           },
         ]}
       />

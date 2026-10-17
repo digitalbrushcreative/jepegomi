@@ -46,7 +46,7 @@ export const site = {
     region: "Nairobi",
     country: "KE",
   },
-  leaders: "Pastor Simon & Joyce Nderitu",
+  leaders: "Pastors Dr Simon & Dr Joyce Nderitu",
   tagline:
     "A church, a school and a Bible college in Nairobi — teaching children, training adults, and building what they learn in.",
 } as const;
@@ -102,13 +102,13 @@ export const navLinks: NavLink[] = [
     label: "About",
     href: "/about",
     blurb:
-      "Who Jepegomi is, and the family who started it — Pastor Simon & Joyce Nderitu.",
+      "Who Jepegomi is, and the pastors who lead it — Pastors Dr Simon & Dr Joyce Nderitu.",
   },
   {
     label: "Church",
     href: "/church",
     blurb:
-      "The congregation in Kahawa Sukari, and the oldest thing the ministry does.",
+      "The congregation in Kahawa Sukari, at the centre of the ministry.",
   },
   {
     label: "Education",
@@ -156,17 +156,17 @@ export const navLinks: NavLink[] = [
     label: "Projects",
     href: "/projects",
     blurb:
-      "The things being raised for — the kitchen that cooks the meals, the playground that needs replacing, the bus, and the kit the services go out on.",
+      "The projects in progress — the kitchen's dining area, playground equipment, a school bus, and streaming equipment.",
     children: [
       {
         label: "Kitchen Build",
         href: "/projects/kitchen",
-        blurb: "From open fires to a proper kitchen. See what is left.",
+        blurb: "Built and cooking daily. Next: the dining area.",
       },
       {
         label: "The Playground",
         href: "/projects/playground",
-        blurb: "Welded on site, standing on bare earth. What replacing it costs.",
+        blurb: "Lasting equipment and a safe surface. What it costs.",
       },
       /*
         These two point into /programs, which is where the work they belong to
@@ -178,7 +178,7 @@ export const navLinks: NavLink[] = [
       {
         label: "Bus Upgrade",
         href: "/programs/transport",
-        blurb: "The van the school has outgrown, and what a 26-seater costs.",
+        blurb: "A 26-seater bus for a growing school, and what it costs.",
       },
       {
         label: "Service Livestream",
@@ -211,7 +211,7 @@ export const givingLinks: { label: string; href: string; blurb: string }[] = [
     label: "What's needed",
     href: "/needs",
     blurb:
-      "The open ledger — every costed item, what it comes to, and how much is still short.",
+      "The open ledger — every costed item, what it comes to, and what is still to raise.",
   },
   {
     label: "How to give",

@@ -144,7 +144,7 @@ export default async function FoodAtSchoolPage() {
             href: "/needs",
             label: "What's needed",
             blurb:
-              "The open ledger: what finishing the dining area costs, line by line, and how much is still short.",
+              "The open ledger: what finishing the dining area costs, line by line, and what is still to raise.",
           },
           {
             href: "/church",

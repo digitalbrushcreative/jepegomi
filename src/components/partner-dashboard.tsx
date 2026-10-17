@@ -511,7 +511,7 @@ export async function PartnerDashboard({
                       ? "One item"
                       : `${continuing.length} items`}{" "}
                     in the work you have already partnered with us for{" "}
-                    {continuing.length === 1 ? "is" : "are"} still short —{" "}
+                    {continuing.length === 1 ? "has" : "have"} more to raise —{" "}
                     <strong className="font-semibold text-charcoal">
                       {usd(
                         continuing.reduce(

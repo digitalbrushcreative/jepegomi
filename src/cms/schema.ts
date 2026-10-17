@@ -231,7 +231,7 @@ const giving = {
     ways: [
       {
         title: "The church",
-        body: "The congregation in Kahawa Sukari. Everything else grew out of it, and the people who run it day to day are here.",
+        body: "The congregation in Kahawa Sukari — the centre of the ministry, and where it is led from.",
       },
       {
         title: "The academy",
@@ -301,7 +301,7 @@ const needs = {
   defaults: {
     heading: "What's needed, and what it costs",
     intro: [
-      "Every item below is one thing the ministry is short of, with the price on it. You can take all of an item or part of one.",
+      "Every item below is a costed part of the ministry's next stage of work, with the price on it. You can take all of an item or part of one.",
       "The figures below are based on quotes and estimates for the work.",
     ].join("\n\n"),
     emptyNote:
@@ -314,7 +314,7 @@ const needs = {
       },
       {
         title: "Pay it, or ask for the details",
-        body: "M-Pesa or card — card details go to Pesapal, never to this site. Or ask for the account details and Pastor Simon writes back himself.",
+        body: "M-Pesa or card — card details go to Pesapal, never to this site. Or ask for the account details and Dr Simon writes back himself.",
       },
       {
         title: "The gift is marked received",
@@ -328,8 +328,8 @@ const needs = {
     partnerNote:
       "No account to make and no password. We email a code to any address you can read, and the figures open up. If you have given before, use the address the gift came from and you will also see everything it paid for.",
     verse:
-      "He who has pity on the poor lends to the Lord, And He will pay back what he has given.",
-    verseRef: "Proverbs 19:17 NKJV",
+      "Write the vision and make it plain on tablets, that he may run who reads it.",
+    verseRef: "Habakkuk 2:2 NKJV",
   },
 } satisfies CmsDocument;
 
@@ -362,7 +362,7 @@ const about = {
   title: "About",
   path: "/about",
   group: "main",
-  description: "The church & the Nderitus.",
+  description: "About Jepegomi",
   fields: {
     heading: { type: "text", label: "Heading" },
     intro: { type: "prose", label: "Intro" },
@@ -392,13 +392,13 @@ const about = {
     },
   },
   defaults: {
-    heading: "The church & the Nderitus",
+    heading: "About Jepegomi",
     intro: `${siteDefaults.longName} is a church and academy in Nairobi led by ${siteDefaults.leaders}.`,
     portrait: "/photos/founders/simon-and-joyce.png",
     portraitAlt: `${siteDefaults.leaders}, who lead ${siteDefaults.longName}`,
     body: [
-      "Their work joins the spiritual and the practical: a place to worship, a school to learn in, and the daily meals that keep the learning going. Everything on this site flows from that mission.",
-      "Alongside the church and Jepegomi Academy, the ministry runs a Bible school, digital outreach, and school transport for children in the community.",
+      "The ministry runs four connected pieces of work from Kahawa Sukari: the church, Jepegomi Academy, the Contextual Bible Training College, and Food at School, which feeds every pupil at the academy.",
+      "Dr Simon and Dr Joyce both hold doctorates and lead the ministry as its pastors. Alongside the four ministries they oversee Jepegomi Digital, which streams the services, and the academy's school transport.",
     ].join("\n\n"),
     facts: [
       { label: "Led by", value: siteDefaults.leaders },
@@ -453,7 +453,7 @@ const church = {
     intro: `${siteDefaults.longName} is a church in ${siteDefaults.location}, led by ${siteDefaults.leaders}. The academy, the college and the feeding program all belong to it.`,
     sectionTitle: "Sunday at Jepegomi",
     body: [
-      "The congregation gathers each week to worship, pray and hear the Word together. It is the oldest thing the ministry does, and the thing the rest of it is built on.",
+      "The congregation gathers each week to worship, pray and hear the Word together. The academy, the college and the feeding programme are all run from the church.",
       "Visitors are welcome. You do not need to know anybody, and you do not need to bring anything.",
     ].join("\n\n"),
     /*
@@ -803,7 +803,7 @@ const home = {
     leadershipLabel: "Leadership",
     leadershipHeading: siteDefaults.leaders,
     leadershipBody:
-      "Simon and Joyce lead the church in Kahawa Sukari, and oversee the academy, the Bible college and the feeding programme.",
+      "Dr Simon and Dr Joyce both hold doctorates. They lead the church in Kahawa Sukari and oversee the academy, the Bible college and the feeding programme.",
     leadershipMessage: "",
     leadershipPhoto: "/photos/founders/simon-and-joyce.png",
     leadershipPhotoAlt: `${siteDefaults.leaders}, standing together and smiling`,
@@ -911,8 +911,8 @@ const academy = {
     sectionTitle: "The school today",
     body: [
       `The Academy sits in ${siteDefaults.location}, run by the same hands as the church: ${siteDefaults.leaders}. Children come from families across the neighbourhood, and the fees are kept where those families can reach them.`,
-      "It did not start where it stands. The first classrooms were a row of iron-sheet rooms on the roadside, with the school's name painted on by hand. Lessons happen in semi-permanent blocks now (stone to the window sill, iron sheet above, a proper roof over both), and the bigger classrooms the government requires are going up behind them.",
-      "The classes are small enough that a child is known by name rather than by number. And what the school is for was painted on that first signboard and has not changed since: value-based education: character and Scripture taught alongside the syllabus, because the ministry has never thought those were two separate subjects.",
+      "Lessons are taught in semi-permanent blocks — stone to the window sill, iron sheet above, a proper roof over both — and the larger permanent classrooms the government requires are going up behind them.",
+      "The classes are small enough that a child is known by name rather than by number. The school's purpose is value-based education: character and Scripture taught alongside the syllabus, as one education rather than two subjects.",
     ].join("\n\n"),
     ages: "Kindergarten to Grade 6",
     pupils: pupilsEnrolled,
@@ -955,14 +955,14 @@ const programs = {
         eyebrow: "Streaming",
         title: "Jepegomi Digital",
         blurb:
-          "Sunday services and weekday fellowships, streamed from the sanctuary in Kahawa Sukari to whoever will watch — filmed, for now, on phones.",
+          "Sunday services and weekday fellowships, streamed from the sanctuary in Kahawa Sukari on YouTube and Facebook.",
         cta: "See the channel",
       },
       {
         eyebrow: "Getting to school",
         title: "School Transport",
         blurb:
-          "The academy's van is being repaired, and the school is raising for a 26-seater bus that carries the school it is growing into.",
+          "The academy runs a school van, and is raising for a 26-seater bus to carry the school it is growing into.",
         cta: "See the appeal",
       },
     ],
@@ -1011,12 +1011,12 @@ const foodAtSchool = {
       {
         eyebrow: "Where it is cooked",
         title: "In a kitchen of its own.",
-        body: "For years the cooking was done outdoors over open flames. A partner church in the United States gave the kitchen that replaced it, and it is where every meal comes from today: a wood-burning jiko under a roof, a store room beside it, and a serving counter the children queue at. It is the single biggest step this program has taken, and we are grateful for it.",
+        body: "Every meal is cooked in the academy's own kitchen: a wood-burning jiko under a roof, a store room beside it, and a serving counter the children queue at. A partner church in the United States funded the build.",
       },
     ],
     closingHeading: "The kitchen cooks. Next comes the room they eat in.",
     closingBody:
-      "The gift built the kitchen and did everything it was given for. Three things would finish the job: a water tank to harvest rainwater, cabro stones to floor the area where the children eat, and plastering and electricity in the dining hall.",
+      "The kitchen is complete and in daily use. The next stage is the dining area: a water tank to harvest rainwater, cabro stones for the floor, and plastering and electricity in the hall.",
   },
 } satisfies CmsDocument;
 
@@ -1094,22 +1094,22 @@ const digital = {
   defaults: {
     heading: "The pulpit, online",
     intro:
-      "When the lockdowns closed the doors, the sermons went out over the internet instead — and never stopped. Sunday services and weekday fellowships are streamed from the sanctuary in Kahawa Sukari to whoever will watch, wherever they are.",
+      "Sunday services and weekday fellowships are streamed from the sanctuary in Kahawa Sukari on YouTube and Facebook, reaching people well beyond the congregation.",
     sections: [
       {
         eyebrow: "Where it started",
-        title: "A closed church, and a camera.",
-        body: "The streaming began during the COVID lockdown, for the plainest of reasons: the congregation could not come. What began as a way to reach the people who already belonged to the church has carried on reaching people who never could have — the messages now travel far past Kahawa Sukari.",
+        title: "A congregation beyond the building.",
+        body: "Jepegomi Digital puts the church's teaching online, so people who cannot be in Kahawa Sukari on a Sunday can still take part — and the messages travel far past the city.",
       },
       {
         eyebrow: "What goes out",
         title: "Sunday services and weekday fellowships, on two channels.",
-        body: "Services are streamed on Sunday and again through the week, on both YouTube and Facebook. The teaching is given by Simon and Joyce under the GOFAMI banner — God for the Family Ministries — and the archive of past messages stays up for anyone who wants to go back to one.",
+        body: "Services are streamed on Sunday and again through the week, on both YouTube and Facebook. The teaching is given by Dr Simon and Dr Joyce under the GOFAMI banner — God for the Family Ministries — and the archive of past messages stays up for anyone who wants to go back to one.",
       },
       {
         eyebrow: "What would take it further",
-        title: "Filmed on phones, and ready to go further.",
-        body: "Everything is recorded on mobile phones, which has carried the ministry a long way and sets a ceiling on the picture and the sound. Better lighting, a camera and someone trained to run it would lift every recording — and turn an occasional stream into a steady one.",
+        title: "The next step: studio-quality streaming.",
+        body: "Services are currently recorded on mobile phones. A proper camera, lighting, sound and a trained operator would raise the quality of every recording and move the channel to a regular schedule.",
       },
     ],
     youtubeName: "Jepegomi Africa",
@@ -1127,7 +1127,7 @@ const digital = {
       },
       {
         item: "DSLR camera and lens",
-        note: "The picture, at last, from something built to make one",
+        note: "A dedicated camera for the main picture",
         priceKes: "90000",
       },
       {
@@ -1142,13 +1142,13 @@ const digital = {
       },
       {
         item: "A year of internet for streaming",
-        note: "The running cost that decides whether a service goes out at all",
+        note: "The connection every stream depends on",
         priceKes: "60000",
       },
     ],
     supportHeading: "How you can partner with us",
     supportIntro:
-      "The cheapest way to help is free: watch a stream and share it. After that, it is equipment and connection.",
+      "The simplest way to take part costs nothing: watch a stream and share it. Beyond that, the needs are equipment and connection.",
     support: [
       {
         title: "Watch, and share what you watch",
@@ -1156,7 +1156,7 @@ const digital = {
       },
       {
         title: "Give toward internet costs",
-        body: "Consistent streaming needs consistent connection. This is the running cost that decides whether a service goes out at all.",
+        body: "Consistent streaming needs a consistent connection. This covers the running cost.",
       },
       {
         title: "Give toward equipment",
@@ -1226,19 +1226,19 @@ const transport = {
   defaults: {
     heading: "The school run",
     intro:
-      "Children come to Jepegomi Academy from across Kahawa Sukari, and how they get there decides how many can come at all. The school has a van, and it is raising for a bus that will carry the school it is growing into.",
+      "Children come to Jepegomi Academy from across Kahawa Sukari. The school runs a van today, and is raising for a 26-seater bus to match the size it is growing to.",
     busSeats: "26",
     busPriceKes: "2000000",
     sections: [
       {
         eyebrow: "Where we are",
         title: "The van that started it.",
-        body: "The academy has a van — a yellow Toyota, lettered for the school and the church. It was bought with money given toward a school vehicle and it did that work faithfully, and it is standing off the road while it waits on repairs.\n\nThe same partner church that built the kitchen has since given toward getting it running again, and we are grateful for it.",
+        body: "The academy's van — a yellow Toyota, lettered for the school and the church — was bought with money given toward a school vehicle. It is currently being serviced, with support from the partner church that funded the kitchen.",
       },
       {
         eyebrow: "Where that gift went",
-        title: "The vehicle money became the van.",
-        body: "What was given toward a school vehicle is what bought the van standing at the school — the gift became the vehicle, which is exactly what it was for.\n\nSo the bus is a fresh ask. The figure below is its whole cost, not a gap left over after a balance.",
+        title: "The bus is a new project.",
+        body: "Money given toward a school vehicle bought the van, as intended. The bus is a separate project, and the figure below is its whole cost.",
       },
       {
         eyebrow: "Where we are going",
@@ -1253,7 +1253,7 @@ const transport = {
     ],
     supportHeading: "How you can partner with us",
     supportIntro:
-      "Nothing is banked against the bus yet, so the whole cost is the ask. Every gift toward it is held for the bus and nothing else.",
+      "The bus is at the start of its fundraising, so the figure shown is the full cost. Every gift toward it is held for the bus and nothing else.",
     support: [
       {
         title: "Give toward the bus",
@@ -1338,35 +1338,35 @@ const projects = {
     ...verseFields,
   },
   defaults: {
-    heading: "The things we're building to serve better",
+    heading: "Projects in progress",
     intro: "",
     cards: [
       {
         eyebrow: "Cooking",
         title: "Kitchen Build",
         blurb:
-          "The kitchen and store room that replaced the open fires — built with a partner church, cooking daily, with the dining area still to finish. Photos, budget and what is left.",
+          "The academy's kitchen and store room — built with a partner church and cooking daily. Next comes the dining area. Photos, budget and what is left.",
         cta: "See the build",
       },
       {
         eyebrow: "The yard",
         title: "The Playground",
         blurb:
-          "Swings welded on site out of angle iron, a slide stripped to its frame, and all of it standing on bare packed earth. What proper equipment and a rubber crumb safe surface would cost.",
+          "Lasting play equipment and a rubber safety surface for the academy's playground. What it costs, item by item.",
         cta: "See what it costs",
       },
       {
         eyebrow: "The school run",
         title: "Bus Upgrade",
         blurb:
-          "The van the school has outgrown, on roads that carry lorries. What a 26-seater bus costs, and how many children are waiting on one.",
+          "A 26-seater bus to carry the academy as it grows. What it costs, and what it makes possible.",
         cta: "See what it costs",
       },
       {
         eyebrow: "Streaming",
         title: "Service Livestream",
         blurb:
-          "Services recorded on a phone and sent to the people who cannot get to the building. What a camera, a laptop that can edit and a year of connection would cost.",
+          "A camera, a laptop that can edit, sound and a year of connection, to stream services at a professional standard. What it costs.",
         cta: "See the kit",
       },
     ],
@@ -1635,21 +1635,16 @@ const playground = {
       },
     ],
     asItStands: [
-      {
-        text: "Two swing frames welded from angle iron, with seats cut and folded by hand",
-      },
-      { text: "A slide frame, ready for a deck to be fitted to it" },
-      { text: "A see-saw, made on site like the rest of it" },
-      { text: "Bare packed earth underfoot, waiting for a soft surface" },
-      {
-        text: "All of it made at the church rather than bought, and out in the weather for years",
-      },
+      { text: "Two swing frames" },
+      { text: "A slide frame, ready for a new deck" },
+      { text: "A see-saw" },
+      { text: "An open play area, ready for a safety surface" },
     ],
     photo: "/photos/church/playground.jpg",
     photoAlt:
-      "Two home-made steel swing frames with painted sheet-metal seats, a see-saw behind them and a rusted slide frame, all standing on bare earth beside the sanctuary",
+      "Two steel swing frames with painted seats, a see-saw and a slide frame in the yard beside the sanctuary",
     photoCaption:
-      "The playground today — welded on site and painted by hand at the church.",
+      "The playground beside the sanctuary, ready for its upgrade.",
   },
 } satisfies CmsDocument;
 

@@ -129,7 +129,7 @@ export function ProjectAccounts({
                     estimated={line.estimatedCents}
                     /*
                       A closed line with no figure against it is spent, amount
-                      unknown — Pastor Simon's letter marks the transport that
+                      unknown — Dr Simon's letter marks the transport that
                       way — and it has to read as "we do not know" rather than
                       as "it cost nothing". See the note in `getProjectBudget`.
                     */

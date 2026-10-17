@@ -129,7 +129,7 @@ function NeedFields({
 
           Both are ordinarily left alone — most items cost what they were going
           to cost and need no explanation. They exist for the ones that did not:
-          Pastor Simon's letter reconciles cement estimated at $900 against
+          Dr Simon's letter reconciles cement estimated at $900 against
           $1,550 actually spent, and until these columns existed that letter had
           to live in a TypeScript file because the ledger had nowhere to put it.
 

@@ -36,7 +36,7 @@ export function ContactForm({ email }: { email: string }) {
     return (
       <Done heading="Thank you — your message is on its way.">
         <p>
-          It has gone to Pastor Simon and Joyce in Nairobi, and one of them will
+          It has gone to Dr Simon and Dr Joyce in Nairobi, and one of them will
           reply to you personally — usually within a day or two.
         </p>
         <p>

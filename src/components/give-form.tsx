@@ -241,12 +241,12 @@ function Thanks({
       <p>
         {state.listed
           ? "That amount now shows as promised against the item, so nobody else will be asked for it. The balance stays open for somebody else to pick up."
-          : "This one is not against a costed item, so no figure on the site changes. It is recorded, and Pastor Simon has it in front of him."}
+          : "This one is not against a costed item, so no figure on the site changes. It is recorded, and Dr Simon has it in front of him."}
       </p>
       <p>
         {state.sent
           ? "We have emailed"
-          : "We could not send the email automatically, so Pastor Simon will write to"}{" "}
+          : "We could not send the email automatically, so Dr Simon will write to"}{" "}
         <strong className="text-charcoal">{state.email}</strong>{" "}
         {state.sent
           ? "with everything you need to send it. If it is not there in a few minutes, look in your spam folder."
@@ -940,7 +940,7 @@ export function GiveForm({
               </p>
 
               <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
-                Records what you intend to give and nothing else — Pastor Simon
+                Records what you intend to give and nothing else — Dr Simon
                 replies with the account details himself. Best for bank transfers
                 and larger gifts from overseas.
               </p>
@@ -958,7 +958,7 @@ export function GiveForm({
 
               <p className="measure mx-auto text-center text-xs leading-relaxed text-smoke">
                 No payment is taken here and no card details are asked for. This
-                records what you intend to give; Pastor Simon replies with the
+                records what you intend to give; Dr Simon replies with the
                 account details himself.
               </p>
             </>
@@ -1123,7 +1123,7 @@ export function GiveForm({
           {towards === OTHER && (
             <Field
               label="What would you like it to go towards?"
-              hint="In your own words. It goes on the ledger exactly as you write it, and Pastor Simon will confirm it back to you."
+              hint="In your own words. It goes on the ledger exactly as you write it, and Dr Simon will confirm it back to you."
             >
               <input
                 name="designation"
@@ -1310,7 +1310,7 @@ export function GiveForm({
             hint={
               canPay
                 ? "Where your receipt goes, and where the updates go."
-                : "Where Pastor Simon sends the account details, and where the updates go."
+                : "Where Dr Simon sends the account details, and where the updates go."
             }
           >
             <input

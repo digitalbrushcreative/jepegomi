@@ -242,7 +242,7 @@ export default async function TransportPage() {
             href: "/needs",
             label: "What's needed",
             blurb:
-              "Everything the ministry is short of, costed, including what is open on the bus.",
+              "Every open project, costed, including the bus.",
           },
           {
             href: "/give",

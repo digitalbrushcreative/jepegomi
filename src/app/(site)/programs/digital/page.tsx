@@ -34,13 +34,13 @@ export const metadata: Metadata = pageMeta({
 */
 const stream = {
   src: "/photos/digital/streaming-desk.jpg",
-  alt: "A laptop running OBS Studio on a stand at the back of the church, its screen showing the live sermon being mixed, while Pastor Simon preaches from the pulpit behind it",
+  alt: "A laptop running OBS Studio on a stand at the back of the church, its screen showing the live sermon being mixed, while Dr Simon preaches from the pulpit behind it",
 };
 
 const streams = [
   {
     src: "/photos/digital/preaching.jpg",
-    alt: "Pastor Simon Nderitu preaching from a lectern with an open Bible, a projector screen beside him reading Preaching the Gospel in Kenya and Beyond",
+    alt: "Dr Simon Nderitu preaching from a lectern with an open Bible, a projector screen beside him reading Preaching the Gospel in Kenya and Beyond",
     caption: "A message going out from the sanctuary at Kahawa Sukari.",
   },
   {
@@ -304,7 +304,7 @@ export default async function DigitalPage() {
             href: "/about",
             label: "About the ministry",
             blurb:
-              "Pastor Simon & Joyce Nderitu, who give the teaching that goes out on the channels.",
+              "Pastors Dr Simon & Dr Joyce Nderitu, who give the teaching that goes out on the channels.",
           },
           {
             href: "/church",

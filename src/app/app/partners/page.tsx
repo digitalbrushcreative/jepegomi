@@ -105,7 +105,7 @@ export default async function AdminPartnersPage() {
             They gave the {usd(kitchen.giftCents)}{" "}
             that built the kitchen, years before this ledger existed. This adds
             them, enters the six
-            budget lines from Pastor Simon&apos;s reconciliation letter as
+            budget lines from Dr Simon&apos;s reconciliation letter as
             finished items, and records their giving against each one — so they
             can sign in and see what it built. Nothing is added to the public
             site: the kitchen page still names no donor.
