@@ -718,10 +718,10 @@ const home = {
       "Children in green and white uniform at their classroom desks, eating lunch from red plates",
 
     introLabel: "About the ministry",
-    introHeading: "The church, and what grew out of it",
+    introHeading: "A week at Jepegomi",
     introBody: [
-      "Sunday worship in Kahawa Sukari is the oldest thing the ministry does. From that congregation came a school for the neighbourhood's children, a college that teaches the Bible to adults, and a kitchen that cooks breakfast and lunch for every pupil.",
-      `All four are led by ${siteDefaults.leaders}.`,
+      "On Sunday the congregation meets for worship in Kahawa Sukari. During the week, Jepegomi Academy teaches children from kindergarten to Grade 6, and every pupil gets porridge in the morning and a cooked lunch at midday. Alongside the school, the Contextual Bible Training College teaches the Bible to adults.",
+      `All of it is led by ${siteDefaults.leaders}.`,
     ].join("\n\n"),
     introPhoto: "/photos/academy/assembly.jpg",
     introPhotoAlt:
@@ -803,7 +803,7 @@ const home = {
     leadershipLabel: "Leadership",
     leadershipHeading: siteDefaults.leaders,
     leadershipBody:
-      "Simon and Joyce lead the church in Kahawa Sukari, and oversee the academy, the Bible college and the feeding programme that grew up around it.",
+      "Simon and Joyce lead the church in Kahawa Sukari, and oversee the academy, the Bible college and the feeding programme.",
     leadershipMessage: "",
     leadershipPhoto: "/photos/founders/simon-and-joyce.png",
     leadershipPhotoAlt: `${siteDefaults.leaders}, standing together and smiling`,
