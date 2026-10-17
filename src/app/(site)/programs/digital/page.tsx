@@ -257,7 +257,7 @@ export default async function DigitalPage() {
                 key={way.title}
                 className="rounded-2xl bg-white p-7 shadow-warm"
               >
-                <Icon name="give" className="h-8 w-8 text-forest" />
+                <Icon name="give" className="h-8 w-8 text-plum" />
                 <h3 className="font-display mt-4 text-xl font-medium">
                   {way.title}
                 </h3>
@@ -272,7 +272,7 @@ export default async function DigitalPage() {
 
           {/* What the whole of it costs, as one figure and one ask. */}
           {kit && (
-            <div className="mt-12 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-forest px-8 py-7 shadow-warm">
+            <div className="mt-12 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-plum px-8 py-7 shadow-warm">
               <div>
                 <p className="eyebrow text-white/70">{digital.kitHeading}</p>
                 {paragraphs(digital.kitBody).map((text) => (
@@ -291,7 +291,7 @@ export default async function DigitalPage() {
             <ButtonLink href="/give?for=digital#pledge" icon="give">
               Give toward the kit
             </ButtonLink>
-            <ButtonLink href="/church" variant="ghost" className="text-forest">
+            <ButtonLink href="/church" variant="ghost" className="text-plum">
               The church behind it
             </ButtonLink>
           </div>

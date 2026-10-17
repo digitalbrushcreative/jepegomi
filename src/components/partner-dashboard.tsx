@@ -395,7 +395,7 @@ export async function PartnerDashboard({
 
           <div className="mt-20 grid gap-14 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
             <div>
-              <p className="eyebrow text-forest">Updates</p>
+              <p className="eyebrow text-plum">Updates</p>
               {/*
                 Partnered with, not paid for. These churches are not customers
                 who bought a kitchen; the money is one part of a thing they are
@@ -427,7 +427,7 @@ export async function PartnerDashboard({
                     <p className="mt-6 text-sm text-smoke">
                       <Link
                         href="/projects/kitchen"
-                        className="font-medium text-forest underline underline-offset-4"
+                        className="font-medium text-plum underline underline-offset-4"
                       >
                         See the whole kitchen project
                       </Link>
@@ -460,7 +460,7 @@ export async function PartnerDashboard({
                       {pledge.needSlug && pledge.needPublished ? (
                         <Link
                           href={`/needs/${pledge.needSlug}`}
-                          className="font-medium hover:text-forest"
+                          className="font-medium hover:text-plum"
                         >
                           {pledge.needTitle}
                         </Link>
@@ -492,7 +492,7 @@ export async function PartnerDashboard({
                 Something not right? Write to{" "}
                 <a
                   href={`mailto:${site.email}`}
-                  className="font-medium text-forest underline underline-offset-4"
+                  className="font-medium text-plum underline underline-offset-4"
                 >
                   {site.email}
                 </a>{" "}
@@ -608,7 +608,7 @@ function OpenNeed({ need }: { need: NeedWithLedger }) {
     <li className="rounded-2xl bg-white p-6 shadow-warm">
       <p className="eyebrow text-smoke">{projectName(areaOf(need.area))}</p>
       <h4 className="font-display mt-2 text-lg font-medium">
-        <Link href={`/needs/${need.slug}`} className="hover:text-forest">
+        <Link href={`/needs/${need.slug}`} className="hover:text-plum">
           {need.title}
         </Link>
       </h4>
@@ -628,7 +628,7 @@ function OpenNeed({ need }: { need: NeedWithLedger }) {
         </p>
         <Link
           href={`/needs/${need.slug}`}
-          className="text-sm font-bold text-forest underline underline-offset-4 hover:text-forest"
+          className="text-sm font-bold text-plum underline underline-offset-4 hover:text-plum"
         >
           Partner with this
         </Link>
@@ -653,9 +653,9 @@ function OpenNeed({ need }: { need: NeedWithLedger }) {
 function WholeProject({ appeal }: { appeal: Appeal }) {
   return (
     <div className="flex flex-col rounded-2xl bg-white p-7 shadow-warm">
-      <Icon name={appeal.area.icon} className="h-8 w-8 text-forest" />
+      <Icon name={appeal.area.icon} className="h-8 w-8 text-plum" />
       <h4 className="font-display mt-4 text-xl leading-snug font-medium">
-        <Link href={appeal.area.href} className="hover:text-forest">
+        <Link href={appeal.area.href} className="hover:text-plum">
           {projectName(appeal.area)}
         </Link>
       </h4>
@@ -664,20 +664,20 @@ function WholeProject({ appeal }: { appeal: Appeal }) {
       </p>
 
       <p className="eyebrow mt-6 text-smoke">The whole job</p>
-      <p className="font-display tabular mt-1 text-2xl font-medium text-forest">
+      <p className="font-display tabular mt-1 text-2xl font-medium text-plum">
         {usd(appeal.costCents)}
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
         <Link
           href={`/give?for=${appeal.area.id}#pledge`}
-          className="text-sm font-bold text-forest underline underline-offset-4 hover:text-forest"
+          className="text-sm font-bold text-plum underline underline-offset-4 hover:text-plum"
         >
           Give to this
         </Link>
         <Link
           href={appeal.area.href}
-          className="text-sm text-smoke underline underline-offset-4 hover:text-forest"
+          className="text-sm text-smoke underline underline-offset-4 hover:text-plum"
         >
           See the work
         </Link>
@@ -688,7 +688,7 @@ function WholeProject({ appeal }: { appeal: Appeal }) {
 
 const statusStyles: Record<PledgeStatus, string> = {
   pending: "bg-gold/15 text-clay",
-  promised: "bg-forest/10 text-forest",
+  promised: "bg-plum/10 text-plum",
   received: "bg-forest/12 text-forest",
   declined: "bg-black/6 text-smoke",
 };
@@ -703,7 +703,7 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div className="bg-forest-deep px-7 py-6">
+    <div className="bg-plum-deep px-7 py-6">
       <dt className="eyebrow text-white/50">{label}</dt>
       <dd className="font-display tabular mt-1.5 text-3xl font-medium text-gold">
         {value}
@@ -735,7 +735,7 @@ function Project({ project }: { project: PartnerProject }) {
               : "Given towards"}
           </p>
           <h3 className="font-display mt-2 text-2xl font-medium">
-            <Link href={area.href} className="hover:text-forest">
+            <Link href={area.href} className="hover:text-plum">
               {projectName(area)}
             </Link>
           </h3>
@@ -743,7 +743,7 @@ function Project({ project }: { project: PartnerProject }) {
 
         <div>
           <p className="eyebrow text-smoke">You gave</p>
-          <p className="font-display tabular mt-1 text-3xl font-medium text-forest">
+          <p className="font-display tabular mt-1 text-3xl font-medium text-plum">
             {usd(project.yoursCents)}
           </p>
         </div>
@@ -763,7 +763,7 @@ function Project({ project }: { project: PartnerProject }) {
                 */}
                 <h4 className="font-medium">
                   {need.published ? (
-                    <Link href={`/needs/${need.slug}`} className="hover:text-forest">
+                    <Link href={`/needs/${need.slug}`} className="hover:text-plum">
                       {need.title}
                     </Link>
                   ) : (

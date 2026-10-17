@@ -75,7 +75,7 @@ function Row({
       </td>
       <td
         className={`tabular border-b border-sand-deep py-3.5 pl-4 text-right align-top text-sm font-medium ${
-          muted ? "text-smoke" : "text-forest"
+          muted ? "text-smoke" : "text-plum"
         }`}
       >
         {actual}
@@ -202,7 +202,7 @@ export function ProjectAccounts({
                     <td className="py-4 text-sm font-bold">
                       Still needed to finish
                     </td>
-                    <td className="tabular py-4 text-right text-sm font-bold text-forest">
+                    <td className="tabular py-4 text-right text-sm font-bold text-plum">
                       <Money cents={budget.stillNeededCents} />
                     </td>
                     <td className="py-4" />

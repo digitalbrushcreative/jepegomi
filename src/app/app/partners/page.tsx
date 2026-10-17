@@ -115,7 +115,7 @@ export default async function AdminPartnersPage() {
       )}
 
       <details className="mt-8 rounded border border-black/8 bg-white p-6">
-        <summary className="cursor-pointer font-medium hover:text-forest">
+        <summary className="cursor-pointer font-medium hover:text-plum">
           Add a partner by hand
         </summary>
         <p className="mt-4 max-w-prose text-sm leading-relaxed text-smoke">
@@ -172,7 +172,7 @@ export default async function AdminPartnersPage() {
                       </span>
                     )}
                     {partner.hasLogin && (
-                      <span className="eyebrow rounded-sm bg-forest/10 px-3 py-1 text-forest">
+                      <span className="eyebrow rounded-sm bg-plum/10 px-3 py-1 text-plum">
                         Has a login
                       </span>
                     )}
@@ -187,7 +187,7 @@ export default async function AdminPartnersPage() {
 
                   <a
                     href={`mailto:${partner.email}`}
-                    className="mt-1 inline-block font-mono text-xs text-forest underline underline-offset-4"
+                    className="mt-1 inline-block font-mono text-xs text-plum underline underline-offset-4"
                   >
                     {partner.email}
                   </a>
@@ -196,7 +196,7 @@ export default async function AdminPartnersPage() {
                 <dl className="flex gap-x-8">
                   <div>
                     <dt className="eyebrow text-smoke">Received</dt>
-                    <dd className="font-display tabular mt-1 text-xl font-medium text-forest">
+                    <dd className="font-display tabular mt-1 text-xl font-medium text-plum">
                       {usd(partner.receivedCents)}
                     </dd>
                   </div>
@@ -230,14 +230,14 @@ export default async function AdminPartnersPage() {
                 */}
                 <Link
                   href={`/partners/preview/${partner.id}`}
-                  className="rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest"
+                  className="rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum"
                 >
                   See what they see
                 </Link>
               </div>
 
               <details className="mt-5">
-                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
                   Record a gift
                 </summary>
                 <div className="mt-5 border-t border-black/8 pt-5">
@@ -257,7 +257,7 @@ export default async function AdminPartnersPage() {
                 having to open twenty panels to find out.
               */}
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
                   Who else may see this
                   {(readers.get(partner.id)?.length ?? 0) > 0 &&
                     ` · ${readers.get(partner.id)!.length}`}
@@ -271,7 +271,7 @@ export default async function AdminPartnersPage() {
               </details>
 
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
                   Details &amp; login
                 </summary>
 
@@ -328,7 +328,7 @@ function SupporterList({
 
   return (
     <details className="mt-12 rounded border border-black/8 bg-white p-6">
-      <summary className="cursor-pointer font-medium hover:text-forest">
+      <summary className="cursor-pointer font-medium hover:text-plum">
         Asked about the figures · {confirmed.length + started.length}
       </summary>
 

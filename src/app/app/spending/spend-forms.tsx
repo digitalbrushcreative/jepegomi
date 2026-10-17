@@ -21,13 +21,13 @@ import {
  */
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
 
 const primaryButton =
   "cursor-pointer rounded bg-forest px-7 py-3 font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60";
 
 const quietButton =
-  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest disabled:opacity-60";
+  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum disabled:opacity-60";
 
 function Field({
   label,
@@ -56,7 +56,7 @@ function Field({
 function Notice({ error, saved }: { error?: string; saved?: boolean }) {
   if (error) {
     return (
-      <p role="alert" className="mt-4 text-sm leading-relaxed text-forest">
+      <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
         {error}
       </p>
     );
@@ -271,7 +271,7 @@ function RemoveSpendButton({ need }: { need: NeedWithLedger }) {
       )}
 
       {state?.error && (
-        <p role="alert" className="mt-2 text-sm leading-relaxed text-forest">
+        <p role="alert" className="mt-2 text-sm leading-relaxed text-plum">
           {state.error}
         </p>
       )}

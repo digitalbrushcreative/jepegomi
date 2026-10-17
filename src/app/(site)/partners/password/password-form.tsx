@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { type PartnerLoginState, partnerSignInAction } from "../actions";
 
 const inputClass =
-  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-forest focus:ring-2 focus:ring-forest/20";
+  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-plum focus:ring-2 focus:ring-plum/20";
 
 export function PartnerPasswordForm() {
   const [state, formAction, pending] = useActionState<PartnerLoginState, FormData>(
@@ -37,7 +37,7 @@ export function PartnerPasswordForm() {
       </label>
 
       {state?.error && (
-        <p role="alert" className="mt-4 text-sm leading-relaxed text-forest">
+        <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
           {state.error}
         </p>
       )}

@@ -78,7 +78,7 @@ export function SiteHeader({
                   href={link.href}
                   className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm transition-colors ${
                     isActive(link)
-                      ? "text-charcoal"
+                      ? "text-plum"
                       : "text-smoke hover:text-charcoal"
                   }`}
                 >
@@ -128,7 +128,7 @@ export function SiteHeader({
                 key={link.href}
                 href={link.href}
                 className={`rounded px-3 py-2 text-sm transition-colors ${
-                  isActive(link) ? "text-charcoal" : "text-smoke hover:text-charcoal"
+                  isActive(link) ? "text-plum" : "text-smoke hover:text-charcoal"
                 }`}
               >
                 {link.label}

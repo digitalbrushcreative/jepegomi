@@ -66,7 +66,7 @@ async function Preview({ params }: { params: Params }) {
       notice={
         <div className="mb-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-b border-white/15 pb-6 text-white">
           <p className="text-sm leading-relaxed">
-            <span className="eyebrow mr-3 rounded-sm bg-gold px-3 py-1 text-forest-deep">
+            <span className="eyebrow mr-3 rounded-sm bg-gold px-3 py-1 text-plum-deep">
               Preview
             </span>
             This is what <strong className="font-semibold">{partner.name}</strong>{" "}

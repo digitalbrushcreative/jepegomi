@@ -28,13 +28,13 @@ import {
 } from "./actions";
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
 
 const primaryButton =
   "cursor-pointer rounded bg-forest px-7 py-3 font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60";
 
 const quietButton =
-  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest disabled:opacity-60";
+  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum disabled:opacity-60";
 
 function Field({
   label,
@@ -61,7 +61,7 @@ function Field({
 function Notice({ error, saved }: { error?: string; saved?: boolean }) {
   if (error) {
     return (
-      <p role="alert" className="mt-4 text-sm leading-relaxed text-forest">
+      <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
         {error}
       </p>
     );
@@ -276,7 +276,7 @@ function NeedFields({
             type="checkbox"
             name="published"
             defaultChecked={need?.published ?? false}
-            className="mt-1 h-4 w-4 accent-forest"
+            className="mt-1 h-4 w-4 accent-plum"
           />
           <span className="text-sm leading-relaxed">
             <strong className="font-medium">Show this on the site.</strong>{" "}
@@ -291,7 +291,7 @@ function NeedFields({
             type="checkbox"
             name="closed"
             defaultChecked={need?.closed ?? false}
-            className="mt-1 h-4 w-4 accent-forest"
+            className="mt-1 h-4 w-4 accent-plum"
           />
           <span className="text-sm leading-relaxed">
             <strong className="font-medium">The work on this is finished.</strong>{" "}
@@ -836,7 +836,7 @@ export function PostUpdateForm({ needId }: { needId: string }) {
         so this reports both outcomes at once rather than choosing one.
       */}
       {state?.error && (
-        <p role="alert" className="mt-4 text-sm leading-relaxed text-forest">
+        <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
           {state.error}
         </p>
       )}
@@ -867,7 +867,7 @@ export function DeleteUpdateButton({ updateId }: { updateId: string }) {
           void deleteUpdateAction(updateId);
         });
       }}
-      className="cursor-pointer text-xs font-medium text-smoke underline underline-offset-4 hover:text-forest disabled:opacity-60"
+      className="cursor-pointer text-xs font-medium text-smoke underline underline-offset-4 hover:text-plum disabled:opacity-60"
     >
       {pending ? "Deleting…" : "Delete"}
     </button>

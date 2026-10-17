@@ -63,7 +63,7 @@ export default async function AdminNeedPage({
     <div className="max-w-3xl">
       <Link
         href="/app/needs"
-        className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-forest"
+        className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-plum"
       >
         ← All needs
       </Link>
@@ -76,7 +76,7 @@ export default async function AdminNeedPage({
             {" · "}
             <Link
               href={`/needs/${need.slug}`}
-              className="font-medium text-forest underline underline-offset-4"
+              className="font-medium text-plum underline underline-offset-4"
             >
               /needs/{need.slug}
             </Link>
@@ -112,14 +112,14 @@ export default async function AdminNeedPage({
                 <div>
                   <p className="font-medium">
                     {pledge.partnerName ?? "Somebody"}{" "}
-                    <span className="tabular ml-1 text-forest">
+                    <span className="tabular ml-1 text-plum">
                       {usd(pledge.amountCents)}
                     </span>
                   </p>
                   {pledge.partnerEmail && (
                     <a
                       href={`mailto:${pledge.partnerEmail}?subject=${encodeURIComponent(`Giving to ${need.title}`)}`}
-                      className="font-mono text-xs text-smoke underline underline-offset-4 hover:text-forest"
+                      className="font-mono text-xs text-smoke underline underline-offset-4 hover:text-plum"
                     >
                       {pledge.partnerEmail}
                     </a>
@@ -177,7 +177,7 @@ export default async function AdminNeedPage({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-4">
-                  <p className="eyebrow text-forest">
+                  <p className="eyebrow text-plum">
                     {formatDay(update.createdAt)}
                   </p>
                   <DeleteUpdateButton updateId={update.id} />

@@ -159,7 +159,7 @@ export default async function TransportPage() {
           <dl className="relative z-10 grid gap-px overflow-hidden rounded-2xl bg-black/8 shadow-warm">
             {figures.map((figure) => (
               <div key={figure.label} className="bg-white p-7">
-                <dt className="eyebrow text-forest">{figure.label}</dt>
+                <dt className="eyebrow text-plum">{figure.label}</dt>
                 <dd className="font-display mt-3 text-3xl font-medium">
                   {figure.value}
                 </dd>
@@ -201,7 +201,7 @@ export default async function TransportPage() {
                 key={way.title}
                 className="rounded-2xl bg-white p-7 shadow-warm"
               >
-                <Icon name="bus" className="h-8 w-8 text-forest" />
+                <Icon name="bus" className="h-8 w-8 text-plum" />
                 <h3 className="font-display mt-4 text-xl font-medium">
                   {way.title}
                 </h3>
@@ -223,7 +223,7 @@ export default async function TransportPage() {
             <ButtonLink href="/give?for=transport#pledge" icon="give">
               Give toward the bus
             </ButtonLink>
-            <ButtonLink href="/academy" variant="ghost" className="text-forest">
+            <ButtonLink href="/academy" variant="ghost" className="text-plum">
               The school it serves
             </ButtonLink>
           </div>

@@ -35,14 +35,14 @@ function Entry({ update, showNeed }: { update: TimelineUpdate; showNeed?: boolea
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
         <time
           dateTime={update.createdAt}
-          className="eyebrow text-forest"
+          className="eyebrow text-plum"
         >
           {formatDay(update.createdAt)}
         </time>
         {showNeed && update.needSlug && update.needTitle && (
           <Link
             href={`/needs/${update.needSlug}`}
-            className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-forest"
+            className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-plum"
           >
             {update.needTitle}
           </Link>

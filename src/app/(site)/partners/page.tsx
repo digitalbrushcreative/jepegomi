@@ -92,7 +92,7 @@ async function PartnerEntrance() {
         <ul className="mt-12 space-y-8">
           {promises.map((promise) => (
             <li key={promise.title} className="flex gap-5">
-              <Icon name={promise.icon} className="h-8 w-8 shrink-0 text-forest" />
+              <Icon name={promise.icon} className="h-8 w-8 shrink-0 text-plum" />
               <div>
                 <h2 className="font-display text-xl font-medium">
                   {promise.title}
@@ -106,14 +106,14 @@ async function PartnerEntrance() {
         </ul>
 
         <div className="mt-12 rounded-2xl border border-dashed border-smoke/30 bg-sand p-7">
-          <p className="eyebrow text-forest">No code arriving?</p>
+          <p className="eyebrow text-plum">No code arriving?</p>
           <p className="mt-3 max-w-xl leading-relaxed text-smoke">
             Try the address the gift was given under — a treasurer&apos;s, or the
             church office. If you gave by bank transfer or M-Pesa and were never
             asked for an address, write to{" "}
             <a
               href={`mailto:${site.email}?subject=${encodeURIComponent("Partner sign in")}`}
-              className="font-medium text-forest underline underline-offset-4"
+              className="font-medium text-plum underline underline-offset-4"
             >
               {site.email}
             </a>{" "}
@@ -143,7 +143,7 @@ async function PartnerEntrance() {
           Given a password before?{" "}
           <Link
             href="/partners/password"
-            className="font-medium text-forest underline underline-offset-4"
+            className="font-medium text-plum underline underline-offset-4"
           >
             Sign in with it here
           </Link>

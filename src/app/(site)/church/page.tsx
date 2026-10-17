@@ -128,7 +128,7 @@ export default async function ChurchPage() {
             <dl className="mt-12 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {church.services.map((service) => (
                 <div key={service.name + service.time} className="bg-white p-6">
-                  <dt className="eyebrow text-forest">{service.name}</dt>
+                  <dt className="eyebrow text-plum">{service.name}</dt>
                   <dd className="mt-2 font-medium">{service.time}</dd>
                   {service.detail && (
                     <dd className="mt-1 text-sm leading-relaxed text-smoke">
@@ -158,7 +158,7 @@ export default async function ChurchPage() {
 
           {church.address ? (
             <div className="mt-8 rounded border border-black/8 bg-white p-6">
-              <p className="eyebrow text-forest">Where we meet</p>
+              <p className="eyebrow text-plum">Where we meet</p>
               <p className="mt-2 leading-relaxed">{church.address}</p>
             </div>
           ) : null}
@@ -200,7 +200,7 @@ export default async function ChurchPage() {
             <ButtonLink href="/about" variant="secondary">
               About the ministry
             </ButtonLink>
-            <ButtonLink href="/contact" variant="ghost" className="text-forest">
+            <ButtonLink href="/contact" variant="ghost" className="text-plum">
               Get in touch
             </ButtonLink>
           </div>

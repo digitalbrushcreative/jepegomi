@@ -195,7 +195,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                 className="flex flex-col rounded-2xl bg-white p-8 shadow-warm"
               >
                 {wayIcons[index] && (
-                  <Icon name={wayIcons[index]} className="h-9 w-9 text-forest" />
+                  <Icon name={wayIcons[index]} className="h-9 w-9 text-plum" />
                 )}
                 <h3 className="font-display mt-5 text-2xl font-medium">
                   {way.title}
@@ -244,7 +244,7 @@ export default async function GivePage(props: PageProps<"/give">) {
               <dl className="grid gap-px overflow-hidden rounded-2xl bg-sand-deep sm:grid-cols-2 lg:grid-cols-1">
                 <div className="bg-white px-8 py-7">
                   <dt className="eyebrow text-smoke">Still open</dt>
-                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-forest">
+                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-plum">
                     <Money cents={ledger.totalOpenCents} />
                   </dd>
                   <p className="mt-2 text-sm text-smoke">
@@ -254,7 +254,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                 </div>
                 <div className="bg-white px-8 py-7">
                   <dt className="eyebrow text-smoke">Received so far</dt>
-                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-forest">
+                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-plum">
                     <Money cents={ledger.totalReceivedCents} />
                   </dd>
                   <p className="mt-2 text-sm text-smoke">
@@ -370,7 +370,7 @@ export default async function GivePage(props: PageProps<"/give">) {
         The ask itself. There is no account number on this page and there is not
         meant to be one: the details are sent by reply, to the person giving.
       */}
-      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 sm:py-24">
+      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
 
         <div className="shell relative">
           <div className="mx-auto max-w-2xl text-center">

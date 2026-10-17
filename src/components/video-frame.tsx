@@ -77,7 +77,7 @@ export function VideoFrame({
               <svg
                 viewBox="0 0 24 24"
                 aria-hidden="true"
-                className="ml-1 h-7 w-7 fill-forest-deep"
+                className="ml-1 h-7 w-7 fill-plum-deep"
               >
                 <path d="M6 4.5v15l14-7.5z" />
               </svg>

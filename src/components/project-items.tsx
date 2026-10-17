@@ -163,7 +163,7 @@ export async function ProjectItems({ area }: { area: string }) {
           </div>
         )}
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-forest px-8 py-7 shadow-warm">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
           <p className="eyebrow text-white/70">Still needed for all of it</p>
           <p className="font-display tabular text-4xl font-medium text-gold">
             <Money cents={project.stillAskingCents} />
@@ -176,7 +176,7 @@ export async function ProjectItems({ area }: { area: string }) {
           </ButtonLink>
           <Link
             href="/needs"
-            className="text-sm font-bold text-forest underline underline-offset-4"
+            className="text-sm font-bold text-plum underline underline-offset-4"
           >
             See every line, and what is left on each
           </Link>

@@ -89,7 +89,7 @@ export default async function AdminSpendingPage() {
             under{" "}
             <Link
               href="/app/pages/projectAccounts"
-              className="font-medium text-forest underline underline-offset-4"
+              className="font-medium text-plum underline underline-offset-4"
             >
               Project accounts
             </Link>
@@ -183,7 +183,7 @@ function ProjectSpending({
       actions={
         <Link
           href="/app/pages/projectAccounts"
-          className="rounded border border-black/15 px-3 py-1.5 text-xs font-medium text-smoke transition-colors hover:bg-sand hover:text-forest"
+          className="rounded border border-black/15 px-3 py-1.5 text-xs font-medium text-smoke transition-colors hover:bg-sand hover:text-plum"
         >
           Read by: {setting?.label ?? "The people who paid for it"}
         </Link>
@@ -213,7 +213,7 @@ function ProjectSpending({
                     screen that gets somebody to "correct" it to a number they
                     made up.
                   */}
-                  <span className="w-24 text-right font-semibold text-forest">
+                  <span className="w-24 text-right font-semibold text-plum">
                     {need.costCents > 0 ? usd(need.costCents) : "Used"}
                   </span>
                 </div>

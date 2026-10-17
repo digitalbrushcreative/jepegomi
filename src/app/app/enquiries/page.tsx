@@ -103,7 +103,7 @@ export default async function AdminEnquiriesPage() {
 
                     <a
                       href={`mailto:${enquiry.email}?subject=${encodeURIComponent("Your enquiry about Jepegomi Academy")}`}
-                      className="mt-2 inline-block font-mono text-xs text-forest underline underline-offset-4"
+                      className="mt-2 inline-block font-mono text-xs text-plum underline underline-offset-4"
                     >
                       {enquiry.email}
                     </a>
@@ -144,7 +144,7 @@ export default async function AdminEnquiriesPage() {
                 </div>
 
                 <details className="mt-5">
-                  <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
+                  <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
                     Your note
                     {enquiry.note && " — written"}
                   </summary>

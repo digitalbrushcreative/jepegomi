@@ -39,7 +39,7 @@ async function PasswordEntrance() {
           one, you do not need it —{" "}
           <Link
             href="/partners"
-            className="font-medium text-forest underline underline-offset-4"
+            className="font-medium text-plum underline underline-offset-4"
           >
             sign in with a code instead
           </Link>

@@ -6,15 +6,21 @@
   The site used to be dressed warm and hand-made — plum slabs, wonky display
   type, cloth edges and a paper grain — and the effect, at the size of a whole
   site, was decoration standing in for substance. It now does less: warm white
-  and stone surfaces, near-black type, one deep green that marks the act of
-  giving and the links that matter, and a muted gold used sparingly. The
-  photographs are what carry colour.
+  and stone surfaces, near-black type, plum as the accent, one deep green that
+  marks the act of giving, and a muted gold used sparingly. The photographs
+  are what carry most of the colour.
 
-  The logo's own plum and green stay in the logo. They are not the site's
-  palette; nothing else on the page should compete with the mark.
+  Plum is still the ministry's colour — it comes off the logo — but it is
+  used as an accent rather than a ground: links, labels, the figures that
+  matter, the footer and the odd closing band. Never the top of a page.
 */
 @theme {
-  /* The one accent. Giving, links, the figures that matter. */
+  /* The brand accent, off the logo. Ink, not wallpaper. */
+  --color-plum: #7a1b5c;
+  --color-plum-light: #992a74;
+  --color-plum-deep: #4a1038;
+
+  /* The giving colour. A Give button, and nothing else. */
   --color-forest: #244638;
   --color-forest-light: #30594a;
   --color-forest-deep: #1a3329;

@@ -108,7 +108,7 @@ function SignedOutFrame({ children }: { children: React.ReactNode }) {
       <div className="border-b border-black/8 px-6 py-4">
         <Link href="/" className="inline-flex items-center gap-3">
           <JepegomiLogo variant="color" title="Jepegomi" className="h-9 w-auto" />
-          <span className="text-[11px] font-semibold tracking-[0.16em] text-forest uppercase">
+          <span className="text-[11px] font-semibold tracking-[0.16em] text-plum uppercase">
             Manage
           </span>
         </Link>
