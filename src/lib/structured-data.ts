@@ -67,7 +67,7 @@ export function ministryLd({
       sort of writing, not "Contextual Bible Training College". A name field
       wants the name.
 
-      No `founder`. `site.leaders` is "Pastor Simon & Joyce Nderitu" — one
+      No `founder`. `site.leaders` is "Pastors Dr Simon & Dr Joyce Nderitu" — one
       string describing two people with one surname and a title on the front,
       and every way of splitting it into two Person records is a guess that
       breaks the first time somebody edits the wording. The About page says who

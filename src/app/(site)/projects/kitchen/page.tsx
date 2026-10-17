@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getContent } from "@/cms/content";
 import { Icon, type IconName } from "@/components/icons";
 import { Money } from "@/components/money";
@@ -18,11 +17,7 @@ import {
   getPublishedNeeds,
   getStillNeededCents,
 } from "@/lib/needs";
-import {
-  getBeforeAfterSources,
-  getGalleryCategories,
-  getGalleryPhotos,
-} from "@/lib/photos";
+import { getGalleryCategories, getGalleryPhotos } from "@/lib/photos";
 import { site } from "@/lib/site";
 import { pageMeta } from "@/lib/seo";
 import { RelatedLinks } from "@/components/related-links";
@@ -30,62 +25,13 @@ import { RelatedLinks } from "@/components/related-links";
 export const metadata: Metadata = pageMeta({
   title: "Kitchen Build",
   description:
-    "From open fires to a proper kitchen — the Jepegomi Academy kitchen a partner church built, cooking daily, with the dining area still to finish.",
+    "The Jepegomi Academy kitchen — built with a partner church, cooking daily, with the dining area next.",
   path: "/projects/kitchen",
 });
-
-function BeforeAfterCard({
-  card,
-  src,
-  tone,
-}: {
-  card: { heading: string; alt: string; bullets: string[] };
-  src: string;
-  tone: "before" | "after";
-}) {
-  return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-warm">
-      <p
-        className={`eyebrow px-6 py-3.5 text-white ${
-          tone === "before" ? "bg-smoke" : "bg-forest"
-        }`}
-      >
-        {card.heading}
-      </p>
-      <div className="relative flex aspect-[16/10] items-center justify-center bg-sand">
-        {src ? (
-          <Image
-            src={src}
-            alt={card.alt}
-            fill
-            sizes="(max-width: 768px) 100vw, 470px"
-            className="object-cover"
-          />
-        ) : (
-          <p className="text-sm text-smoke/60">Photo to be added</p>
-        )}
-      </div>
-      <ul className="space-y-2 px-6 py-5">
-        {card.bullets.map((bullet) => (
-          <li key={bullet} className="flex gap-2.5 text-sm text-smoke">
-            <span
-              aria-hidden="true"
-              className={tone === "before" ? "text-clay" : "text-forest"}
-            >
-              ●
-            </span>
-            {bullet}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 export default async function KitchenPage() {
   const [
     photos,
-    beforeAfterSrc,
     childrenFed,
     accounts,
     stillNeededCents,
@@ -94,7 +40,6 @@ export default async function KitchenPage() {
     categories,
   ] = await Promise.all([
       getGalleryPhotos(),
-      getBeforeAfterSources(),
       getChildrenFed(),
       getContent("projectAccounts"),
       /*
@@ -118,16 +63,9 @@ export default async function KitchenPage() {
   */
   const storyPoints = [
     <>
-      Meals were cooked{" "}
-      <strong className="font-bold text-charcoal">
-        outdoors over open fires
-      </strong>
-      , without a kitchen or a store room
-    </>,
-    <>
       {report.donorTitled} in {report.donorLocation}{" "}
       <strong className="font-bold text-charcoal">partnered with us</strong> to
-      change that
+      build the academy a kitchen and store room
     </>,
     <>
       The kitchen is{" "}
@@ -356,30 +294,6 @@ export default async function KitchenPage() {
         </div>
       </section>
 
-      {/* Then & now. */}
-      <section className="relative bg-sand px-6 py-20 sm:py-24">
-
-        <div className="shell">
-          <div className="flex flex-col items-center text-center">
-            <SectionTitle className="mt-3 flex flex-col items-center">
-              From open fires to a proper kitchen
-            </SectionTitle>
-          </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <BeforeAfterCard
-              card={report.before}
-              src={beforeAfterSrc.before}
-              tone="before"
-            />
-            <BeforeAfterCard
-              card={report.after}
-              src={beforeAfterSrc.after}
-              tone="after"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* The photo journal. */}
       <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
 
@@ -479,7 +393,7 @@ export default async function KitchenPage() {
                     Every shilling of the gift, accounted for
                   </SectionTitle>
                   <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
-                    Pastor Simon reconciled the build line by line: what each
+                    Dr Simon reconciled the build line by line: what each
                     thing was estimated at, what it actually cost, and where it
                     ran over.
                   </p>
@@ -512,7 +426,7 @@ export default async function KitchenPage() {
                     }
                     footnote={
                       <p>
-                        Figures in USD, as reported by Pastor Simon to the donor.
+                        Figures in USD, as reported by Dr Simon to the donor.
                         The <Money cents={report.giftCents} /> gift is fully
                         spent.
                         {budget.outstanding.length > 0 &&
@@ -528,7 +442,7 @@ export default async function KitchenPage() {
                   Every shilling of the gift is accounted for.
                 </p>
                 <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
-                  Pastor Simon reconciled the build line by line: what each thing
+                  Dr Simon reconciled the build line by line: what each thing
                   was estimated at, what it actually cost, and where it ran over.
                   Partners who gave towards this work read it in full when they
                   sign in.
@@ -587,7 +501,7 @@ export default async function KitchenPage() {
             href: "/needs",
             label: "What's needed",
             blurb:
-              "Every remaining cost on the kitchen, itemised, alongside everything else the ministry is short of.",
+              "Every remaining cost on the kitchen, itemised, alongside the ministry's other open projects.",
           },
         ]}
       />

@@ -172,7 +172,7 @@ export function WhileHidden({ children }: { children: ReactNode }) {
  */
 export function LockedFigures({
   title = "Join as a partner to reveal the total cost",
-  blurb = "The full breakdown — what this comes to, what has already been given towards it, and what is still short — opens as soon as you sign in.",
+  blurb = "The full breakdown — what this comes to, what has already been given towards it, and what is still to raise — opens as soon as you sign in.",
   className = "",
 }: {
   title?: string;

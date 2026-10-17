@@ -369,10 +369,10 @@ export function giftReceipt(gift: GiftDetails): Message {
   const opening = paid
     ? gift.remaining
       ? `Your gift has arrived and now shows as received on the website. The balance — ${escape(gift.remaining)} — stays open for somebody else to pick up.`
-      : "Your gift has arrived, it is written down against your name, and Pastor Simon will make sure it goes where you have asked."
+      : "Your gift has arrived, it is written down against your name, and Dr Simon will make sure it goes where you have asked."
     : gift.remaining
       ? `That amount now shows as promised on the website, so nobody else will be asked for it. The balance — ${escape(gift.remaining)} — stays open for somebody else to pick up.`
-      : "That is written down against your name, and Pastor Simon will make sure it goes where you have asked.";
+      : "That is written down against your name, and Dr Simon will make sure it goes where you have asked.";
 
   /*
     A paid gift is never sent account details. That is the whole point of the
@@ -443,10 +443,10 @@ ${
   paid
     ? gift.remaining
       ? `Your gift has arrived and now shows as received on the website. The balance —\n${gift.remaining} — stays open for somebody else to pick up.`
-      : "Your gift has arrived, it is written down against your name, and Pastor Simon\nwill make sure it goes where you have asked."
+      : "Your gift has arrived, it is written down against your name, and Dr Simon\nwill make sure it goes where you have asked."
     : gift.remaining
       ? `That amount now shows as promised on the website, so nobody else will be asked\nfor it. The balance — ${gift.remaining} — stays open for somebody else to pick up.`
-      : "That is written down against your name, and Pastor Simon will make sure it goes\nwhere you have asked."
+      : "That is written down against your name, and Dr Simon will make sure it goes\nwhere you have asked."
 }
 
 Towards:   ${gift.towards}${gift.needUrl ? `  (${gift.needUrl})` : ""}
@@ -693,7 +693,7 @@ export function supporterSignInCode(input: {
   const heading = "Your code for the figures";
 
   const opens =
-    "Here is the code that opens the costings on our site — what each thing we are asking for comes to, what has already been given towards it, and what is still short. Type it into the page you asked from.";
+    "Here is the code that opens the costings on our site — what each project comes to, what has already been given towards it, and what is still to raise. Type it into the page you asked from.";
 
   const nothingOwed =
     "This is not an account and you have not signed up for anything. We ask for an address because these are the ministry's own prices and we would rather know who is reading them than publish them to the whole internet. You are under no obligation to give.";

@@ -136,7 +136,7 @@ export function Confirm({ trackingId }: { trackingId: string }) {
             >
               {site.email}
             </a>{" "}
-            and Pastor Simon will send you another way to give.
+            and Dr Simon will send you another way to give.
           </p>
         </div>
         <div className="mt-6">
