@@ -10,16 +10,14 @@ import { type NavLink, navLinks } from "@/lib/site";
  * The header has no colour of its own.
  *
  * It is transparent and sits *on* the hero, so whatever the hero is wearing is
- * what the header wears — and on the homepage that means it turns over with the
- * slider: plum for the church, green for the Academy, charcoal for the college,
- * brown for Food at School. Every page on this site opens on a dark hero, which
- * is what makes white nav type safe to lay straight over it.
+ * what the header wears. Every page on this site opens on a dark hero, which is
+ * what makes white nav type safe to lay straight over it.
  *
- * "Dark" is now a promise the heroes have to keep rather than a fact about flat
- * colour. Once the homepage slides carried photographs, the outer links and the
- * menu button ended up over open picture — so HeroSlider lays a scrim band
- * across the top of any slide with a backdrop. A hero that puts a photograph up
- * there owes this header the same band.
+ * "Dark" is a promise the heroes have to keep rather than a fact about flat
+ * colour. The homepage opens on a photograph, so the outer links and the menu
+ * button sit over open picture — which is why it lays a scrim band across the
+ * top of it. A hero that puts a photograph up there owes this header the same
+ * band.
  *
  * Once you scroll off the hero there is nothing dark left underneath, so it
  * takes on a solid plum of its own rather than leaving white links floating

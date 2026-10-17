@@ -557,180 +557,268 @@ const college = {
   },
 } satisfies CmsDocument;
 
+/*
+  The front page, as an introduction to an institution rather than a summary of
+  every page on the site.
+
+  It used to open on a rotating slide per arm, then four cards, then every
+  current appeal, then the closing ask — accurate, and a fundraising platform's
+  shape. The order now is purpose, people, work, evidence, partnership: who the
+  ministry is, what it does, what it has done, who leads it, and only then how
+  somebody might stand with it. The appeals did not go anywhere. They live on
+  /projects and /needs, one click from the partnership section, instead of on
+  every screen of the front page.
+
+  Every field name is new rather than reused. Saved content is laid over these
+  defaults key by key, so a reused name — `heading`, `closingHeading` — would
+  have brought the old page's words back into the new page's slots. The old
+  keys are still in the stored JSON and nothing reads them; the next save from
+  the editor drops them.
+
+  Links are fixed in the page where a section has exactly one place to go (the
+  story of the ministry is /about; a visit is /church). The ministries and the
+  featured story keep a link field, because which arm or which story is shown
+  is the editor's choice.
+
+  No field here is a figure. The number of children fed is the academy's
+  "Pupils enrolled" field read back (see lib/enrolment.ts), so the front page
+  cannot quote a different count from the academy page.
+*/
 const home = {
   title: "Home",
   path: "/",
   group: "main",
   description:
-    "The front page — the rotating hero slides, and the four cards below them.",
+    "The front page — who the ministry is, its four ministries, the figures, a featured story, the leadership, and the invitation to partner.",
   fields: {
-    heading: { type: "text", label: "Headline" },
-    intro: { type: "prose", label: "Intro" },
-    slides: {
-      type: "list",
-      label: "Hero slides",
-      itemLabel: "slide",
-      help: "The rotating panels at the top of the front page — one for each arm of the ministry. The mark shown on a slide follows its link, so keep the link pointing where it does now.",
-      fields: {
-        eyebrow: { type: "text", label: "Eyebrow" },
-        title: { type: "text", label: "Headline" },
-        body: { type: "prose", label: "Text" },
-        href: { type: "text", label: "Link" },
-        cta: { type: "text", label: "Link text" },
-      },
+    heroHeading: {
+      type: "text",
+      label: "Headline",
+      help: "The one large line at the top of the page. Keep it short — it is set very large.",
     },
-    cards: {
+    heroBody: { type: "prose", label: "Text under the headline" },
+    heroPhoto: {
+      type: "image",
+      label: "Photograph",
+      help: "Fills most of the first screen. Wide (landscape) photographs of people work best — a Sunday service would be ideal. The headline sits over the bottom-left of it.",
+    },
+    heroPhotoAlt: {
+      type: "text",
+      label: "Photograph description",
+      help: "Read aloud to people who cannot see the photo.",
+    },
+
+    introLabel: { type: "text", label: "Who we are — label" },
+    introHeading: { type: "text", label: "Who we are — heading" },
+    introBody: {
+      type: "prose",
+      label: "Who we are — text",
+      help: "Leave a blank line between paragraphs.",
+    },
+    introPhoto: { type: "image", label: "Who we are — photograph" },
+    introPhotoAlt: { type: "text", label: "Who we are — photograph description" },
+
+    ministriesHeading: { type: "text", label: "Ministries — heading" },
+    ministries: {
       type: "list",
-      label: "Cards",
-      itemLabel: "card",
-      help: "The panels below the hero — one for each arm of the ministry. The link is a path on this site, like /give.",
+      label: "Ministries",
+      itemLabel: "ministry",
+      help: "One large photographic panel each, two to a row. The link is a path on this site, like /academy.",
       fields: {
+        name: { type: "text", label: "Name", help: "Shown small, above the title — e.g. Jepegomi Academy." },
         title: { type: "text", label: "Title" },
-        body: { type: "prose", label: "Body" },
+        body: { type: "prose", label: "Text" },
+        photo: { type: "image", label: "Photograph" },
+        photoAlt: { type: "text", label: "Photograph description" },
         href: { type: "text", label: "Link" },
         cta: { type: "text", label: "Link text" },
       },
     },
-    needsEyebrow: { type: "text", label: "Needs eyebrow" },
-    needs: {
+
+    evidenceLabel: { type: "text", label: "Figures — label" },
+    evidenceHeading: { type: "text", label: "Figures — heading" },
+    childrenFedLabel: {
+      type: "text",
+      label: "Children fed — caption",
+      help: "The number itself is the academy's “Pupils enrolled” field, so it changes when that does.",
+    },
+    figures: {
       type: "list",
-      label: "Current needs",
-      itemLabel: "need",
-      help: "The appeal on the front page — one panel per need, switched by the buttons above it. The kitchen's figures and its pot are read from the budget and cannot be edited here; they would drift out of step with the Kitchen page. Put the need you most want giving to first.",
+      label: "Other figures",
+      itemLabel: "figure",
+      help: "Shown beside the number of children fed. Only publish figures you can stand behind — a modest true number is worth more than a large round one.",
       fields: {
-        label: {
-          type: "text",
-          label: "Short name",
-          help: "What the button switching to this need says — two or three words.",
-        },
-        heading: { type: "text", label: "Heading" },
-        body: { type: "prose", label: "Text" },
-        status: {
-          type: "text",
-          label: "Where it stands",
-          help: "Shown on the card beside the need. The kitchen ignores this and shows its pot instead.",
-        },
-        giveCta: { type: "text", label: "Give button text" },
-        cta: { type: "text", label: "Second link text" },
-        href: { type: "text", label: "Second link" },
+        value: { type: "text", label: "Number" },
+        label: { type: "text", label: "Caption" },
       },
     },
-    closingHeading: { type: "text", label: "Closing heading" },
-    closingBody: { type: "prose", label: "Closing text" },
+    figuresAsOf: {
+      type: "text",
+      label: "Figures are correct as of",
+      help: "e.g. “October 2026”. Shown under the figures so a reader knows how current they are. Update it whenever you check them.",
+    },
+    evidenceNote: { type: "text", label: "Figures — closing line" },
+
+    storyLabel: { type: "text", label: "Featured story — label" },
+    storyHeading: { type: "text", label: "Featured story — heading" },
+    storyBody: { type: "prose", label: "Featured story — text" },
+    storyPhoto: { type: "image", label: "Featured story — photograph" },
+    storyPhotoAlt: { type: "text", label: "Featured story — photograph description" },
+    storyHref: {
+      type: "text",
+      label: "Featured story — link",
+      help: "Where “Read the story” goes — a path on this site, like /projects/kitchen.",
+    },
+    storyCta: { type: "text", label: "Featured story — link text" },
+
+    leadershipLabel: { type: "text", label: "Leadership — label" },
+    leadershipHeading: { type: "text", label: "Leadership — heading" },
+    leadershipBody: { type: "prose", label: "Leadership — text" },
+    leadershipMessage: {
+      type: "prose",
+      label: "A word from the pastors",
+      help: "In Simon & Joyce's own words, shown as a quotation. Blank until they write it — the section reads fine without it, and it should never be written for them.",
+    },
+    leadershipPhoto: { type: "image", label: "Leadership — portrait" },
+    leadershipPhotoAlt: { type: "text", label: "Leadership — portrait description" },
+
+    partnerLabel: { type: "text", label: "Partner with us — label" },
+    partnerHeading: { type: "text", label: "Partner with us — heading" },
+    partnerBody: { type: "prose", label: "Partner with us — text" },
+    partnerPhoto: { type: "image", label: "Partner with us — photograph" },
+    partnerPhotoAlt: { type: "text", label: "Partner with us — photograph description" },
+    partnerCta: { type: "text", label: "Partner with us — link text" },
+
+    welcomeHeading: { type: "text", label: "Closing — heading" },
+    welcomeBody: { type: "prose", label: "Closing — text" },
+    welcomePhoto: {
+      type: "image",
+      label: "Closing — photograph",
+      help: "Runs the full width of the page behind the closing words, darkened so they can be read.",
+    },
+    welcomePhotoAlt: { type: "text", label: "Closing — photograph description" },
   },
   defaults: {
+    heroHeading: "Rooted in faith. Committed to people.",
+    heroBody:
+      "A Christian ministry serving Kahawa Sukari through worship, education, biblical training, and practical care.",
     /*
-      The headline names all four arms, because the front page used to name only
-      one. This site began life as the Kitchen Build report and grew outwards,
-      and it kept the report's centre of gravity long after it had stopped being
-      a report: the feeding program was the headline, the pot, the numbers and
-      the closing ask. The church it all belongs to was a card at the bottom.
+      Children at their desks over lunch, rather than the congregation the
+      brief asks for. The only photographs of a service are 636px crops out of
+      the slide deck, and at the width of this hero they turn to mush. This one
+      is sharp, full of people, and true of an ordinary school day. A photograph
+      of a Sunday service, taken on a phone, should replace it.
     */
-    heading: "A church, a school, a Bible college, and a hot meal every day.",
-    intro: [
-      `${siteDefaults.longName} is a church in ${siteDefaults.location}, led by ${siteDefaults.leaders}. Alongside it stand Jepegomi Academy, the Contextual Bible Training College, and the Food at School program.`,
-      "Worship, education, training, and the meals that keep a classroom learning. It is one ministry, and all of it is the work.",
-    ].join("\n\n"),
-    /*
-      One slide per arm, in the ministry's own order: the church, the school it
-      runs, the college it trains in, and the program that feeds the children it
-      teaches. Every slide carries the Give button, so leading with the church
-      costs the appeal nothing.
-    */
-    slides: [
-      {
-        eyebrow: "Sunday Services",
-        title: "The church at the centre of it.",
-        body: "The congregation in Kahawa Sukari. The academy, the college and the feeding program all belong to this church, and visitors are welcome.",
-        href: "/church",
-        cta: "Visit the church",
-      },
-      {
-        eyebrow: "Jepegomi Academy",
-        title: "Quality education with values.",
-        body: "The school in Kahawa Sukari teaches children from kindergarten to Grade 6, and teaches them character alongside the syllabus.",
-        href: "/academy",
-        cta: "See the Academy",
-      },
-      {
-        eyebrow: "Contextual Bible Training College",
-        title: "Bible training, rooted in this community.",
-        body: "The training arm of the ministry, teaching the Scriptures in and for the community the church already serves.",
-        href: "/college",
-        cta: "About the college",
-      },
-      {
-        eyebrow: "Food at School",
-        title: "Every child eats, every school day.",
-        body: "Porridge in the morning and a cooked lunch at midday, enough to keep a child alert through a full day of lessons.",
-        href: "/programs/food-at-school",
-        cta: "See the program",
-      },
-    ],
-    /*
-      Four cards, one per arm, all the same size. The kitchen is not among them —
-      not because it matters less, but because it now has the whole section
-      below to itself, which is more than a quarter of a card row ever was.
-    */
-    cards: [
-      {
-        title: "Sunday Services",
-        body: "Worship, prayer and teaching in Kahawa Sukari, week by week. The oldest thing the ministry does.",
-        href: "/church",
-        cta: "Visit the church",
-      },
-      {
-        title: "Jepegomi Academy",
-        body: "Quality education with values, from kindergarten to Grade 6, at the school in the middle of the community.",
-        href: "/academy",
-        cta: "See the Academy",
-      },
-      {
-        title: "Bible College",
-        body: "The ministry's training arm. The Contextual Bible Training College teaches the Scriptures where they are lived.",
-        href: "/college",
-        cta: "About the college",
-      },
-      {
-        title: "Food at School",
-        body: "Morning porridge and a hot lunch, every school day. It is what a child needs to get through a full day of lessons.",
-        href: "/programs/food-at-school",
-        cta: "See the program",
-      },
-    ],
-    needsEyebrow: "Current needs",
-    /*
-      Both needs now have a costing, a donor and a figure still missing — the
-      kitchen leads only because it is nearer to done.
+    heroPhoto: "/photos/school/lunch-classroom-03.jpg",
+    heroPhotoAlt:
+      "Children in green and white uniform at their classroom desks, eating lunch from red plates",
 
-      Neither body repeats the figures. They are rendered beside the words from
-      the ledger and the School Transport document, and a number typed here as
-      well would be a second copy free to drift away from the first the day
-      anybody edits this page.
+    introLabel: "Who we are",
+    introHeading: "One ministry. Many ways to serve.",
+    introBody: [
+      `${siteDefaults.longName} is rooted in Kahawa Sukari, Nairobi, and led by ${siteDefaults.leaders}. Our work extends from the congregation to the classroom, from biblical training to the meals children eat at school every day.`,
+      "Through each of these ministries, we seek to put our faith into practice.",
+    ].join("\n\n"),
+    introPhoto: "/photos/academy/assembly.jpg",
+    introPhotoAlt:
+      "A long line of children in green uniform standing outdoors at assembly, a teacher reading to them",
+
+    ministriesHeading: "Our work in the community",
+    /*
+      The church first, then what it runs — the same order as the nav and the
+      about page. The college photograph is a seminar group outside the
+      building, which is what the college has; it is not dressed up as a
+      lecture.
     */
-    needs: [
+    ministries: [
       {
-        label: "The kitchen",
-        heading: "Finish the kitchen with us",
-        body: "Every one of those meals now comes out of a kitchen of its own. A partner church in the United States built it with us, and it has been cooking every school day since. Three things would finish the job: a water tank, a proper floor where the children eat, and plaster and power in the dining hall.",
-        status: "",
-        giveCta: "Give to the kitchen",
-        cta: "See the kitchen",
-        href: "/projects/kitchen",
+        name: "The Church",
+        title: "A place to worship and belong",
+        body: "Worship, prayer and teaching in Kahawa Sukari, week by week. The oldest thing the ministry does, and visitors are welcome.",
+        photo: "/photos/church/congregation.jpg",
+        photoAlt: "The congregation seated on white chairs inside the sanctuary during a service",
+        href: "/church",
+        cta: "Visit the church",
       },
       {
-        label: "The school bus",
-        heading: "Get the children to school",
-        body: "The same partner church that built the kitchen has given toward getting the academy's van running again.\n\nBeyond that, the school has outgrown a van. A 26-seater bus carries it as it is today and leaves room for the children still to come, and the whole cost of it is still to raise.",
-        status: "",
-        giveCta: "Give to the bus",
-        cta: "See the appeal",
-        href: "/programs/transport",
+        name: "Jepegomi Academy",
+        title: "Education that nurtures knowledge and character",
+        body: "Quality education with values, from kindergarten to Grade 6, at the school in the middle of the community.",
+        photo: "/photos/academy/graduation.jpg",
+        photoAlt: "Kindergarten graduates in green gowns and mortarboards, standing with two of their teachers",
+        href: "/academy",
+        cta: "About the academy",
+      },
+      {
+        name: "Contextual Bible Training College",
+        title: "Preparing people for a life of ministry",
+        body: "The ministry's training arm, teaching the Scriptures in and for the community the church already serves.",
+        photo: "/photos/college/seminar.jpg",
+        photoAlt: "A group of pastors and ministry leaders standing together outside the church after a seminar",
+        href: "/college",
+        cta: "About the college",
+      },
+      {
+        name: "Food at School",
+        title: "Supporting learning through daily meals",
+        body: "Morning porridge and a cooked lunch, every school day — what a child needs to get through a full day of lessons.",
+        photo: "/photos/school/lunch-queue-01.jpg",
+        photoAlt: "Children in green uniform queueing along a wall, plates in hand",
+        href: "/programs/food-at-school",
+        cta: "About the programme",
       },
     ],
-    closingHeading: "Stand with the whole ministry",
-    closingBody:
-      "A gift to Jepegomi goes into all of it: the church on Sunday, the classroom on Monday, the college that trains the next teachers, and the meal a child eats at school tomorrow.",
+
+    evidenceLabel: "Our ministry in practice",
+    evidenceHeading: "Faith made visible in everyday life.",
+    childrenFedLabel: "Children receiving school meals every day",
+    figures: [
+      { value: "2", label: "Meals provided each school day" },
+      { value: "4", label: "Connected areas of ministry" },
+    ],
+    /*
+      Blank on purpose. Nobody has confirmed when these were last counted, and
+      a date typed here by somebody who did not count them would be the one
+      claim on the page that is invented.
+    */
+    figuresAsOf: "",
+    evidenceNote:
+      "Behind every number is a child, a family, or a neighbour we have the privilege of serving.",
+
+    storyLabel: "Stories from Jepegomi",
+    storyHeading: `From open fires to a kitchen serving ${pupilsEnrolled} children`,
+    storyBody: [
+      "Every school day, Jepegomi Academy prepares two meals for its pupils. For years they were cooked over open fires in the yard. With the support of a partner church in the United States, the school now has a dedicated kitchen of its own.",
+      "The kitchen is in use today, and work continues on the dining area beside it.",
+    ].join("\n\n"),
+    storyPhoto: "/photos/kitchen/16.jpg",
+    storyPhotoAlt: "A wood fire burning in the new kitchen's stove, two cooking plates above it",
+    storyHref: "/projects/kitchen",
+    storyCta: "Read the story",
+
+    leadershipLabel: "Our leadership",
+    leadershipHeading: "A ministry built on faith and service.",
+    leadershipBody: `${siteDefaults.longName} is led by ${siteDefaults.leaders}. Together they oversee the church, Jepegomi Academy, the Bible college and the Food at School programme from Kahawa Sukari.`,
+    leadershipMessage: "",
+    leadershipPhoto: "/photos/founders/founder-edit.jpg",
+    leadershipPhotoAlt: `${siteDefaults.leaders}, standing together and smiling`,
+
+    partnerLabel: "Partner with us",
+    partnerHeading: "Building what our community needs, together.",
+    partnerBody: [
+      "The ministry's work has grown through the commitment of its congregation and the generosity of people who believe in it — among them a partner church in the United States that built the school kitchen with us.",
+      "Each project sets out what is needed and how far the work has come, so you can see where your support would go before you give.",
+    ].join("\n\n"),
+    partnerPhoto: "/photos/kitchen/11.jpg",
+    partnerPhotoAlt:
+      "The finished kitchen — plastered walls, a tiled roof and a chimney, standing in the school yard",
+    partnerCta: "Explore partnership opportunities",
+
+    welcomeHeading: "There is a place for you in our story.",
+    welcomeBody:
+      "Whether you are looking for a church, learning about our work, or considering a partnership, we would be glad to hear from you.",
+    welcomePhoto: "/photos/church/sanctuary-wide.jpg",
+    welcomePhotoAlt: "The church building in Kahawa Sukari under a clear sky",
   },
 } satisfies CmsDocument;
 
