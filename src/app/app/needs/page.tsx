@@ -88,7 +88,7 @@ export default async function AdminNeedsPage() {
             for somebody else. These appear at{" "}
             <Link
               href="/needs"
-              className="font-medium text-forest underline underline-offset-4"
+              className="font-medium text-plum underline underline-offset-4"
             >
               /needs
             </Link>{" "}
@@ -151,7 +151,7 @@ export default async function AdminNeedsPage() {
                   {pledge.partnerEmail && (
                     <a
                       href={`mailto:${pledge.partnerEmail}?subject=${encodeURIComponent(`Giving to ${pledgeTowards(pledge)}`)}`}
-                      className="mt-1 inline-block font-mono text-xs text-forest underline underline-offset-4"
+                      className="mt-1 inline-block font-mono text-xs text-plum underline underline-offset-4"
                     >
                       {pledge.partnerEmail}
                     </a>
@@ -160,7 +160,7 @@ export default async function AdminNeedsPage() {
 
                 <Link
                   href={`/app/needs/${pledge.needId}`}
-                  className="rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest"
+                  className="rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum"
                 >
                   Open the item
                 </Link>
@@ -178,7 +178,7 @@ export default async function AdminNeedsPage() {
           </h2>
           <p className="mt-2 max-w-2xl leading-relaxed text-smoke">
             Somebody who came to{" "}
-            <Link href="/give" className="font-medium text-forest underline underline-offset-4">
+            <Link href="/give" className="font-medium text-plum underline underline-offset-4">
               /give
             </Link>{" "}
             and said in their own words what they wanted to support, rather than
@@ -204,7 +204,7 @@ export default async function AdminNeedsPage() {
                   <div className="min-w-0">
                     <p className="font-medium">
                       {pledge.partnerName ?? "Somebody"}{" "}
-                      <span className="tabular ml-1 text-forest">
+                      <span className="tabular ml-1 text-plum">
                         {usd(pledge.amountCents)}
                       </span>
                     </p>
@@ -214,7 +214,7 @@ export default async function AdminNeedsPage() {
                     {pledge.partnerEmail && (
                       <a
                         href={`mailto:${pledge.partnerEmail}?subject=${encodeURIComponent(`Giving to ${pledgeTowards(pledge)}`)}`}
-                        className="mt-1 inline-block font-mono text-xs text-forest underline underline-offset-4"
+                        className="mt-1 inline-block font-mono text-xs text-plum underline underline-offset-4"
                       >
                         {pledge.partnerEmail}
                       </a>
@@ -285,7 +285,7 @@ export default async function AdminNeedsPage() {
                         ` · ${parts.find((part) => part.id === need.partId)!.title}`}
                     </span>
                     {!need.published && (
-                      <span className="eyebrow rounded-sm bg-forest/10 px-3 py-1 text-forest">
+                      <span className="eyebrow rounded-sm bg-plum/10 px-3 py-1 text-plum">
                         Hidden
                       </span>
                     )}

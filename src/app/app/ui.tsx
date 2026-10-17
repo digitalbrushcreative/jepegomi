@@ -106,7 +106,7 @@ export function Stat({
     "block rounded-lg border border-black/8 bg-white p-5 transition-colors";
 
   return href ? (
-    <Link href={href} className={`${className} hover:border-forest/30 hover:bg-sand/60`}>
+    <Link href={href} className={`${className} hover:border-plum/30 hover:bg-sand/60`}>
       {body}
     </Link>
   ) : (

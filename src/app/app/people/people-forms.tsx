@@ -4,7 +4,7 @@ import { useActionState, useTransition } from "react";
 import { inviteUserAction, removeUserAction } from "../actions";
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
 
 export function InviteForm() {
   const [state, formAction, pending] = useActionState(
@@ -42,7 +42,7 @@ export function InviteForm() {
       </label>
 
       {state?.error && (
-        <p role="alert" className="mt-4 text-sm text-forest">
+        <p role="alert" className="mt-4 text-sm text-plum">
           {state.error}
         </p>
       )}
@@ -83,7 +83,7 @@ export function RemoveButton({
         }
         start(() => removeUserAction(userId));
       }}
-      className="cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest disabled:opacity-60"
+      className="cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum disabled:opacity-60"
     >
       {pending ? "Removing…" : "Remove"}
     </button>

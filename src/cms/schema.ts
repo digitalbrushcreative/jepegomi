@@ -594,7 +594,7 @@ const home = {
     heroHeading: {
       type: "text",
       label: "Headline",
-      help: "The one large line at the top of the page. Keep it short — it is set very large.",
+      help: "The one large line at the top of the page. Keep it short — it is set very large. The church comes first, then the school, then the food: the ministry's own order.",
     },
     heroBody: { type: "prose", label: "Text under the headline" },
     heroPhoto: {
@@ -703,8 +703,9 @@ const home = {
     welcomePhotoAlt: { type: "text", label: "Closing — photograph description" },
   },
   defaults: {
-    heroHeading: "A church in Kahawa Sukari, and the school, college and kitchen it runs.",
-    heroBody: `${siteDefaults.longName} is led by ${siteDefaults.leaders}. Alongside the church it runs Jepegomi Academy, the Contextual Bible Training College, and a kitchen that feeds the academy's pupils twice a day.`,
+    heroHeading: "Faith that gathers, teaches and feeds.",
+    heroBody:
+      "Sunday worship, a school from kindergarten to Grade 6, and two meals a day for every pupil.",
     /*
       Children at their desks over lunch, rather than the congregation the
       brief asks for. The only photographs of a service are 636px crops out of

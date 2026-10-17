@@ -294,7 +294,7 @@ export default async function KitchenPage() {
               className="overflow-hidden rounded-2xl bg-white text-center shadow-warm"
             >
               <div className="px-6 py-7">
-                <dd className="font-display tabular text-4xl leading-none font-medium text-forest">
+                <dd className="font-display tabular text-4xl leading-none font-medium text-plum">
                   {stat.value}
                 </dd>
                 <dt className="eyebrow mt-3 text-smoke">{stat.label}</dt>
@@ -311,7 +311,7 @@ export default async function KitchenPage() {
             <SectionTitle className="mt-3">
               {report.donorTitled} in {report.donorLocation}
               <br />
-              <span className="text-forest">→</span> Jepegomi Academy, Nairobi
+              <span className="text-plum">→</span> Jepegomi Academy, Nairobi
             </SectionTitle>
             <ul className="mt-7">
               {storyPoints.map((point, index) => (
@@ -381,7 +381,7 @@ export default async function KitchenPage() {
       </section>
 
       {/* The photo journal. */}
-      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 sm:py-24">
+      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
 
         <div className="shell relative">
           <div className="flex flex-col items-center text-center">
@@ -440,7 +440,7 @@ export default async function KitchenPage() {
             ))}
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-forest px-8 py-7 shadow-warm">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
             <p className="eyebrow text-white/70">Still needed to finish</p>
             <p className="font-display tabular text-4xl font-medium text-gold">
               <Money cents={stillNeededCents} />
@@ -543,7 +543,7 @@ export default async function KitchenPage() {
       )}
 
       {/* The ask. */}
-      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 text-center sm:py-24">
+      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 text-center sm:py-24">
 
         <div className="shell relative">
           <div className="mx-auto max-w-md">

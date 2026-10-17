@@ -85,7 +85,7 @@ function SupporterWelcome({ email }: { email: string }) {
         </div>
 
         <div className="mt-14 rounded-2xl border border-dashed border-smoke/30 bg-sand p-7">
-          <p className="eyebrow text-forest">Given before?</p>
+          <p className="eyebrow text-plum">Given before?</p>
           <p className="mt-3 max-w-xl leading-relaxed text-smoke">
             Then it is filed under the address the gift came from, which may not
             be this one — a church office, or a treasurer&apos;s. Sign out and
@@ -93,7 +93,7 @@ function SupporterWelcome({ email }: { email: string }) {
             for, and how the work is going.{" "}
             <Link
               href="/partners"
-              className="font-medium text-forest underline underline-offset-4"
+              className="font-medium text-plum underline underline-offset-4"
             >
               Back to sign in
             </Link>
@@ -145,7 +145,7 @@ async function OwnDashboard() {
         reader ? (
           <div className="mb-10 border-b border-white/15 pb-6 text-white">
             <p className="max-w-2xl text-sm leading-relaxed">
-              <span className="eyebrow mr-3 rounded-sm bg-gold px-3 py-1 text-forest-deep">
+              <span className="eyebrow mr-3 rounded-sm bg-gold px-3 py-1 text-plum-deep">
                 On their behalf
               </span>
               You are seeing{" "}

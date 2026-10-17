@@ -33,7 +33,7 @@ function Shell({
 function Missing({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-8 rounded border border-dashed border-smoke/40 bg-sand p-6">
-      <p className="eyebrow text-forest">Needs configuration</p>
+      <p className="eyebrow text-plum">Needs configuration</p>
       <div className="mt-3 space-y-3 text-sm leading-relaxed text-smoke">
         {children}
       </div>
@@ -181,7 +181,7 @@ export default async function AppPage() {
           actions={
             <Link
               href="/app/needs"
-              className="text-xs font-medium text-forest underline underline-offset-4"
+              className="text-xs font-medium text-plum underline underline-offset-4"
             >
               All needs
             </Link>
@@ -204,7 +204,7 @@ export default async function AppPage() {
                       {pledgeTowards(pledge)} · {PLEDGE_LABELS[pledge.status]}
                     </p>
                   </div>
-                  <span className="font-display shrink-0 text-sm font-medium tabular-nums text-forest">
+                  <span className="font-display shrink-0 text-sm font-medium tabular-nums text-plum">
                     {usd(pledge.amountCents)}
                   </span>
                 </li>
@@ -219,7 +219,7 @@ export default async function AppPage() {
           actions={
             <Link
               href="/app/enquiries"
-              className="text-xs font-medium text-forest underline underline-offset-4"
+              className="text-xs font-medium text-plum underline underline-offset-4"
             >
               The inbox
             </Link>
@@ -261,7 +261,7 @@ export default async function AppPage() {
           actions={
             <Link
               href="/app/pages"
-              className="text-xs font-medium text-forest underline underline-offset-4"
+              className="text-xs font-medium text-plum underline underline-offset-4"
             >
               All pages
             </Link>
@@ -270,7 +270,7 @@ export default async function AppPage() {
           {edits.length === 0 ? (
             <Empty>
               Nothing has been edited yet — every page is showing the wording it
-              shipped with. <Link href="/app/pages" className="text-forest underline underline-offset-4">Start with a page</Link>.
+              shipped with. <Link href="/app/pages" className="text-plum underline underline-offset-4">Start with a page</Link>.
             </Empty>
           ) : (
             <ul className="divide-y divide-black/6">

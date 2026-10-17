@@ -32,7 +32,7 @@ const STATUS_STYLES: Record<PaymentStatus, { label: string; className: string }>
   {
     paid: { label: "Paid", className: "bg-forest/12 text-forest" },
     started: { label: "In progress", className: "bg-gold/20 text-clay" },
-    failed: { label: "Failed", className: "bg-forest/10 text-forest" },
+    failed: { label: "Failed", className: "bg-plum/10 text-plum" },
     abandoned: { label: "Abandoned", className: "bg-sand text-smoke" },
   };
 
@@ -84,7 +84,7 @@ export default async function AdminPaymentsPage() {
             those are confirmed by hand under{" "}
             <Link
               href="/app/needs"
-              className="font-medium text-forest underline underline-offset-4"
+              className="font-medium text-plum underline underline-offset-4"
             >
               Needs
             </Link>
@@ -170,7 +170,7 @@ export default async function AdminPaymentsPage() {
                         {payment.giverEmail && (
                           <a
                             href={`mailto:${payment.giverEmail}`}
-                            className="mt-0.5 block font-mono text-[11px] text-forest underline underline-offset-4"
+                            className="mt-0.5 block font-mono text-[11px] text-plum underline underline-offset-4"
                           >
                             {payment.giverEmail}
                           </a>
@@ -181,7 +181,7 @@ export default async function AdminPaymentsPage() {
                         {payment.needSlug ? (
                           <Link
                             href={`/needs/${payment.needSlug}`}
-                            className="hover:text-forest"
+                            className="hover:text-plum"
                           >
                             {payment.towards}
                           </Link>

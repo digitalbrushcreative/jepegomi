@@ -30,7 +30,7 @@ export function LatestVideos({ videos }: { videos: ChannelVideo[] }) {
           sizes="(max-width: 768px) 100vw, 720px"
           priority
         />
-        <p className="eyebrow mt-4 text-forest">
+        <p className="eyebrow mt-4 text-plum">
           Most recent · {formatDay(latest.published)}
         </p>
         <h3 className="font-display mt-2 text-xl leading-snug font-medium text-balance">

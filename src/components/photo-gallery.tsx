@@ -77,7 +77,7 @@ export function PhotoGallery({
             aria-pressed={filter === tab.id}
             className={`eyebrow cursor-pointer rounded-sm border-2 px-5 py-2 transition-colors ${
               filter === tab.id
-                ? "border-gold bg-gold text-forest-deep"
+                ? "border-gold bg-gold text-plum-deep"
                 : "border-white/20 text-white/55 hover:border-white/50 hover:text-white"
             }`}
           >
@@ -95,7 +95,7 @@ export function PhotoGallery({
             className="group cursor-pointer overflow-hidden rounded-xl bg-white/8 text-left transition-colors hover:bg-white/12"
           >
             <div className="aspect-[4/3] overflow-hidden">
-              <div className="relative flex h-full w-full items-center justify-center bg-forest/30 transition-transform duration-300 group-hover:scale-[1.04]">
+              <div className="relative flex h-full w-full items-center justify-center bg-plum/30 transition-transform duration-300 group-hover:scale-[1.04]">
                 {photo.src ? (
                   <Image
                     src={photo.src}

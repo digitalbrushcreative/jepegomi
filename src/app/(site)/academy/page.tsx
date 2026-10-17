@@ -177,7 +177,7 @@ export default async function AcademyPage() {
             <dl className="mt-12 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {confirmed.map((detail) => (
                 <div key={detail.label} className="bg-white p-6">
-                  <dt className="eyebrow text-forest">{detail.label}</dt>
+                  <dt className="eyebrow text-plum">{detail.label}</dt>
                   <dd className="mt-2 font-medium">{detail.value}</dd>
                 </div>
               ))}

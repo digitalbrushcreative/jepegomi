@@ -44,7 +44,7 @@ export async function SiteFooter() {
   const content = await getContent("site");
 
   return (
-    <footer className="relative overflow-hidden bg-charcoal px-6">
+    <footer className="relative overflow-hidden border-t border-white/12 bg-plum-deep px-6">
 
       <div className="shell relative py-14">
         <div className="flex flex-wrap items-center justify-between gap-8">

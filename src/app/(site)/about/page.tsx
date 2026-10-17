@@ -73,7 +73,7 @@ export default async function AboutPage() {
             <dl className="mt-16 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {about.facts.map((fact) => (
                 <div key={fact.label} className="bg-white p-6">
-                  <dt className="eyebrow text-forest">{fact.label}</dt>
+                  <dt className="eyebrow text-plum">{fact.label}</dt>
                   <dd className="mt-2 font-medium">{fact.value}</dd>
                 </div>
               ))}

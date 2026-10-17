@@ -6,7 +6,7 @@ import type { Field, LeafField } from "@/cms/schema";
 import { saveContentAction } from "../../actions";
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
 
 function Help({ text }: { text?: string }) {
   if (!text) return null;
@@ -48,7 +48,7 @@ function Choice({
             key={option.value}
             className={`flex cursor-pointer items-start gap-3 rounded border p-4 transition-colors ${
               current === option.value
-                ? "border-forest bg-forest/5"
+                ? "border-plum bg-plum/5"
                 : "border-black/12 bg-white hover:bg-sand/50"
             }`}
           >
@@ -58,7 +58,7 @@ function Choice({
               value={option.value}
               checked={current === option.value}
               onChange={() => setCurrent(option.value)}
-              className="mt-1 h-4 w-4 accent-forest"
+              className="mt-1 h-4 w-4 accent-plum"
             />
             <span>
               <span className="block text-sm font-medium">{option.label}</span>
@@ -168,7 +168,7 @@ function ListEditor({
                         next[index] = { ...row, [subKey]: event.target.value };
                         setRows(next);
                       }}
-                      className="mt-1 w-full rounded border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-forest"
+                      className="mt-1 w-full rounded border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-plum"
                     />
                   </label>
                 ))}
@@ -178,7 +178,7 @@ function ListEditor({
                 type="button"
                 onClick={() => setRows(rows.filter((_, i) => i !== index))}
                 aria-label={`Remove this ${field.itemLabel}`}
-                className="mt-5 cursor-pointer rounded border border-black/15 bg-white px-3 py-2 text-sm text-smoke transition-colors hover:bg-white hover:text-forest"
+                className="mt-5 cursor-pointer rounded border border-black/15 bg-white px-3 py-2 text-sm text-smoke transition-colors hover:bg-white hover:text-plum"
               >
                 Remove
               </button>
@@ -271,14 +271,14 @@ export function ContentForm({
         {path && (
           <Link
             href={path}
-            className="text-sm font-medium text-forest underline underline-offset-4 hover:text-forest-light"
+            className="text-sm font-medium text-plum underline underline-offset-4 hover:text-plum-light"
           >
             View the page
           </Link>
         )}
 
         {state?.error && (
-          <p role="alert" className="text-sm text-forest">
+          <p role="alert" className="text-sm text-plum">
             {state.error}
           </p>
         )}

@@ -32,31 +32,31 @@ export default async function ContactPage() {
           <div>
             <dl className="divide-y divide-sand">
               <div className="pb-5">
-                <dt className="eyebrow text-forest">Email</dt>
+                <dt className="eyebrow text-plum">Email</dt>
                 <dd className="mt-2">
                   <a
                     href={`mailto:${details.email}`}
-                    className="text-lg font-medium underline underline-offset-4 hover:text-forest"
+                    className="text-lg font-medium underline underline-offset-4 hover:text-plum"
                   >
                     {details.email}
                   </a>
                 </dd>
               </div>
               <div className="py-5">
-                <dt className="eyebrow text-forest">Web</dt>
+                <dt className="eyebrow text-plum">Web</dt>
                 <dd className="mt-2">
                   {/* The domain is where the site lives, not something written
                       about it — so it stays in code, not in a text box. */}
                   <a
                     href={site.url}
-                    className="text-lg font-medium underline underline-offset-4 hover:text-forest"
+                    className="text-lg font-medium underline underline-offset-4 hover:text-plum"
                   >
                     {site.domain}
                   </a>
                 </dd>
               </div>
               <div className="py-5">
-                <dt className="eyebrow text-forest">Location</dt>
+                <dt className="eyebrow text-plum">Location</dt>
                 <dd className="mt-2 text-lg font-medium">{details.location}</dd>
               </div>
             </dl>

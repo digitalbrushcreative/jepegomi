@@ -101,7 +101,7 @@ export default async function CollegePage() {
             <dl className="mt-12 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {confirmed.map((detail) => (
                 <div key={detail.label} className="bg-white p-6">
-                  <dt className="eyebrow text-forest">{detail.label}</dt>
+                  <dt className="eyebrow text-plum">{detail.label}</dt>
                   <dd className="mt-2 font-medium">{detail.value}</dd>
                 </div>
               ))}
@@ -165,7 +165,7 @@ export default async function CollegePage() {
                       </p>
                     </div>
                     <div className="sm:text-right">
-                      <p className="font-display text-xl font-medium text-forest">
+                      <p className="font-display text-xl font-medium text-plum">
                         Ksh {program.fee}
                         <span className="text-base font-normal text-smoke">
                           {" "}
@@ -189,7 +189,7 @@ export default async function CollegePage() {
             note above the college document in src/cms/schema.ts for why fees
             are the exception. Each line drops out on its own if it is cleared.
           */}
-          <div className="mt-10 rounded-2xl border border-forest/15 bg-white p-8 sm:p-10">
+          <div className="mt-10 rounded-2xl border border-plum/15 bg-white p-8 sm:p-10">
             <h3 className="font-display text-2xl font-medium">
               {college.paymentsTitle}
             </h3>
@@ -203,7 +203,7 @@ export default async function CollegePage() {
                 .filter((line) => line.value !== "")
                 .map((line) => (
                   <div key={line.label}>
-                    <dt className="eyebrow text-forest">{line.label}</dt>
+                    <dt className="eyebrow text-plum">{line.label}</dt>
                     <dd className="font-display mt-2 text-xl font-medium">
                       {line.value}
                     </dd>
@@ -222,7 +222,7 @@ export default async function CollegePage() {
             <ButtonLink href="/contact" variant="secondary">
               Ask about the college
             </ButtonLink>
-            <ButtonLink href="/church" variant="ghost" className="text-forest">
+            <ButtonLink href="/church" variant="ghost" className="text-plum">
               The church
             </ButtonLink>
           </div>

@@ -74,7 +74,7 @@ function NeedCard({ need }: { need: NeedWithLedger }) {
 
       <NeedMeter ledger={need.ledger} closed={need.closed} className="mt-7" />
 
-      <span className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-forest">
+      <span className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-plum">
         {settled ? "See what it paid for" : "Choose an amount"}
         <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
           →
@@ -209,7 +209,7 @@ function LaterSection({ groups }: { groups: PartGroup[] }) {
  */
 function WholeProjectLine({ project }: { project: ProjectGroup }) {
   return (
-    <div className="mt-14 rounded-2xl border border-dashed border-forest/30 bg-forest/[0.04] p-8">
+    <div className="mt-14 rounded-2xl border border-dashed border-plum/30 bg-plum/[0.04] p-8">
       <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
         <div className="max-w-xl">
           <h4 className="font-display text-xl font-medium">
@@ -225,7 +225,7 @@ function WholeProjectLine({ project }: { project: ProjectGroup }) {
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
           <div>
             <p className="eyebrow text-smoke">All of it</p>
-            <p className="font-display tabular mt-1 text-3xl font-medium text-forest">
+            <p className="font-display tabular mt-1 text-3xl font-medium text-plum">
               <Money cents={project.stillAskingCents} />
             </p>
           </div>
@@ -249,7 +249,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
     <section className="mt-20 border-t border-sand-deep pt-14 first:mt-12 first:border-0 first:pt-0">
       <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-4">
         <div className="flex items-center gap-4">
-          <Icon name={project.area.icon} className="h-10 w-10 shrink-0 text-forest" />
+          <Icon name={project.area.icon} className="h-10 w-10 shrink-0 text-plum" />
           <div>
             {/*
               The raise is the heading and the programme is the line above it,
@@ -269,7 +269,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
             <SectionTitle>{projectTitle(project)}</SectionTitle>
             <Link
               href={project.area.href}
-              className="mt-1 inline-block text-sm font-medium text-forest underline underline-offset-4"
+              className="mt-1 inline-block text-sm font-medium text-plum underline underline-offset-4"
             >
               About this work
             </Link>
@@ -286,7 +286,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
               right now.
             */}
             <p className="eyebrow text-smoke">Left on this project</p>
-            <p className="font-display tabular mt-1 text-3xl font-medium text-forest">
+            <p className="font-display tabular mt-1 text-3xl font-medium text-plum">
               <Money cents={project.stillAskingCents} />
             </p>
           </div>
@@ -499,7 +499,7 @@ export default async function NeedsPage() {
       */}
       <Verse text={content.verse} reference={content.verseRef} />
 
-      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 sm:py-24">
+      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
 
         <div className="shell relative">
           <SectionTitle className="text-white">
@@ -508,7 +508,7 @@ export default async function NeedsPage() {
 
           <ol className="mt-12 grid gap-px overflow-hidden rounded-2xl bg-white/15 sm:grid-cols-2 lg:grid-cols-4">
             {content.steps.map((step, index) => (
-              <li key={step.title} className="bg-forest-deep p-8">
+              <li key={step.title} className="bg-plum-deep p-8">
                 <span className="font-display tabular text-3xl font-medium text-gold">
                   {index + 1}
                 </span>

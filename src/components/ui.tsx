@@ -9,7 +9,7 @@ export function Eyebrow({
   children: ReactNode;
   className?: string;
 }) {
-  return <p className={`eyebrow text-gold-ink ${className}`}>{children}</p>;
+  return <p className={`eyebrow text-plum ${className}`}>{children}</p>;
 }
 
 /**
@@ -147,7 +147,7 @@ export function HubCard({
         {icon && (
           <Icon
             name={icon}
-            className="mb-5 h-9 w-9 text-forest transition-transform"
+            className="mb-5 h-9 w-9 text-plum transition-transform"
           />
         )}
         <Eyebrow>{eyebrow}</Eyebrow>
@@ -158,7 +158,7 @@ export function HubCard({
         */}
         <h2 className="font-display mt-3 text-2xl font-medium">{title}</h2>
         <p className="mt-3 flex-1 leading-relaxed text-smoke">{blurb}</p>
-        <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-forest">
+        <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-plum">
           {cta}
           <span
             aria-hidden="true"
@@ -201,7 +201,7 @@ export function PageHero({
 
       <div className="shell relative pt-28 pb-16 sm:pt-32 sm:pb-20">
         <div className="max-w-3xl">
-          {eyebrow && <p className="eyebrow text-gold-ink">{eyebrow}</p>}
+          {eyebrow && <p className="eyebrow text-plum">{eyebrow}</p>}
           <h1
             className={`font-display text-4xl leading-[1.1] font-medium text-balance text-charcoal sm:text-[3.25rem] ${
               eyebrow ? "mt-4" : ""

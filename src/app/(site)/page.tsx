@@ -125,7 +125,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/45 via-black/15 to-transparent" />
 
         <div className="shell w-full pb-14 sm:pb-20">
-          <h1 className="font-display max-w-4xl text-[2.4rem] leading-[1.05] font-normal tracking-tight text-balance sm:text-5xl lg:text-[4.25rem]">
+          <h1 className="font-display max-w-4xl text-[2.75rem] leading-[1.02] font-medium tracking-tight text-balance sm:text-6xl lg:text-[5rem]">
             {home.heroHeading}
           </h1>
 
@@ -161,7 +161,7 @@ export default async function HomePage() {
             <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke sm:text-xl">
               <Prose text={home.introBody} />
             </div>
-            <ArrowLink href="/about" className="mt-9 text-forest">
+            <ArrowLink href="/about" className="mt-9 text-plum">
               More about the ministry
             </ArrowLink>
           </div>
@@ -214,7 +214,7 @@ export default async function HomePage() {
                   <div className="mt-3 max-w-lg leading-relaxed text-smoke">
                     <Prose text={ministry.body} />
                   </div>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-forest">
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-plum">
                     {ministry.cta}
                     <span
                       aria-hidden="true"
@@ -251,7 +251,7 @@ export default async function HomePage() {
                 <dt className="mt-3 max-w-[16rem] leading-snug text-smoke">
                   {figure.label}
                 </dt>
-                <dd className="font-display tabular text-6xl leading-none font-medium text-forest sm:text-7xl">
+                <dd className="font-display tabular text-6xl leading-none font-medium text-plum sm:text-7xl">
                   {figure.value}
                 </dd>
               </div>
@@ -268,7 +268,7 @@ export default async function HomePage() {
             <p className="max-w-xl leading-relaxed text-pretty text-smoke">
               {home.evidenceNote}
             </p>
-            <ArrowLink href="/academy" className="shrink-0 text-forest">
+            <ArrowLink href="/academy" className="shrink-0 text-plum">
               About the academy
             </ArrowLink>
           </div>
@@ -296,7 +296,7 @@ export default async function HomePage() {
             <div className="mt-6 text-lg leading-relaxed text-pretty text-smoke">
               <Prose text={home.storyBody} />
             </div>
-            <ArrowLink href={home.storyHref} className="mt-9 text-forest">
+            <ArrowLink href={home.storyHref} className="mt-9 text-plum">
               {home.storyCta}
             </ArrowLink>
           </div>
@@ -334,7 +334,7 @@ export default async function HomePage() {
               </figure>
             )}
 
-            <ArrowLink href="/about" className="mt-10 text-forest">
+            <ArrowLink href="/about" className="mt-10 text-plum">
               More about Simon & Joyce
             </ArrowLink>
           </div>
@@ -361,7 +361,7 @@ export default async function HomePage() {
             <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke">
               <Prose text={home.partnerBody} />
             </div>
-            <ArrowLink href="/projects" className="mt-9 text-forest">
+            <ArrowLink href="/projects" className="mt-9 text-plum">
               {home.partnerCta}
             </ArrowLink>
           </div>

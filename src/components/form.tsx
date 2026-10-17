@@ -13,7 +13,7 @@ import { CAPTCHA_FIELD, CHECK_FIELD, CHECK_QUESTION, TRAP } from "@/lib/forms";
  */
 
 export const inputClass =
-  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-forest focus:ring-2 focus:ring-forest/20";
+  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-plum focus:ring-2 focus:ring-plum/20";
 
 export function Field({
   label,
@@ -48,7 +48,7 @@ export function FormError({ children }: { children?: string }) {
   if (!children) return null;
 
   return (
-    <p role="alert" className="rounded-md bg-forest/8 px-4 py-3 text-sm text-forest">
+    <p role="alert" className="rounded-md bg-plum/8 px-4 py-3 text-sm text-plum">
       {children}
     </p>
   );

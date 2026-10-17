@@ -189,9 +189,9 @@ export default async function PlaygroundPage() {
                 key={half.eyebrow}
                 className="flex flex-col rounded-2xl bg-white p-8 shadow-warm"
               >
-                <Icon name={half.icon} className="h-9 w-9 text-forest" />
+                <Icon name={half.icon} className="h-9 w-9 text-plum" />
                 <p className="eyebrow mt-5 text-smoke">{half.eyebrow}</p>
-                <p className="font-display tabular mt-2 text-4xl leading-none font-medium text-forest">
+                <p className="font-display tabular mt-2 text-4xl leading-none font-medium text-plum">
                   <Money cents={cents(half.total)} />
                 </p>
                 <p className="mt-5 flex-1 leading-relaxed text-smoke">
@@ -237,7 +237,7 @@ export default async function PlaygroundPage() {
               : " The line-by-line estimate behind these totals is shared with partners who take on part of the work rather than published here."}
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-forest px-8 py-7 shadow-warm">
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
             <p className="eyebrow text-white/70">The whole job</p>
             <p className="font-display tabular text-4xl font-medium text-gold">
               <Money cents={cents(totalUsd)} />
@@ -262,7 +262,7 @@ export default async function PlaygroundPage() {
       </section>
 
       {/* The ask. */}
-      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 text-center sm:py-24">
+      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 text-center sm:py-24">
 
         <div className="shell relative">
           <div className="mx-auto max-w-md">

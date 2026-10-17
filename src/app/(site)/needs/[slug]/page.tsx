@@ -164,7 +164,7 @@ async function NeedBody({ params }: { params: Params }) {
             <p className="mt-8">
               <Link
                 href={area.href}
-                className="inline-flex items-center gap-2.5 text-sm font-bold text-forest"
+                className="inline-flex items-center gap-2.5 text-sm font-bold text-plum"
               >
                 <Icon name={area.icon} className="h-5 w-5" />
                 About {area.label.toLowerCase()}

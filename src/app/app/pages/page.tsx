@@ -41,7 +41,7 @@ export default async function PagesIndex() {
                       <div className="min-w-0 flex-1">
                         <Link
                           href={`/app/pages/${key}`}
-                          className="font-medium hover:text-forest"
+                          className="font-medium hover:text-plum"
                         >
                           {doc.title}
                           {/* The whole row is the target, not just the words. */}

@@ -214,7 +214,7 @@ export function LockedFigures({
         <p className="mt-2 max-w-md leading-relaxed text-smoke">{blurb}</p>
         <Link
           href="/partners"
-          className="mt-5 inline-flex rounded-sm bg-forest px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-forest-deep"
+          className="mt-5 inline-flex rounded-sm bg-plum px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-plum-deep"
         >
           Sign in to see the figures
         </Link>
@@ -237,7 +237,7 @@ export function LockedNote({ className = "" }: { className?: string }) {
       Figures are shown to partners.{" "}
       <Link
         href="/partners"
-        className="font-medium text-forest underline underline-offset-4"
+        className="font-medium text-plum underline underline-offset-4"
       >
         Sign in to reveal the total cost and the breakdown
       </Link>{" "}

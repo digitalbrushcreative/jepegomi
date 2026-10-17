@@ -41,7 +41,7 @@ function QuoteTable({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-warm">
-      <p className="eyebrow bg-forest px-6 py-3.5 text-white">{caption}</p>
+      <p className="eyebrow bg-plum px-6 py-3.5 text-white">{caption}</p>
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[34rem] border-collapse text-left">
@@ -78,7 +78,7 @@ function QuoteTable({
             <tr className="bg-sand">
               <td className="eyebrow px-6 py-4 text-smoke">{caption} total</td>
               <td />
-              <td className="font-display tabular px-6 py-4 text-right text-xl font-medium text-forest">
+              <td className="font-display tabular px-6 py-4 text-right text-xl font-medium text-plum">
                 <Money cents={cents(total)} />
               </td>
             </tr>
@@ -103,7 +103,7 @@ export function PlaygroundEstimate({ quote }: { quote: Playground }) {
         total={quote.groundUsd}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-forest px-8 py-7 shadow-warm">
+      <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
         <p className="eyebrow text-white/70">Estimated total</p>
         <p className="font-display tabular text-4xl font-medium text-gold">
           <Money cents={cents(quote.totalUsd)} />
