@@ -5,7 +5,6 @@ import { paragraphs } from "@/cms/prose";
 import { Icon } from "@/components/icons";
 import { LockedNote, Money, WhileHidden } from "@/components/money";
 import { NeedBar, NeedMeter } from "@/components/need-meter";
-import { ClothEdge } from "@/components/pattern";
 import { ButtonLink, PageHero, SectionTitle, Verse } from "@/components/ui";
 import type { NeedWithLedger } from "@/lib/giving";
 import { getParts, getProjects, getPublishedNeeds } from "@/lib/needs";
@@ -42,7 +41,7 @@ function NeedCard({ need }: { need: NeedWithLedger }) {
   return (
     <Link
       href={`/needs/${need.slug}`}
-      className={`group flex flex-col rounded-2xl bg-white p-8 shadow-warm transition-all hover:-translate-y-1 hover:shadow-warm-lg ${
+      className={`group flex flex-col rounded-2xl bg-white p-8 shadow-warm transition-all hover:shadow-warm-lg ${
         settled ? "opacity-75 hover:opacity-100" : ""
       }`}
     >
@@ -53,7 +52,7 @@ function NeedCard({ need }: { need: NeedWithLedger }) {
         reader wants the price.
       */}
       <div className="flex items-start justify-between gap-4">
-        <span className="eyebrow rounded-full bg-sand px-3 py-1.5 text-smoke">
+        <span className="eyebrow rounded-sm bg-sand px-3 py-1.5 text-smoke">
           {need.closed ? (
             "Finished"
           ) : settled ? (
@@ -66,7 +65,7 @@ function NeedCard({ need }: { need: NeedWithLedger }) {
         </span>
       </div>
 
-      <h3 className="font-display mt-5 text-2xl leading-snug font-semibold text-balance">
+      <h3 className="font-display mt-5 text-2xl leading-snug font-medium text-balance">
         {need.title}
       </h3>
       {need.summary && (
@@ -75,7 +74,7 @@ function NeedCard({ need }: { need: NeedWithLedger }) {
 
       <NeedMeter ledger={need.ledger} closed={need.closed} className="mt-7" />
 
-      <span className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-plum">
+      <span className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-forest">
         {settled ? "See what it paid for" : "Choose an amount"}
         <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
           →
@@ -99,10 +98,10 @@ function PartSection({ group }: { group: PartGroup }) {
       {group.part && (
         <div className="max-w-2xl">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <h4 className="font-display text-xl font-semibold">
+            <h4 className="font-display text-xl font-medium">
               {group.part.title}
             </h4>
-            <p className="tabular text-sm font-bold text-green">
+            <p className="tabular text-sm font-bold text-forest">
               {group.settled ? (
                 "Fully claimed"
               ) : (
@@ -154,7 +153,7 @@ function LaterSection({ groups }: { groups: PartGroup[] }) {
         {groups.map((group) => (
           <div key={group.part?.id ?? "loose"}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-              <h4 className="font-display text-lg font-semibold text-smoke">
+              <h4 className="font-display text-lg font-medium text-smoke">
                 {group.part?.title}
               </h4>
               <p className="tabular text-sm font-medium text-smoke">
@@ -210,10 +209,10 @@ function LaterSection({ groups }: { groups: PartGroup[] }) {
  */
 function WholeProjectLine({ project }: { project: ProjectGroup }) {
   return (
-    <div className="mt-14 rounded-2xl border border-dashed border-plum/30 bg-plum/[0.04] p-8">
+    <div className="mt-14 rounded-2xl border border-dashed border-forest/30 bg-forest/[0.04] p-8">
       <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
         <div className="max-w-xl">
-          <h4 className="font-display text-xl font-semibold">
+          <h4 className="font-display text-xl font-medium">
             Or take on the whole of it
           </h4>
           <p className="mt-2 leading-relaxed text-smoke">
@@ -226,7 +225,7 @@ function WholeProjectLine({ project }: { project: ProjectGroup }) {
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
           <div>
             <p className="eyebrow text-smoke">All of it</p>
-            <p className="font-display tabular mt-1 text-3xl font-semibold text-plum">
+            <p className="font-display tabular mt-1 text-3xl font-medium text-forest">
               <Money cents={project.stillAskingCents} />
             </p>
           </div>
@@ -250,7 +249,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
     <section className="mt-20 border-t border-sand-deep pt-14 first:mt-12 first:border-0 first:pt-0">
       <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-4">
         <div className="flex items-center gap-4">
-          <Icon name={project.area.icon} className="h-10 w-10 shrink-0 text-plum" />
+          <Icon name={project.area.icon} className="h-10 w-10 shrink-0 text-forest" />
           <div>
             {/*
               The raise is the heading and the programme is the line above it,
@@ -270,7 +269,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
             <SectionTitle>{projectTitle(project)}</SectionTitle>
             <Link
               href={project.area.href}
-              className="mt-1 inline-block text-sm font-medium text-plum underline underline-offset-4"
+              className="mt-1 inline-block text-sm font-medium text-forest underline underline-offset-4"
             >
               About this work
             </Link>
@@ -287,7 +286,7 @@ function ProjectSection({ project }: { project: ProjectGroup }) {
               right now.
             */}
             <p className="eyebrow text-smoke">Left on this project</p>
-            <p className="font-display tabular mt-1 text-3xl font-semibold text-plum">
+            <p className="font-display tabular mt-1 text-3xl font-medium text-forest">
               <Money cents={project.stillAskingCents} />
             </p>
           </div>
@@ -385,7 +384,7 @@ export default async function NeedsPage() {
               <>
                 <div>
                   <dt className="eyebrow text-white/50">Open right now</dt>
-                  <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-marigold">
+                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-gold">
                     <Money cents={stillNeeded} />
                   </dd>
                 </div>
@@ -393,7 +392,7 @@ export default async function NeedsPage() {
                   <dt className="eyebrow text-white/50">
                     {readyCount === 1 ? "Item" : "Items"} waiting
                   </dt>
-                  <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
+                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-white">
                     {readyCount}
                   </dd>
                 </div>
@@ -410,7 +409,7 @@ export default async function NeedsPage() {
                 <dt className="eyebrow text-white/50">
                   {projects.length === 1 ? "Project" : "Projects"}
                 </dt>
-                <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
+                <dd className="font-display tabular mt-1.5 text-4xl font-medium text-white">
                   {projects.length}
                 </dd>
               </div>
@@ -418,7 +417,7 @@ export default async function NeedsPage() {
             {covered.length > 0 && (
               <div>
                 <dt className="eyebrow text-white/50">Fully covered</dt>
-                <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
+                <dd className="font-display tabular mt-1.5 text-4xl font-medium text-white">
                   {covered.length}
                 </dd>
               </div>
@@ -500,9 +499,7 @@ export default async function NeedsPage() {
       */}
       <Verse text={content.verse} reference={content.verseRef} />
 
-      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
-        <div className="grain-layer" />
-        <ClothEdge className="text-plum-deep" />
+      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 sm:py-24">
 
         <div className="shell relative">
           <SectionTitle className="text-white">
@@ -511,11 +508,11 @@ export default async function NeedsPage() {
 
           <ol className="mt-12 grid gap-px overflow-hidden rounded-2xl bg-white/15 sm:grid-cols-2 lg:grid-cols-4">
             {content.steps.map((step, index) => (
-              <li key={step.title} className="bg-plum-deep p-8">
-                <span className="font-display tabular text-3xl font-semibold text-marigold">
+              <li key={step.title} className="bg-forest-deep p-8">
+                <span className="font-display tabular text-3xl font-medium text-gold">
                   {index + 1}
                 </span>
-                <h3 className="font-display mt-4 text-xl font-semibold text-white">
+                <h3 className="font-display mt-4 text-xl font-medium text-white">
                   {step.title}
                 </h3>
                 {paragraphs(step.body).map((text) => (
@@ -529,7 +526,7 @@ export default async function NeedsPage() {
 
           <div className="mt-14 flex flex-wrap items-center gap-x-10 gap-y-6 border-t border-white/15 pt-10">
             <div className="max-w-xl">
-              <p className="eyebrow text-marigold">Given before?</p>
+              <p className="eyebrow text-gold">Given before?</p>
               {paragraphs(content.partnerNote).map((text) => (
                 <p key={text} className="mt-3 leading-relaxed text-white/65">
                   {text}

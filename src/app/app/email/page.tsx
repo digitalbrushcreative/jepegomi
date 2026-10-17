@@ -72,7 +72,7 @@ export default async function EmailPage() {
         cap={MOST_RECIPIENTS}
       />
 
-      <h2 className="font-display mt-14 mb-4 text-2xl font-bold">
+      <h2 className="font-display mt-14 mb-4 text-2xl font-medium">
         What has gone out
       </h2>
 
@@ -136,7 +136,7 @@ function Outcome({ letter }: { letter: SentLetter }) {
   }
 
   return (
-    <span className="text-green">
+    <span className="text-forest">
       sent to {letter.sentCount} {letter.sentCount === 1 ? "person" : "people"}
     </span>
   );

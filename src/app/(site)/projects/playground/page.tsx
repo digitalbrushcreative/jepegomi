@@ -4,7 +4,6 @@ import { Money } from "@/components/money";
 import { ProjectItems } from "@/components/project-items";
 import { Icon } from "@/components/icons";
 import { PlaygroundEstimate } from "@/components/playground-estimate";
-import { ClothEdge } from "@/components/pattern";
 import { PhotoBand } from "@/components/photos";
 import { ButtonLink, PageHero, SectionTitle } from "@/components/ui";
 import { showsAccounts } from "@/lib/disclosure";
@@ -80,19 +79,19 @@ export default async function PlaygroundPage() {
         <dl className="mt-12 flex flex-wrap gap-x-14 gap-y-6">
           <div>
             <dt className="eyebrow text-white/50">The whole job</dt>
-            <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-marigold">
+            <dd className="font-display tabular mt-1.5 text-4xl font-medium text-gold">
               <Money cents={cents(totalUsd)} />
             </dd>
           </div>
           <div>
             <dt className="eyebrow text-white/50">Equipment</dt>
-            <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
+            <dd className="font-display tabular mt-1.5 text-4xl font-medium text-white">
               <Money cents={cents(quote.equipmentUsd)} />
             </dd>
           </div>
           <div>
             <dt className="eyebrow text-white/50">Safe surface</dt>
-            <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-white">
+            <dd className="font-display tabular mt-1.5 text-4xl font-medium text-white">
               <Money cents={cents(quote.groundUsd)} />
             </dd>
           </div>
@@ -148,10 +147,10 @@ export default async function PlaygroundPage() {
             photograph as anything at all. So it gets said in words, on its own,
             in a panel that is not a list of equipment.
           */}
-          <aside className="self-start overflow-hidden rounded-2xl bg-green shadow-warm">
+          <aside className="self-start overflow-hidden rounded-2xl bg-forest shadow-warm">
             <div className="p-8 sm:p-9">
-              <Icon name="paving" className="h-9 w-9 text-marigold-light" />
-              <p className="font-display mt-5 text-2xl leading-snug font-semibold text-white">
+              <Icon name="paving" className="h-9 w-9 text-gold-light" />
+              <p className="font-display mt-5 text-2xl leading-snug font-medium text-white">
                 Start with the ground
               </p>
               <p className="mt-5 leading-relaxed text-white/85">
@@ -171,7 +170,6 @@ export default async function PlaygroundPage() {
 
       {/* The two halves, each one a thing somebody could fund on its own. */}
       <section className="relative bg-sand px-6 py-20 sm:py-24">
-        <ClothEdge className="text-sand" />
 
         <div className="shell">
           <div className="flex flex-col items-center text-center">
@@ -191,9 +189,9 @@ export default async function PlaygroundPage() {
                 key={half.eyebrow}
                 className="flex flex-col rounded-2xl bg-white p-8 shadow-warm"
               >
-                <Icon name={half.icon} className="h-9 w-9 text-plum" />
+                <Icon name={half.icon} className="h-9 w-9 text-forest" />
                 <p className="eyebrow mt-5 text-smoke">{half.eyebrow}</p>
-                <p className="font-display tabular mt-2 text-4xl leading-none font-semibold text-plum">
+                <p className="font-display tabular mt-2 text-4xl leading-none font-medium text-forest">
                   <Money cents={cents(half.total)} />
                 </p>
                 <p className="mt-5 flex-1 leading-relaxed text-smoke">
@@ -239,9 +237,9 @@ export default async function PlaygroundPage() {
               : " The line-by-line estimate behind these totals is shared with partners who take on part of the work rather than published here."}
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-forest px-8 py-7 shadow-warm">
             <p className="eyebrow text-white/70">The whole job</p>
-            <p className="font-display tabular text-4xl font-semibold text-marigold">
+            <p className="font-display tabular text-4xl font-medium text-gold">
               <Money cents={cents(totalUsd)} />
             </p>
           </div>
@@ -264,13 +262,11 @@ export default async function PlaygroundPage() {
       </section>
 
       {/* The ask. */}
-      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 text-center sm:py-24">
-        <div className="grain-layer" />
-        <ClothEdge className="text-plum-deep" />
+      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 text-center sm:py-24">
 
         <div className="shell relative">
           <div className="mx-auto max-w-md">
-            <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
+            <h2 className="font-display mt-3 text-3xl font-medium text-white sm:text-[2.6rem]">
               Give the children a safe place to play
             </h2>
             <p className="mt-6 leading-relaxed text-white/65">

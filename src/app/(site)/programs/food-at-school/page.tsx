@@ -49,20 +49,20 @@ export default async function FoodAtSchoolPage() {
 
   return (
     <>
-      <section className="bg-plum-deep px-6 pt-28 pb-20">
+      <section className="bg-sand px-6 pt-28 pb-20">
         <div className="shell">
           <FoodAtSchoolLogo
-            variant="mono"
+            variant="color"
             title="Food at School"
-            className="h-24 w-auto text-white"
+            className="h-24 w-auto text-charcoal"
           />
-          <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+          <h1 className="font-display mt-4 text-4xl leading-tight font-medium text-charcoal sm:text-5xl">
             {program.heading}
           </h1>
           {paragraphs(program.intro).map((text) => (
             <p
               key={text}
-              className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+              className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke"
             >
               {text}
             </p>
@@ -99,10 +99,10 @@ export default async function FoodAtSchoolPage() {
         </div>
       </section>
 
-      <section className="bg-green px-6 py-24">
+      <section className="bg-forest px-6 py-24">
         <div className="shell text-center">
           <div className="mx-auto max-w-2xl">
-            <h2 className="font-display mt-4 text-3xl leading-tight font-bold text-white sm:text-4xl">
+            <h2 className="font-display mt-4 text-3xl leading-tight font-medium text-white sm:text-4xl">
               {program.closingHeading}
             </h2>
             {paragraphs(program.closingBody).map((text) => (
@@ -116,7 +116,7 @@ export default async function FoodAtSchoolPage() {
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <ButtonLink
                 href="/projects/kitchen"
-                className="bg-white !text-green hover:bg-white/90"
+                className="bg-white !text-forest hover:bg-white/90"
               >
                 See the kitchen
               </ButtonLink>

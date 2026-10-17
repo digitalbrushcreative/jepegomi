@@ -30,9 +30,9 @@ import { Empty, PageHeader, Panel, Stat } from "../ui";
 
 const STATUS_STYLES: Record<PaymentStatus, { label: string; className: string }> =
   {
-    paid: { label: "Paid", className: "bg-green/12 text-green" },
-    started: { label: "In progress", className: "bg-marigold/20 text-clay" },
-    failed: { label: "Failed", className: "bg-plum/10 text-plum" },
+    paid: { label: "Paid", className: "bg-forest/12 text-forest" },
+    started: { label: "In progress", className: "bg-gold/20 text-clay" },
+    failed: { label: "Failed", className: "bg-forest/10 text-forest" },
     abandoned: { label: "Abandoned", className: "bg-sand text-smoke" },
   };
 
@@ -40,7 +40,7 @@ function StatusTag({ status }: { status: PaymentStatus }) {
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.failed;
   return (
     <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${style.className}`}
+      className={`inline-block rounded-sm px-2.5 py-0.5 text-[11px] font-semibold ${style.className}`}
     >
       {style.label}
     </span>
@@ -84,7 +84,7 @@ export default async function AdminPaymentsPage() {
             those are confirmed by hand under{" "}
             <Link
               href="/app/needs"
-              className="font-medium text-plum underline underline-offset-4"
+              className="font-medium text-forest underline underline-offset-4"
             >
               Needs
             </Link>
@@ -170,7 +170,7 @@ export default async function AdminPaymentsPage() {
                         {payment.giverEmail && (
                           <a
                             href={`mailto:${payment.giverEmail}`}
-                            className="mt-0.5 block font-mono text-[11px] text-plum underline underline-offset-4"
+                            className="mt-0.5 block font-mono text-[11px] text-forest underline underline-offset-4"
                           >
                             {payment.giverEmail}
                           </a>
@@ -181,7 +181,7 @@ export default async function AdminPaymentsPage() {
                         {payment.needSlug ? (
                           <Link
                             href={`/needs/${payment.needSlug}`}
-                            className="hover:text-plum"
+                            className="hover:text-forest"
                           >
                             {payment.towards}
                           </Link>
@@ -194,7 +194,7 @@ export default async function AdminPaymentsPage() {
                       </td>
 
                       <td className="px-5 py-3 text-right whitespace-nowrap">
-                        <span className="font-display font-semibold tabular-nums">
+                        <span className="font-display font-medium tabular-nums">
                           {usd(payment.amountCents)}
                         </span>
                         {/*

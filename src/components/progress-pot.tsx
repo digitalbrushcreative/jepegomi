@@ -61,7 +61,7 @@ export function ProgressPot({
       </g>
 
       {/* What's been built so far. */}
-      <path d={fill} className="fill-green" opacity="0.85" />
+      <path d={fill} className="fill-forest" opacity="0.85" />
       {/* The surface of it, so the fill reads as something poured in. */}
       <path
         d={`M ${left} ${fillY} H ${right}`}

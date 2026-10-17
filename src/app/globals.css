@@ -1,69 +1,67 @@
 @import "tailwindcss";
 
 /*
-  Jepegomi's design language: warm, hand-made, community-led.
+  Jepegomi's design language: institutional, editorial, quiet.
 
-  The plum and green are not decisions we get to make — they come off the logo
-  marks Simon already prints on uniforms and signage. What we control is how
-  they are *used*. Earlier this site filled whole screens with them, which read
-  as corporate and cold. Here plum is ink and green is the giving action, and
-  the warmth is carried by paper, marigold and soft cloth edges instead.
+  The site used to be dressed warm and hand-made — plum slabs, wonky display
+  type, cloth edges and a paper grain — and the effect, at the size of a whole
+  site, was decoration standing in for substance. It now does less: warm white
+  and stone surfaces, near-black type, one deep green that marks the act of
+  giving and the links that matter, and a muted gold used sparingly. The
+  photographs are what carry colour.
+
+  The logo's own plum and green stay in the logo. They are not the site's
+  palette; nothing else on the page should compete with the mark.
 */
 @theme {
-  /* Brand — fixed by the logo marks. */
-  --color-plum: #7a1b5c;
-  --color-plum-light: #992a74;
-  --color-plum-deep: #4a1038;
-  --color-green: #4a7c2a;
-  --color-green-light: #5f9a37;
-  --color-green-deep: #2f5119;
+  /* The one accent. Giving, links, the figures that matter. */
+  --color-forest: #244638;
+  --color-forest-light: #30594a;
+  --color-forest-deep: #1a3329;
 
-  /* Warmth — and the only colours allowed to shout. */
-  --color-marigold: #e9a53c;
-  --color-marigold-light: #f6c877;
-  --color-clay: #c05f3c;
+  /* Gold, for a rule or a label — never a fill behind text. */
+  --color-gold: #b28a50;
+  --color-gold-light: #d2b483;
+  --color-clay: #a8553a;
 
   /*
-    The same two warm colours, taken down to where they can carry *text* on
-    paper. At their brand values they cannot: marigold on cream is 2.0:1 and
-    clay is 4.1:1, both under AA. The brand values are still the right ones for
-    fills, borders, icons and text on plum or green — this pair is only for
-    type on a light surface, and both clear 4.5:1 on cream, white and sand.
+    The same two warm colours, taken down to where they can carry *text* on a
+    light surface; both clear 4.5:1 on cream, white and sand.
   */
-  --color-marigold-ink: #8f5e14;
-  --color-clay-ink: #a84e30;
+  --color-gold-ink: #7a5a28;
+  --color-clay-ink: #8f4428;
 
-  /* Paper. The site sits on cloth and paper, never on flat white. */
-  --color-cream: #fdfaf3;
-  --color-sand: #f5ecdd;
-  --color-sand-deep: #e7d9c2;
-  --color-charcoal: #2a1c24;
-  --color-smoke: #6f6068;
-  --color-brown: #3d2010;
+  /* Surfaces and type. */
+  --color-cream: #faf9f6;
+  --color-sand: #f0eee8;
+  --color-sand-deep: #e2ded4;
+  --color-charcoal: #222522;
+  --color-smoke: #5b5f5a;
+  --color-brown: #3a2a1e;
 
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-sans: var(--font-karla), system-ui, sans-serif;
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   /*
-    A 4px corner — just enough to take the sharp edge off. The cards once ran to
-    32px, which read as soft-toy rather than hand-made; this is the other end of
-    that, near-square but not brutalist. The whole scale is flat at one value, so
-    a card, a photo and an input all agree, and it is set here rather than on 49
-    call sites so the softness can be dialled up again from one place.
+    A 2px corner: square, with the hard edge taken off. One value for the whole
+    scale so a card, a photo and an input all agree.
 
     `rounded-full` is not part of this scale (Tailwind emits a fixed pill radius
-    for it), so avatars and pills stay circular.
+    for it), so avatars and dots stay circular.
   */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.25rem;
-  --radius-xl: 0.25rem;
-  --radius-2xl: 0.25rem;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.125rem;
+  --radius-lg: 0.125rem;
+  --radius-xl: 0.125rem;
+  --radius-2xl: 0.125rem;
 
-  /* Shadows are warm — a grey shadow on cream paper looks like dirt. */
-  --shadow-warm: 0 2px 4px -2px rgb(74 32 16 / 0.06), 0 12px 28px -12px rgb(74 32 16 / 0.14);
-  --shadow-warm-lg: 0 4px 8px -4px rgb(74 32 16 / 0.08), 0 24px 48px -16px rgb(74 32 16 / 0.2);
+  /*
+    No shadows. Anything that used to float on one now sits inside a hairline,
+    which is the same separation without the effect.
+  */
+  --shadow-warm: 0 0 0 1px rgb(34 37 34 / 0.1);
+  --shadow-warm-lg: 0 0 0 1px rgb(34 37 34 / 0.18);
 }
 
 html {
@@ -78,25 +76,15 @@ body {
 }
 
 /*
-  Fraunces ships a `SOFT` axis that rounds off the terminals and a `WONK` axis
-  that swaps in the wonky, slightly hand-cut letterforms. Both are what keep the
-  headings from feeling like a bank's. They are set here rather than per-heading
-  so a heading can never accidentally be set "straight".
-*/
-.font-display {
-  font-variation-settings: "SOFT" 60, "WONK" 1;
-}
-
-/*
   Eyebrows. Previously 9px Space Mono, which gave every page a clinical,
   machine-printed tick. Now it is the body face, larger and actually legible,
   with the tracking doing the work.
 */
 @utility eyebrow {
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -137,23 +125,9 @@ body {
   max-width: 68ch;
 }
 
-/*
-  A paper grain, laid over the warm backgrounds. It is nearly invisible on its
-  own — you notice it only if you remove it, when everything suddenly looks
-  like a screen again.
-*/
-@utility grain-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.4;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
-}
-
-/* Focus that is visible on plum, on cream and on a photo alike. */
+/* Focus that is visible on dark bands, on cream and on a photo alike. */
 :where(a, button, [tabindex]):focus-visible {
-  outline: 3px solid var(--color-marigold);
+  outline: 3px solid var(--color-gold);
   outline-offset: 3px;
   border-radius: 4px;
 }

@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { Icon, type IconName } from "@/components/icons";
-import { ClothEdge } from "@/components/pattern";
 import { GivingDetailsForm } from "@/app/(site)/give/details-form";
 import type { GiveChoice } from "@/components/give-form";
 import { GivePanel } from "@/components/give-panel";
@@ -196,9 +195,9 @@ export default async function GivePage(props: PageProps<"/give">) {
                 className="flex flex-col rounded-2xl bg-white p-8 shadow-warm"
               >
                 {wayIcons[index] && (
-                  <Icon name={wayIcons[index]} className="h-9 w-9 text-plum" />
+                  <Icon name={wayIcons[index]} className="h-9 w-9 text-forest" />
                 )}
-                <h3 className="font-display mt-5 text-2xl font-semibold">
+                <h3 className="font-display mt-5 text-2xl font-medium">
                   {way.title}
                 </h3>
                 {paragraphs(way.body).map((text) => (
@@ -225,7 +224,6 @@ export default async function GivePage(props: PageProps<"/give">) {
       */}
       {ledger.openCount > 0 && (
         <section className="relative bg-sand px-6 py-20 sm:py-24">
-          <ClothEdge className="text-sand" />
 
           <div className="shell">
             <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
@@ -246,7 +244,7 @@ export default async function GivePage(props: PageProps<"/give">) {
               <dl className="grid gap-px overflow-hidden rounded-2xl bg-sand-deep sm:grid-cols-2 lg:grid-cols-1">
                 <div className="bg-white px-8 py-7">
                   <dt className="eyebrow text-smoke">Still open</dt>
-                  <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-plum">
+                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-forest">
                     <Money cents={ledger.totalOpenCents} />
                   </dd>
                   <p className="mt-2 text-sm text-smoke">
@@ -256,7 +254,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                 </div>
                 <div className="bg-white px-8 py-7">
                   <dt className="eyebrow text-smoke">Received so far</dt>
-                  <dd className="font-display tabular mt-1.5 text-4xl font-semibold text-green">
+                  <dd className="font-display tabular mt-1.5 text-4xl font-medium text-forest">
                     <Money cents={ledger.totalReceivedCents} />
                   </dd>
                   <p className="mt-2 text-sm text-smoke">
@@ -312,7 +310,7 @@ export default async function GivePage(props: PageProps<"/give">) {
 
             <ul className="mt-8 space-y-4 text-sm leading-relaxed text-smoke">
               <li className="flex gap-3">
-                <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-green" />
+                <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-forest" />
                 <span>
                   {canPay ? (
                     <>
@@ -333,7 +331,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                 </span>
               </li>
               <li className="flex gap-3">
-                <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-green" />
+                <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-forest" />
                 <span>
                   <strong className="font-medium text-charcoal">
                     You can give part of the cost.
@@ -341,7 +339,7 @@ export default async function GivePage(props: PageProps<"/give">) {
                 </span>
               </li>
               <li className="flex gap-3">
-                <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-green" />
+                <Icon name="give" className="mt-0.5 h-5 w-5 shrink-0 text-forest" />
                 <span>
                   <strong className="font-medium text-charcoal">
                     You will get updates and photos as the work goes on.
@@ -372,13 +370,11 @@ export default async function GivePage(props: PageProps<"/give">) {
         The ask itself. There is no account number on this page and there is not
         meant to be one: the details are sent by reply, to the person giving.
       */}
-      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
-        <div className="grain-layer" />
-        <ClothEdge className="text-plum-deep" />
+      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 sm:py-24">
 
         <div className="shell relative">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display mt-4 text-3xl leading-[1.15] font-semibold text-balance text-white sm:text-[2.6rem]">
+            <h2 className="font-display mt-4 text-3xl leading-[1.15] font-medium text-balance text-white sm:text-[2.6rem]">
               {giving.howHeading}
             </h2>
 

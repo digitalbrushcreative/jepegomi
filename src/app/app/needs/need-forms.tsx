@@ -28,13 +28,13 @@ import {
 } from "./actions";
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
 
 const primaryButton =
-  "cursor-pointer rounded bg-green px-7 py-3 font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60";
+  "cursor-pointer rounded bg-forest px-7 py-3 font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60";
 
 const quietButton =
-  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum disabled:opacity-60";
+  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest disabled:opacity-60";
 
 function Field({
   label,
@@ -61,14 +61,14 @@ function Field({
 function Notice({ error, saved }: { error?: string; saved?: boolean }) {
   if (error) {
     return (
-      <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
+      <p role="alert" className="mt-4 text-sm leading-relaxed text-forest">
         {error}
       </p>
     );
   }
   if (saved) {
     return (
-      <p role="status" className="mt-4 text-sm text-green">
+      <p role="status" className="mt-4 text-sm text-forest">
         Saved. It is live on the site now.
       </p>
     );
@@ -276,7 +276,7 @@ function NeedFields({
             type="checkbox"
             name="published"
             defaultChecked={need?.published ?? false}
-            className="mt-1 h-4 w-4 accent-green"
+            className="mt-1 h-4 w-4 accent-forest"
           />
           <span className="text-sm leading-relaxed">
             <strong className="font-medium">Show this on the site.</strong>{" "}
@@ -291,7 +291,7 @@ function NeedFields({
             type="checkbox"
             name="closed"
             defaultChecked={need?.closed ?? false}
-            className="mt-1 h-4 w-4 accent-plum"
+            className="mt-1 h-4 w-4 accent-forest"
           />
           <span className="text-sm leading-relaxed">
             <strong className="font-medium">The work on this is finished.</strong>{" "}
@@ -752,7 +752,7 @@ export function PledgeActions({
           type="button"
           disabled={pending}
           onClick={() => move("received", "Mark this as received? Only do this once the money is actually in.")}
-          className="cursor-pointer rounded bg-green px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60"
+          className="cursor-pointer rounded bg-forest px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60"
         >
           Money received
         </button>
@@ -836,12 +836,12 @@ export function PostUpdateForm({ needId }: { needId: string }) {
         so this reports both outcomes at once rather than choosing one.
       */}
       {state?.error && (
-        <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
+        <p role="alert" className="mt-4 text-sm leading-relaxed text-forest">
           {state.error}
         </p>
       )}
       {state?.saved && !state?.error && (
-        <p role="status" className="mt-4 text-sm text-green">
+        <p role="status" className="mt-4 text-sm text-forest">
           Posted. It is on the item&apos;s page and on every partner&apos;s
           dashboard.
         </p>
@@ -867,7 +867,7 @@ export function DeleteUpdateButton({ updateId }: { updateId: string }) {
           void deleteUpdateAction(updateId);
         });
       }}
-      className="cursor-pointer text-xs font-medium text-smoke underline underline-offset-4 hover:text-plum disabled:opacity-60"
+      className="cursor-pointer text-xs font-medium text-smoke underline underline-offset-4 hover:text-forest disabled:opacity-60"
     >
       {pending ? "Deleting…" : "Delete"}
     </button>

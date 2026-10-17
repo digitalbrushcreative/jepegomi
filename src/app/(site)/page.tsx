@@ -4,19 +4,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
-import { HeroSlider } from "@/components/hero-slider";
-import { Icon, type IconName } from "@/components/icons";
-import { Money } from "@/components/money";
-import { NeedsSlider } from "@/components/needs-slider";
-import { ClothEdge } from "@/components/pattern";
-import { PhotoStrip } from "@/components/photos";
-import { ProgressPot } from "@/components/progress-pot";
-import { SchoolBus } from "@/components/school-bus";
-import { ButtonLink, SectionTitle } from "@/components/ui";
+import { Eyebrow } from "@/components/ui";
 import { getChildrenFed } from "@/lib/enrolment";
-import { getKitchenReport, kitchenStats } from "@/lib/kitchen";
-import { busPrice } from "@/lib/money";
-import { getGivingSummary, getStillNeededCents } from "@/lib/needs";
 import { pageMeta } from "@/lib/seo";
 import { site } from "@/lib/site";
 
@@ -40,347 +29,193 @@ export const metadata: Metadata = pageMeta({
   path: "/",
 });
 
-/*
-  The photograph each hero slide is built around. It fills the whole slide, and
-  the slide's own colour is clipped back over the left of it — so these are not
-  backdrops in the dimmed sense, they are the picture, shown at full strength.
-
-  The college has none. There is no photograph of it — not a bad one, none — and
-  the lookup is per-slide, so it falls back to the flat charcoal slide the design
-  already had, with its own mark held behind at watermark opacity. A stand-in of
-  somebody else's lecture room would fill the space and say something untrue.
-
-  Each shows the thing its slide is actually about: the church, a service inside
-  the sanctuary; the academy, its children; the feeding program, children eating.
-  The first pass reached for whatever was widest and highest-resolution — an
-  empty yard, a building site with a pile of stones, a queue of backs — and a
-  hero that large has to earn its size with a subject, not a texture.
-
-  All three share one property, and it is the one that matters at this size: the
-  subject fills the frame. Only the right of a picture survives the split, so a
-  photograph with its interest in the middle arrives as whatever happened to be
-  standing on the right. An interior of an empty classroom was tried here and
-  came through as a wall chart and a blurred elbow.
-
-  The church pays for that in sharpness. Its only interior photographs are 636px
-  crops out of the slide deck, so this one is enlarged more than twice over. It
-  is still the right picture: nobody looking at a church wants the car park.
-  A better one, taken on a phone at a Sunday service, is the single cheapest
-  upgrade available to this page.
-*/
-const heroBackdrops: Record<string, string> = {
-  "/church": "/photos/church/congregation.jpg",
-  "/academy": "/photos/academy/graduation.jpg",
-  "/programs/food-at-school": "/photos/school/lunch-classroom-01.jpg",
-};
-
-/*
-  Three photographs under the four cards, one for each arm the cards describe
-  that has people in it. The cards make the argument that no arm is a footnote
-  to another; these stop that argument being made entirely in prose.
-*/
-const arms = [
-  {
-    src: "/photos/church/service.jpg",
-    alt: "A man standing at a lectern reading to rows of seated children",
-    caption: "The pupils' service, in the sanctuary at Kahawa Sukari.",
-  },
-  {
-    src: "/photos/academy/assembly.jpg",
-    alt: "A long line of children in green uniform standing outdoors at assembly, a teacher reading to them",
-    caption: "Morning assembly at the academy.",
-  },
-  {
-    src: "/photos/school/lunch-queue-01.jpg",
-    alt: "Children in green uniform queueing along a wall, plates in hand",
-    caption: "The Food at School lunch queue, every school day.",
-  },
-];
-
-/*
-  The photographs in each need's collage.
-
-  The kitchen's are referenced by slot number, the same names the Kitchen Build
-  gallery reads out of that folder — so replacing one on the report replaces it
-  here too, and the front page cannot end up showing a kitchen the report has
-  moved past.
-*/
-const kitchenCollage = [
-  {
-    src: "/photos/kitchen/11.jpg",
-    alt: "The finished kitchen — plastered walls, a tiled roof and a chimney, standing in the school yard",
-  },
-  {
-    src: "/photos/kitchen/16.jpg",
-    alt: "A wood fire burning in the new jiko, a pot on the plate above it",
-  },
-  {
-    src: "/photos/kitchen/17.jpg",
-    alt: "Rows of red plates filled with rice and beans, laid out ready for the children",
-  },
-];
-
-const transportCollage = [
-  {
-    src: "/photos/transport/van.jpg",
-    alt: "The academy's yellow school van parked on grass beside the church",
-  },
-  {
-    src: "/photos/transport/van-lettering.jpg",
-    alt: "The van's side, lettered Jepegomi Academy School, Kahawa, Church — a stone chocked against the wheel",
-  },
-  {
-    src: "/photos/transport/van-off-road.jpg",
-    alt: "The same van standing at the edge of the school field, out of service",
-  },
-];
-
-/** One tile of a collage: a photograph, cropped square. */
-function PhotoTile({ src, alt }: { src: string; alt: string }) {
-  return (
-    <li className="relative aspect-square overflow-hidden rounded-xl bg-plum/40">
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="(max-width: 1024px) 45vw, 180px"
-        className="object-cover"
-      />
-    </li>
-  );
-}
-
 /**
- * The odd tile out: the one carrying the figure.
+ * A quiet text link with an arrow — the only kind of action this page offers.
  *
- * Cream rather than white, and cream rather than plum — a plum tile on the
- * plum-deep section would sink into it, and the whole job of this tile is to be
- * the thing the eye stops on.
+ * Not a ButtonLink. A pill button is a request, and the front page's job is to
+ * introduce the ministry before it asks anybody for anything. Giving is still
+ * one click away in the header on every screen.
  */
-function StatTile({ children }: { children: ReactNode }) {
+function ArrowLink({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <li className="flex aspect-square flex-col items-center justify-center rounded-xl bg-cream px-3 text-plum">
+    <Link
+      href={href}
+      className={`group inline-flex items-center gap-2 border-b border-current/30 pb-1 text-[0.95rem] font-bold transition-colors hover:border-current ${className}`}
+    >
       {children}
-    </li>
+      <span
+        aria-hidden="true"
+        className="transition-transform group-hover:translate-x-1"
+      >
+        →
+      </span>
+    </Link>
+  );
+}
+
+/** Prose from the CMS, one <p> per paragraph, with the spacing between them. */
+function Prose({ text, className = "" }: { text: string; className?: string }) {
+  return (
+    <>
+      {paragraphs(text).map((block, index) => (
+        <p key={block} className={`${index > 0 ? "mt-4" : ""} ${className}`}>
+          {block}
+        </p>
+      ))}
+    </>
   );
 }
 
 /*
-  The cards are written by Simon & Joyce in the CMS, so the words are theirs.
-  The icon is the design's job, not theirs — it is matched to wherever the card
-  points. A card pointing somewhere new simply gets no icon, which is a quiet
-  omission rather than a broken page.
-*/
-const cardIcons: Record<string, IconName> = {
-  "/church": "church",
-  "/academy": "child",
-  "/college": "book",
-  "/programs/food-at-school": "pot",
-  "/projects/kitchen": "trowel",
-  "/about": "church",
-};
+  The order of this page is the argument it makes: purpose, people, work,
+  evidence, partnership. Who the ministry is comes before what it does, what it
+  does comes before what it has done, and the invitation to stand with it comes
+  last — after a reader has had every reason to trust it.
 
-/*
-  This page used to be the feeding program with a ministry attached. That was the
-  honest result of how the site was built — it grew out of the Kitchen Build
-  report — but it had stopped being an honest picture of the ministry: the
-  kitchen held the headline, the pot, the numbers *and* the closing ask, while
-  the church the whole thing belongs to was a card at the bottom.
+  What it leaves out is deliberate too. No icons, no shadows, no cloth edges, no
+  rotating slides and no figure behind a blur: photographs carry the weight,
+  and the type and the white space do the rest.
 
-  So the kitchen has been gathered into one section it owns outright, and the
-  four arms — the church, the academy, the college, the program — take the hero
-  and the cards on equal terms. The appeal did not get quieter. It got a room of
-  its own instead of leaking into every other one.
+  The appeals that used to fill the middle of this page — the kitchen's pot, the
+  bus — are on /projects and /needs, one link away from the partnership section.
 */
 export default async function HomePage() {
-  const [
-    home,
-    about,
-    siteContent,
-    transport,
-    giving,
-    childrenFed,
-    kitchenStillNeeded,
-    kitchen,
-  ] =
-    await Promise.all([
-      getContent("home"),
-      getContent("about"),
-      getContent("site"),
-      getContent("transport"),
-      getGivingSummary(),
-      getChildrenFed(),
-      getStillNeededCents("kitchen"),
-      getKitchenReport(),
-    ]);
-
-  const bus = busPrice(transport.busPriceKes, siteContent.kesPerUsd);
-
-  const stats = kitchenStats(kitchen, childrenFed);
+  const [home, childrenFed] = await Promise.all([
+    getContent("home"),
+    getChildrenFed(),
+  ]);
 
   /*
-    What the kitchen brings to the needs slider that the CMS cannot: figures and
-    a pot, both read from the budget and never typed here, so they cannot drift
-    out of step with the Kitchen page. Keyed by the need's link — a need with no
-    entry here shows its icon and its status line instead, which is what every
-    need that has not been costed yet has to do.
+    The children-fed figure leads the row, read from the academy's enrolment
+    rather than typed here. If that field is blank or not a number, the figure
+    drops out rather than printing a confident zero.
   */
-  const needFigures = {
-    /* What a bus costs, and nothing about what is banked against it. The tile
-       used to carry "Held in the bank" alongside — see the bus fields in
-       cms/schema.ts. */
-    "/programs/transport": [
-      {
-        label: `A ${transport.busSeats}-seater bus`,
-        value: <Money cents={bus.usdCents} />,
-      },
-    ],
-    /*
-      The middle tile was the size of the gift that built it. What a partner
-      church gave is that church's business and the ministry's, not a figure for
-      the front page to advertise — so the tile says what the kitchen does, and
-      the accounts themselves are behind the partner door. See
-      lib/disclosure.ts, and the note on the gift field in cms/schema.ts.
-    */
-    "/projects/kitchen": [
-      { label: stats[0].label, value: stats[0].value },
-      { label: stats[1].label, value: stats[1].value },
-      {
-        label: "Still needed to finish",
-        value: <Money cents={kitchenStillNeeded} />,
-      },
-    ],
-  };
-
-  const needPanels = {
-    /*
-      What the school has, and what it is raising for — three photographs of the
-      van and the bus it is raising for.
-
-      The bus tile is a 26-seater of the kind the school has been quoted for,
-      not a vehicle it owns. The prose on /programs/transport is what carries
-      that distinction now; the tile itself is just the bus.
-    */
-    "/programs/transport": (
-      <ul className="grid w-full grid-cols-2 gap-3">
-        <PhotoTile {...transportCollage[0]} />
-        <StatTile>
-          <SchoolBus percent={0} className="w-full" />
-        </StatTile>
-        <PhotoTile {...transportCollage[1]} />
-        <PhotoTile {...transportCollage[2]} />
-      </ul>
-    ),
-    /*
-      Four tiles: the build, the fire it lit, the meal it cooks — and the pot,
-      which is a tile now rather than the whole card.
-
-      The kitchen is the one need on this page with a year of photographs behind
-      it, and a single figure was spending none of them. The three pictures run
-      in the order the build did, so the collage is a sequence and not a mosaic:
-      a finished building, the fire lit inside it, and the food coming off it.
-    */
-    "/projects/kitchen": (
-      <ul className="grid w-full grid-cols-2 gap-3">
-        <StatTile>
-          <ProgressPot
-            percent={kitchen.percentComplete}
-            className="h-[4.5rem] w-auto"
-          />
-          <p className="font-display mt-2.5 text-[2rem] leading-none font-semibold">
-            {kitchen.percentComplete}%
-          </p>
-        </StatTile>
-        {kitchenCollage.map((photo) => (
-          <PhotoTile key={photo.src} {...photo} />
-        ))}
-      </ul>
-    ),
-  };
+  const figures = [
+    ...(childrenFed
+      ? [{ value: String(childrenFed), label: home.childrenFedLabel }]
+      : []),
+    ...home.figures,
+  ];
 
   return (
     <>
-      {/* One slide per arm: the church, the academy, the college, the program. */}
-      <HeroSlider slides={home.slides} backdrops={heroBackdrops} />
-
       {/*
-        Who Jepegomi is, as a whole. The slider speaks for each arm in turn; this
-        speaks for all four at once, and it carries the page's one <h1>. The
-        slides can't: there are four of them, and a page has one heading, not one
-        per rotation.
-
-        The pot used to share this space, which meant the first thing the page
-        said after the hero was "the kitchen is 75% done" — a fine thing to say,
-        but not the first thing, and not before the ministry had introduced
-        itself.
+        One photograph, not five. The words sit at the bottom-left over a
+        shade, which is what keeps them readable on whatever photograph an
+        editor chooses later.
       */}
-      <section className="bg-cream px-6 py-16 text-center sm:py-24">
-        <div className="shell">
-          {/* A centred lead reads best on a tight measure — the frame is shared,
-              the line length is not. */}
-          <h1 className="font-display mx-auto max-w-3xl text-[2.4rem] leading-[1.05] font-semibold text-balance sm:text-[3.25rem]">
-            {home.heading}
+      <section className="relative isolate mt-16 flex h-[calc(80svh-4rem)] max-h-[52rem] min-h-[32rem] items-end overflow-hidden bg-charcoal px-6 text-white">
+        <Image
+          src={home.heroPhoto}
+          alt={home.heroPhotoAlt}
+          fill
+          priority
+          sizes="100vw"
+          className="-z-10 object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/45 to-black/0" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/45 via-black/15 to-transparent" />
+
+        <div className="shell w-full pb-14 sm:pb-20">
+          <h1 className="font-display max-w-4xl text-[2.4rem] leading-[1.05] font-normal tracking-tight text-balance sm:text-5xl lg:text-[4.25rem]">
+            {home.heroHeading}
           </h1>
 
           {/*
-            Under the heading rather than over it. Where it is now is a place
-            line; where it was, it was a tracked uppercase label sitting on top
-            of an oversized headline, which is the one hero shape every
-            generated site arrives wearing. The words are worth keeping — a
-            reader wants to know where this is — the position was not.
+            The place line goes under the headline, not over it. A tracked
+            uppercase label perched on an oversized headline is the hero every
+            template ships with; a reader still wants to know where this is, and
+            here it reads as a place rather than a badge.
           */}
-          <p className="mt-4 flex items-center justify-center gap-2 text-sm text-smoke">
-            <Icon name="pin" className="h-4 w-4 text-plum" />
-            {site.location}
+          <p className="mt-5 text-sm font-medium tracking-wide text-white/80">
+            {site.longName} · {site.location}
           </p>
 
-          {paragraphs(home.intro).map((text) => (
-            <p
-              key={text}
-              className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-smoke"
-            >
-              {text}
-            </p>
-          ))}
+          <div className="mt-6 max-w-xl text-lg leading-relaxed text-pretty text-white/90 sm:text-xl">
+            <Prose text={home.heroBody} />
+          </div>
+
+          <div className="mt-9 flex flex-wrap gap-x-8 gap-y-4">
+            <ArrowLink href="/about">About the ministry</ArrowLink>
+            <ArrowLink href="#ministries">The four ministries</ArrowLink>
+          </div>
+        </div>
+      </section>
+
+      {/* Who we are: the ministry as one thing, before it is four. */}
+      <section className="px-6 py-20 sm:py-28">
+        <div className="shell grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-6">
+            <Eyebrow>{home.introLabel}</Eyebrow>
+            <h2 className="font-display mt-4 text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
+              {home.introHeading}
+            </h2>
+            <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke sm:text-xl">
+              <Prose text={home.introBody} />
+            </div>
+            <ArrowLink href="/about" className="mt-9 text-forest">
+              More about the ministry
+            </ArrowLink>
+          </div>
+
+          <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-sand lg:col-span-5 lg:col-start-8">
+            <Image
+              src={home.introPhoto}
+              alt={home.introPhotoAlt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 480px"
+              className="object-cover"
+            />
+          </div>
         </div>
       </section>
 
       {/*
-        The four arms, all the same size. Four equal cards is the whole argument
-        of this page: not one of them is a footnote to another.
+        The four ministries, all the same size, two to a row. Photographs rather
+        than icons: the argument that no arm is a footnote to another is made by
+        showing the people in each.
       */}
-      <section className="relative bg-sand px-6 py-20 sm:py-24">
-        <ClothEdge className="text-sand" />
+      <section
+        id="ministries"
+        className="scroll-mt-20 border-t border-charcoal/10 px-6 py-20 sm:py-28"
+      >
+        <div className="shell">
+          <h2 className="font-display max-w-2xl text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
+            {home.ministriesHeading}
+          </h2>
 
-        <div className="shell grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {home.cards.map((card) => {
-            const icon = cardIcons[card.href];
-            return (
-              <Link
-                key={card.href}
-                href={card.href}
-                className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-warm transition-all hover:-translate-y-1 hover:shadow-warm-lg"
-              >
-                <div className="flex flex-1 flex-col p-7">
-                  {icon && (
-                    <Icon
-                      name={icon}
-                      className="mb-5 h-9 w-9 text-plum transition-transform group-hover:scale-110"
-                    />
-                  )}
-                  <h2 className="font-display text-xl font-semibold">
-                    {card.title}
-                  </h2>
-                  {paragraphs(card.body).map((text) => (
-                    <p
-                      key={text}
-                      className="mt-3 flex-1 text-[0.95rem] leading-relaxed text-smoke"
-                    >
-                      {text}
-                    </p>
-                  ))}
-                  <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-plum">
-                    {card.cta}
+          <ul className="mt-14 grid gap-x-10 gap-y-16 md:grid-cols-2">
+            {home.ministries.map((ministry) => (
+              <li key={ministry.href + ministry.title}>
+                <Link href={ministry.href} className="group block">
+                  <div className="relative aspect-[3/2] overflow-hidden rounded-sm bg-sand">
+                    {ministry.photo && (
+                      <Image
+                        src={ministry.photo}
+                        alt={ministry.photoAlt}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 560px"
+                        className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                      />
+                    )}
+                  </div>
+                  <Eyebrow className="mt-6">{ministry.name}</Eyebrow>
+                  <h3 className="font-display mt-2 text-2xl leading-snug font-medium text-balance sm:text-[1.75rem]">
+                    {ministry.title}
+                  </h3>
+                  <div className="mt-3 max-w-lg leading-relaxed text-smoke">
+                    <Prose text={ministry.body} />
+                  </div>
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-forest">
+                    {ministry.cta}
                     <span
                       aria-hidden="true"
                       className="transition-transform group-hover:translate-x-1"
@@ -388,104 +223,183 @@ export default async function HomePage() {
                       →
                     </span>
                   </span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="shell">
-          <PhotoStrip photos={arms} className="mt-12" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {/*
-        The appeal, in one place. It used to be three sections (the pot up in the
-        welcome, a band of numbers, and the closing ask) and then one — the
-        kitchen — because the kitchen was the only thing being asked for. It now
-        holds every current need in turn, so the second one does not have to
-        fight the kitchen for a section of its own.
+        The evidence. Modest numbers, set large and left alone — no counters,
+        no icons, nothing animated. A figure that has to be dressed up to
+        impress is the wrong figure.
       */}
-      <NeedsSlider
-        eyebrow={home.needsEyebrow}
-        needs={home.needs}
-        panels={needPanels}
-        figures={needFigures}
-      />
+      <section className="bg-sand px-6 py-20 sm:py-28">
+        <div className="shell">
+          <Eyebrow>{home.evidenceLabel}</Eyebrow>
+          <h2 className="font-display mt-4 max-w-2xl text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
+            {home.evidenceHeading}
+          </h2>
 
-      {/* The people behind it. */}
-      <section className="relative bg-cream px-6 py-20 sm:py-24">
-        <ClothEdge className="text-cream" />
+          <dl className="mt-14 grid gap-10 sm:grid-cols-3">
+            {figures.map((figure) => (
+              <div
+                key={figure.label}
+                className="flex flex-col-reverse justify-end border-t border-charcoal/20 pt-6"
+              >
+                <dt className="mt-3 max-w-[16rem] leading-snug text-smoke">
+                  {figure.label}
+                </dt>
+                <dd className="font-display tabular text-6xl leading-none font-medium text-forest sm:text-7xl">
+                  {figure.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
 
-        <div className="shell grid items-center gap-12 sm:grid-cols-[auto_1fr] sm:gap-14">
-          <div className="relative mx-auto h-44 w-44 shrink-0 overflow-hidden rounded-full bg-sand ring-8 ring-marigold/20 sm:h-56 sm:w-56">
+          {home.figuresAsOf.trim() && (
+            <p className="mt-8 text-sm text-smoke">
+              Figures as of {home.figuresAsOf}.
+            </p>
+          )}
+
+          <div className="mt-12 flex flex-col gap-6 border-t border-charcoal/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <p className="max-w-xl leading-relaxed text-pretty text-smoke">
+              {home.evidenceNote}
+            </p>
+            <ArrowLink href="/academy" className="shrink-0 text-forest">
+              About the academy
+            </ArrowLink>
+          </div>
+        </div>
+      </section>
+
+      {/* A featured story — asymmetric, the way a magazine lays out a feature. */}
+      <section className="px-6 py-20 sm:py-28">
+        <div className="shell grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-sand lg:col-span-6">
             <Image
-              src={about.portrait}
-              alt={about.portraitAlt}
+              src={home.storyPhoto}
+              alt={home.storyPhotoAlt}
               fill
-              sizes="224px"
-              className="object-cover object-top"
+              sizes="(max-width: 1024px) 100vw, 560px"
+              className="object-cover"
             />
           </div>
 
-          <div>
-            <SectionTitle className="mt-3">{site.leaders}</SectionTitle>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-smoke">
-              {about.intro}
-            </p>
-            <ButtonLink
-              href="/about"
-              variant="ghost"
-              className="mt-7 text-plum"
-            >
-              Meet them
-            </ButtonLink>
+          <div className="lg:col-span-5 lg:col-start-8">
+            <Eyebrow>{home.storyLabel}</Eyebrow>
+            <h2 className="font-display mt-4 text-3xl leading-[1.12] font-normal tracking-tight text-balance sm:text-[2.6rem]">
+              {home.storyHeading}
+            </h2>
+            <div className="mt-6 text-lg leading-relaxed text-pretty text-smoke">
+              <Prose text={home.storyBody} />
+            </div>
+            <ArrowLink href={home.storyHref} className="mt-9 text-forest">
+              {home.storyCta}
+            </ArrowLink>
           </div>
         </div>
       </section>
 
       {/*
-        The ask — for the ministry, not for the kitchen. The kitchen made its own
-        case above, in its own section, with its own numbers and its own button.
-        Asking for it twice on one page is how the page came to sound like the
-        ministry did nothing else.
+        The leadership. The portrait is the cut-out — Simon & Joyce with no
+        backdrop — standing on the foot of the section rather than framed in a
+        box, so they are in the page instead of pinned to it.
+
+        The pastors' own words appear only once they have written them. The
+        section stands without them; a quotation written on their behalf would
+        not.
       */}
-      <section className="relative overflow-hidden bg-sand px-6 pt-20 pb-16 text-center sm:pt-24">
-        <ClothEdge className="text-sand" />
-
-        {/* Frame shared with every other section; the ask itself stays on a
-            tight centred measure, the way a closing ask wants to read. */}
-        <div className="shell">
-          <div className="mx-auto max-w-2xl">
-            <h2 className="font-display mt-4 text-3xl leading-[1.15] font-semibold text-balance sm:text-[2.6rem]">
-              {home.closingHeading}
+      <section className="overflow-hidden bg-sand px-6 pt-20 sm:pt-28">
+        <div className="shell grid items-end gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="pb-4 lg:col-span-6 lg:col-start-7 lg:row-start-1 lg:self-center lg:pb-28">
+            <Eyebrow>{home.leadershipLabel}</Eyebrow>
+            <h2 className="font-display mt-4 text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
+              {home.leadershipHeading}
             </h2>
-            {paragraphs(home.closingBody).map((text) => (
-              <p key={text} className="mt-5 leading-relaxed text-smoke">
-                {text}
-              </p>
-            ))}
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-              <ButtonLink href="/give" icon="give">
-                Give
-              </ButtonLink>
+            <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke">
+              <Prose text={home.leadershipBody} />
+            </div>
 
-              {/*
-                Only once there is a costed item to point at. An empty ledger
-                behind a button promising "what's needed" is the one thing this
-                whole feature exists not to do.
+            {home.leadershipMessage.trim() && (
+              <figure className="mt-10 border-l-2 border-gold pl-6">
+                <blockquote className="font-display text-xl leading-snug text-pretty italic sm:text-2xl">
+                  <Prose text={home.leadershipMessage} />
+                </blockquote>
+                <figcaption className="mt-4 text-sm text-smoke">
+                  — {site.leaders}
+                </figcaption>
+              </figure>
+            )}
 
-                The total used to be in the label — "see what's needed, $4,200
-                open" — and it has come off rather than gone behind a blur. A
-                button is a place for one clear instruction, and "see what's
-                needed — $•,••• open" is a button apologising for itself at the
-                exact moment somebody is deciding whether to press it.
-              */}
-              {giving.openCount > 0 && (
-                <ButtonLink href="/needs" variant="ghost" className="text-plum">
-                  See what&apos;s needed
-                </ButtonLink>
-              )}
+            <ArrowLink href="/about" className="mt-10 text-forest">
+              More about Simon & Joyce
+            </ArrowLink>
+          </div>
+
+          <Image
+            src={home.leadershipPhoto}
+            alt={home.leadershipPhotoAlt}
+            width={800}
+            height={1034}
+            sizes="(max-width: 1024px) 20rem, 420px"
+            className="mx-auto block w-72 sm:w-80 lg:col-span-5 lg:row-start-1 lg:w-full lg:max-w-[26rem]"
+          />
+        </div>
+      </section>
+
+      {/* Giving: the first and only invitation to give on the page. */}
+      <section className="px-6 py-20 sm:py-28">
+        <div className="shell grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-6">
+            <Eyebrow>{home.partnerLabel}</Eyebrow>
+            <h2 className="font-display mt-4 text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
+              {home.partnerHeading}
+            </h2>
+            <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke">
+              <Prose text={home.partnerBody} />
+            </div>
+            <ArrowLink href="/projects" className="mt-9 text-forest">
+              {home.partnerCta}
+            </ArrowLink>
+          </div>
+
+          <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-sand lg:col-span-6">
+            <Image
+              src={home.partnerPhoto}
+              alt={home.partnerPhotoAlt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 560px"
+              className="object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* A simple, human closing, full-width. */}
+      <section className="relative isolate overflow-hidden bg-charcoal px-6 py-28 text-white sm:py-36">
+        <Image
+          src={home.welcomePhoto}
+          alt={home.welcomePhotoAlt}
+          fill
+          sizes="100vw"
+          className="-z-10 object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-black/60" />
+
+        <div className="shell">
+          <div className="max-w-2xl">
+            <h2 className="font-display text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
+              {home.welcomeHeading}
+            </h2>
+            <div className="mt-6 text-lg leading-relaxed text-pretty text-white/85">
+              <Prose text={home.welcomeBody} />
+            </div>
+            <div className="mt-10 flex flex-wrap gap-x-8 gap-y-4">
+              <ArrowLink href="/church">Visiting the church</ArrowLink>
+              <ArrowLink href="/contact">Contact us</ArrowLink>
             </div>
           </div>
         </div>

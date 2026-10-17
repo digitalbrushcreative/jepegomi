@@ -70,8 +70,8 @@ function ClaimPanel({
       <div className="px-8 py-8">
         {settled ? (
           <div className="text-center">
-            <Icon name="give" className="mx-auto h-12 w-12 text-green" />
-            <p className="font-display mt-5 text-2xl font-semibold">
+            <Icon name="give" className="mx-auto h-12 w-12 text-forest" />
+            <p className="font-display mt-5 text-2xl font-medium">
               {need.closed ? "This one is done" : "Fully claimed"}
             </p>
             <p className="mt-3 leading-relaxed text-smoke">
@@ -85,7 +85,7 @@ function ClaimPanel({
           </div>
         ) : (
           <>
-            <h2 className="font-display text-2xl font-semibold">
+            <h2 className="font-display text-2xl font-medium">
               Take part of this
             </h2>
             <p className="mt-2 mb-7 leading-relaxed text-smoke">
@@ -137,7 +137,7 @@ async function NeedBody({ params }: { params: Params }) {
         <p className="mt-8">
           <Link
             href="/needs"
-            className="text-sm font-bold text-marigold underline underline-offset-4 hover:text-marigold-light"
+            className="text-sm font-bold text-gold underline underline-offset-4 hover:text-gold-light"
           >
             ← Everything that&apos;s needed
           </Link>
@@ -164,7 +164,7 @@ async function NeedBody({ params }: { params: Params }) {
             <p className="mt-8">
               <Link
                 href={area.href}
-                className="inline-flex items-center gap-2.5 text-sm font-bold text-plum"
+                className="inline-flex items-center gap-2.5 text-sm font-bold text-forest"
               >
                 <Icon name={area.icon} className="h-5 w-5" />
                 About {area.label.toLowerCase()}

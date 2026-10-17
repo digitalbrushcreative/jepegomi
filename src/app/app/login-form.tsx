@@ -37,15 +37,15 @@ function goToApp() {
 */
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
 
 const buttonClass =
-  "mt-6 w-full cursor-pointer rounded bg-green px-6 py-3 font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60";
+  "mt-6 w-full cursor-pointer rounded bg-forest px-6 py-3 font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60";
 
 function FormError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p role="alert" className="mt-3 text-sm text-plum">
+    <p role="alert" className="mt-3 text-sm text-forest">
       {message}
     </p>
   );

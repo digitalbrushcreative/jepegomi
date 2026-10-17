@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
-import { ClothEdge } from "@/components/pattern";
 import { ButtonLink } from "@/components/ui";
 import { pageMeta } from "@/lib/seo";
 import { RelatedLinks } from "@/components/related-links";
@@ -29,20 +28,19 @@ export default async function AboutPage() {
         Not PageHero: this one runs the founders' cut-out off the hero's bottom
         edge, so the section can't have bottom padding. It's a waist-up portrait,
         so it bleeds rather than stands. Everything else matches PageHero's
-        plum-deep treatment so the page still reads as part of the set.
+        light treatment so the page still reads as part of the set.
       */}
-      <section className="relative overflow-hidden bg-plum-deep">
-        <div className="grain-layer" />
+      <section className="relative overflow-hidden bg-sand px-6">
 
-        <div className="shell relative flex flex-col items-center gap-10 px-6 pt-28 sm:flex-row sm:items-end sm:gap-12">
+        <div className="shell relative flex flex-col items-center gap-10 pt-28 sm:flex-row sm:items-end sm:gap-12">
           <div className="flex-1 pb-20">
-            <h1 className="font-display mt-4 text-4xl leading-[1.1] font-semibold text-balance text-white sm:text-[3.25rem]">
+            <h1 className="font-display mt-4 text-4xl leading-[1.1] font-medium text-balance text-charcoal sm:text-[3.25rem]">
               {about.heading}
             </h1>
             {paragraphs(about.intro).map((text) => (
               <p
                 key={text}
-                className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+                className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke"
               >
                 {text}
               </p>
@@ -61,13 +59,6 @@ export default async function AboutPage() {
             />
           )}
         </div>
-
-        {/*
-          The cream page rises over the foot of the portrait, so Simon & Joyce
-          stand *in* the page rather than being cropped by a ruled line across
-          their knees.
-        */}
-        <ClothEdge anchor="inside-bottom" className="text-cream" />
       </section>
 
       <section className="px-6 py-24">
@@ -82,7 +73,7 @@ export default async function AboutPage() {
             <dl className="mt-16 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {about.facts.map((fact) => (
                 <div key={fact.label} className="bg-white p-6">
-                  <dt className="eyebrow text-plum">{fact.label}</dt>
+                  <dt className="eyebrow text-forest">{fact.label}</dt>
                   <dd className="mt-2 font-medium">{fact.value}</dd>
                 </div>
               ))}

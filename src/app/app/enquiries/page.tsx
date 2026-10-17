@@ -11,8 +11,8 @@ import { PageHeader } from "../ui";
 import { DeleteButton, NoteForm, StatusButtons } from "./enquiry-forms";
 
 const STATUS_STYLES: Record<EnquiryStatus, { label: string; className: string }> = {
-  new: { label: "Waiting", className: "bg-marigold/20 text-clay" },
-  answered: { label: "Answered", className: "bg-green/12 text-green" },
+  new: { label: "Waiting", className: "bg-gold/20 text-clay" },
+  answered: { label: "Answered", className: "bg-forest/12 text-forest" },
   closed: { label: "Closed", className: "bg-sand text-smoke" },
 };
 
@@ -62,7 +62,7 @@ export default async function AdminEnquiriesPage() {
       />
 
       {waiting.length > 0 && (
-        <p className="rounded border border-marigold/40 bg-marigold/8 px-5 py-4 text-sm leading-relaxed">
+        <p className="rounded border border-gold/40 bg-gold/8 px-5 py-4 text-sm leading-relaxed">
           <strong className="font-medium">
             {waiting.length} still waiting on you.
           </strong>{" "}
@@ -91,11 +91,11 @@ export default async function AdminEnquiriesPage() {
                 <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <h2 className="font-display text-xl font-bold">
+                      <h2 className="font-display text-xl font-medium">
                         {enquiry.parentName}
                       </h2>
                       <span
-                        className={`eyebrow rounded-full px-3 py-1 ${status.className}`}
+                        className={`eyebrow rounded-sm px-3 py-1 ${status.className}`}
                       >
                         {status.label}
                       </span>
@@ -103,7 +103,7 @@ export default async function AdminEnquiriesPage() {
 
                     <a
                       href={`mailto:${enquiry.email}?subject=${encodeURIComponent("Your enquiry about Jepegomi Academy")}`}
-                      className="mt-2 inline-block font-mono text-xs text-plum underline underline-offset-4"
+                      className="mt-2 inline-block font-mono text-xs text-forest underline underline-offset-4"
                     >
                       {enquiry.email}
                     </a>
@@ -144,7 +144,7 @@ export default async function AdminEnquiriesPage() {
                 </div>
 
                 <details className="mt-5">
-                  <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
+                  <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
                     Your note
                     {enquiry.note && " — written"}
                   </summary>

@@ -6,7 +6,7 @@ import type { Field, LeafField } from "@/cms/schema";
 import { saveContentAction } from "../../actions";
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
 
 function Help({ text }: { text?: string }) {
   if (!text) return null;
@@ -48,7 +48,7 @@ function Choice({
             key={option.value}
             className={`flex cursor-pointer items-start gap-3 rounded border p-4 transition-colors ${
               current === option.value
-                ? "border-plum bg-plum/5"
+                ? "border-forest bg-forest/5"
                 : "border-black/12 bg-white hover:bg-sand/50"
             }`}
           >
@@ -58,7 +58,7 @@ function Choice({
               value={option.value}
               checked={current === option.value}
               onChange={() => setCurrent(option.value)}
-              className="mt-1 h-4 w-4 accent-plum"
+              className="mt-1 h-4 w-4 accent-forest"
             />
             <span>
               <span className="block text-sm font-medium">{option.label}</span>
@@ -168,7 +168,7 @@ function ListEditor({
                         next[index] = { ...row, [subKey]: event.target.value };
                         setRows(next);
                       }}
-                      className="mt-1 w-full rounded border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-plum"
+                      className="mt-1 w-full rounded border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-forest"
                     />
                   </label>
                 ))}
@@ -178,7 +178,7 @@ function ListEditor({
                 type="button"
                 onClick={() => setRows(rows.filter((_, i) => i !== index))}
                 aria-label={`Remove this ${field.itemLabel}`}
-                className="mt-5 cursor-pointer rounded border border-black/15 bg-white px-3 py-2 text-sm text-smoke transition-colors hover:bg-white hover:text-plum"
+                className="mt-5 cursor-pointer rounded border border-black/15 bg-white px-3 py-2 text-sm text-smoke transition-colors hover:bg-white hover:text-forest"
               >
                 Remove
               </button>
@@ -263,7 +263,7 @@ export function ContentForm({
         <button
           type="submit"
           disabled={pending}
-          className="cursor-pointer rounded bg-green px-7 py-3 font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60"
+          className="cursor-pointer rounded bg-forest px-7 py-3 font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60"
         >
           {pending ? "Saving…" : "Save"}
         </button>
@@ -271,20 +271,20 @@ export function ContentForm({
         {path && (
           <Link
             href={path}
-            className="text-sm font-medium text-plum underline underline-offset-4 hover:text-plum-light"
+            className="text-sm font-medium text-forest underline underline-offset-4 hover:text-forest-light"
           >
             View the page
           </Link>
         )}
 
         {state?.error && (
-          <p role="alert" className="text-sm text-plum">
+          <p role="alert" className="text-sm text-forest">
             {state.error}
           </p>
         )}
 
         {state?.saved && !pending && (
-          <p role="status" className="text-sm text-green">
+          <p role="status" className="text-sm text-forest">
             Saved. It is live on the site now.
           </p>
         )}

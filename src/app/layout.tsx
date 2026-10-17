@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
-import { Fraunces, Karla } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import { shareImage } from "@/lib/seo";
 import { site } from "@/lib/site";
 import "./globals.css";
 
 /*
-  Fraunces is a variable font, so no `weight` is passed — asking for fixed
-  weights here would drop the variable file and take the SOFT and WONK axes
-  down with it. Those two axes are the whole reason it is this face and not
-  Playfair: they are what make the headings feel cut by a person.
+  Newsreader for headings, Inter for everything else. Newsreader is a text
+  serif drawn for reading on screens — sober where the old display face was
+  playful — and its optical-size axis keeps large headings from looking like
+  enlarged body type. Inter carries the navigation, the body and the forms.
 */
-const fraunces = Fraunces({
+const newsreader = Newsreader({
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
-  variable: "--font-fraunces",
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  variable: "--font-newsreader",
 });
 
-const karla = Karla({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-karla",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${karla.variable} h-full antialiased`}
+      className={`${newsreader.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full">{children}</body>
     </html>

@@ -53,8 +53,8 @@ export default async function ThanksPage({
         <div className="shell max-w-2xl">
           <Suspense
             fallback={
-              <div className="rounded-xl border border-marigold/30 bg-marigold/8 px-6 py-6">
-                <p className="font-display text-xl font-semibold">
+              <div className="rounded-xl border border-gold/30 bg-gold/8 px-6 py-6">
+                <p className="font-display text-xl font-medium">
                   Checking with Pesapal…
                 </p>
               </div>

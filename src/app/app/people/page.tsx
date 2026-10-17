@@ -46,7 +46,7 @@ export default async function PeoplePage() {
         ))}
       </ul>
 
-      <h2 className="font-display mt-14 text-2xl font-bold">Add someone</h2>
+      <h2 className="font-display mt-14 text-2xl font-medium">Add someone</h2>
       <p className="mt-2 leading-relaxed text-smoke">
         Choose a password with them and tell them what it is. They can use it to
         sign in at <code className="font-mono text-sm">/app</code>.

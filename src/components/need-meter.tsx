@@ -46,14 +46,14 @@ const tones: Record<
     muted: "text-smoke",
     // Marigold at brand value is 2.0:1 on a white card — the open figure is
     // the one number here worth acting on, so it cannot be the unreadable one.
-    emphasis: "text-marigold-ink",
+    emphasis: "text-gold-ink",
   },
   dark: {
     track: "bg-white/15",
     label: "text-white/50",
     figure: "text-white",
     muted: "text-white/60",
-    emphasis: "text-marigold",
+    emphasis: "text-gold",
   },
 };
 
@@ -90,11 +90,11 @@ export function NeedBar({
       */}
       <div className="relative h-full">
         <div
-          className="absolute inset-y-0 left-0 w-full origin-left bg-green/40 transition-transform duration-700"
+          className="absolute inset-y-0 left-0 w-full origin-left bg-forest/40 transition-transform duration-700"
           style={{ transform: `scaleX(${percentClaimed / 100})` }}
         />
         <div
-          className="absolute inset-y-0 left-0 w-full origin-left bg-green transition-transform duration-700"
+          className="absolute inset-y-0 left-0 w-full origin-left bg-forest transition-transform duration-700"
           style={{ transform: `scaleX(${percentReceived / 100})` }}
         />
       </div>
@@ -119,7 +119,7 @@ function Figure({
     <div>
       <dt className={`eyebrow ${colours.label}`}>{label}</dt>
       <dd
-        className={`font-display tabular mt-1 text-2xl font-semibold ${
+        className={`font-display tabular mt-1 text-2xl font-medium ${
           emphasis ? colours.emphasis : colours.figure
         }`}
       >

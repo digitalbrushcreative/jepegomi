@@ -97,8 +97,8 @@ export default async function AdminPartnersPage() {
         kind of job a button should do. It disappears the moment they are here.
       */}
       {!hasEncounter && (
-        <div className="mt-8 rounded border border-green/30 bg-green/6 p-6">
-          <h2 className="font-display text-lg font-bold">
+        <div className="mt-8 rounded border border-forest/30 bg-forest/6 p-6">
+          <h2 className="font-display text-lg font-medium">
             Encounter Church is not on this page yet
           </h2>
           <p className="mt-3 max-w-prose text-sm leading-relaxed text-smoke">
@@ -115,7 +115,7 @@ export default async function AdminPartnersPage() {
       )}
 
       <details className="mt-8 rounded border border-black/8 bg-white p-6">
-        <summary className="cursor-pointer font-medium hover:text-plum">
+        <summary className="cursor-pointer font-medium hover:text-forest">
           Add a partner by hand
         </summary>
         <p className="mt-4 max-w-prose text-sm leading-relaxed text-smoke">
@@ -129,7 +129,7 @@ export default async function AdminPartnersPage() {
       </details>
 
       {unverified.length > 0 && (
-        <p className="rounded border border-marigold/40 bg-marigold/8 px-5 py-4 text-sm leading-relaxed">
+        <p className="rounded border border-gold/40 bg-gold/8 px-5 py-4 text-sm leading-relaxed">
           <strong className="font-medium">
             {unverified.length} still to verify.
           </strong>{" "}
@@ -159,20 +159,20 @@ export default async function AdminPartnersPage() {
               <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h2 className="font-display text-xl font-bold">
+                    <h2 className="font-display text-xl font-medium">
                       {partner.name}
                     </h2>
                     {partner.verified ? (
-                      <span className="eyebrow rounded-full bg-green/12 px-3 py-1 text-green">
+                      <span className="eyebrow rounded-sm bg-forest/12 px-3 py-1 text-forest">
                         Verified
                       </span>
                     ) : (
-                      <span className="eyebrow rounded-full bg-marigold/20 px-3 py-1 text-clay">
+                      <span className="eyebrow rounded-sm bg-gold/20 px-3 py-1 text-clay">
                         Unverified
                       </span>
                     )}
                     {partner.hasLogin && (
-                      <span className="eyebrow rounded-full bg-plum/10 px-3 py-1 text-plum">
+                      <span className="eyebrow rounded-sm bg-forest/10 px-3 py-1 text-forest">
                         Has a login
                       </span>
                     )}
@@ -187,7 +187,7 @@ export default async function AdminPartnersPage() {
 
                   <a
                     href={`mailto:${partner.email}`}
-                    className="mt-1 inline-block font-mono text-xs text-plum underline underline-offset-4"
+                    className="mt-1 inline-block font-mono text-xs text-forest underline underline-offset-4"
                   >
                     {partner.email}
                   </a>
@@ -196,19 +196,19 @@ export default async function AdminPartnersPage() {
                 <dl className="flex gap-x-8">
                   <div>
                     <dt className="eyebrow text-smoke">Received</dt>
-                    <dd className="font-display tabular mt-1 text-xl font-semibold text-green">
+                    <dd className="font-display tabular mt-1 text-xl font-medium text-forest">
                       {usd(partner.receivedCents)}
                     </dd>
                   </div>
                   <div>
                     <dt className="eyebrow text-smoke">Claimed</dt>
-                    <dd className="font-display tabular mt-1 text-xl font-semibold">
+                    <dd className="font-display tabular mt-1 text-xl font-medium">
                       {usd(partner.claimedCents)}
                     </dd>
                   </div>
                   <div>
                     <dt className="eyebrow text-smoke">Items</dt>
-                    <dd className="font-display tabular mt-1 text-xl font-semibold">
+                    <dd className="font-display tabular mt-1 text-xl font-medium">
                       {partner.pledgeCount}
                     </dd>
                   </div>
@@ -230,14 +230,14 @@ export default async function AdminPartnersPage() {
                 */}
                 <Link
                   href={`/partners/preview/${partner.id}`}
-                  className="rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum"
+                  className="rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest"
                 >
                   See what they see
                 </Link>
               </div>
 
               <details className="mt-5">
-                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
                   Record a gift
                 </summary>
                 <div className="mt-5 border-t border-black/8 pt-5">
@@ -257,7 +257,7 @@ export default async function AdminPartnersPage() {
                 having to open twenty panels to find out.
               */}
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
                   Who else may see this
                   {(readers.get(partner.id)?.length ?? 0) > 0 &&
                     ` · ${readers.get(partner.id)!.length}`}
@@ -271,7 +271,7 @@ export default async function AdminPartnersPage() {
               </details>
 
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-plum">
+                <summary className="cursor-pointer text-sm font-medium text-smoke hover:text-forest">
                   Details &amp; login
                 </summary>
 
@@ -328,7 +328,7 @@ function SupporterList({
 
   return (
     <details className="mt-12 rounded border border-black/8 bg-white p-6">
-      <summary className="cursor-pointer font-medium hover:text-plum">
+      <summary className="cursor-pointer font-medium hover:text-forest">
         Asked about the figures · {confirmed.length + started.length}
       </summary>
 
