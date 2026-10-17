@@ -73,11 +73,11 @@ export function VideoFrame({
           />
           <span className="absolute inset-0 bg-charcoal/25 transition-colors group-hover:bg-charcoal/10" />
           <span className="absolute inset-0 flex items-center justify-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-marigold shadow-warm transition-transform group-hover:scale-110">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gold shadow-warm transition-transform">
               <svg
                 viewBox="0 0 24 24"
                 aria-hidden="true"
-                className="ml-1 h-7 w-7 fill-plum-deep"
+                className="ml-1 h-7 w-7 fill-forest-deep"
               >
                 <path d="M6 4.5v15l14-7.5z" />
               </svg>

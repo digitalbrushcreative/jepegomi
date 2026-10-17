@@ -29,20 +29,20 @@ function Entry({ update, showNeed }: { update: TimelineUpdate; showNeed?: boolea
       {/* The dot on the line. */}
       <span
         aria-hidden="true"
-        className="absolute top-2 left-0 h-3 w-3 rounded-full border-2 border-cream bg-marigold"
+        className="absolute top-2 left-0 h-3 w-3 rounded-full border-2 border-cream bg-gold"
       />
 
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
         <time
           dateTime={update.createdAt}
-          className="eyebrow text-plum"
+          className="eyebrow text-forest"
         >
           {formatDay(update.createdAt)}
         </time>
         {showNeed && update.needSlug && update.needTitle && (
           <Link
             href={`/needs/${update.needSlug}`}
-            className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-plum"
+            className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-forest"
           >
             {update.needTitle}
           </Link>

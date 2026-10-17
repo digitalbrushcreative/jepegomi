@@ -51,7 +51,7 @@ export function RelatedLinks({
         */}
         <h2
           id="related"
-          className="font-display text-sm font-bold tracking-[0.14em] text-plum uppercase"
+          className="font-display text-sm font-medium tracking-[0.14em] text-forest uppercase"
         >
           {heading}
         </h2>
@@ -60,11 +60,11 @@ export function RelatedLinks({
           {links.map((link) => (
             <li key={link.href}>
               <Link href={link.href} className="group block">
-                <span className="font-display text-xl font-semibold text-charcoal transition-colors group-hover:text-plum">
+                <span className="font-display text-xl font-medium text-charcoal transition-colors group-hover:text-forest">
                   {link.label}
                   <span
                     aria-hidden="true"
-                    className="ml-2 inline-block text-plum transition-transform group-hover:translate-x-1"
+                    className="ml-2 inline-block text-forest transition-transform group-hover:translate-x-1"
                   >
                     →
                   </span>

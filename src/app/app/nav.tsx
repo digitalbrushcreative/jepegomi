@@ -179,7 +179,7 @@ function activeHref(pathname: string, sections: NavSection[]) {
 
 function Badge({ count }: { count: number }) {
   return (
-    <span className="ml-auto min-w-5 rounded-full bg-marigold px-1.5 py-0.5 text-center text-[11px] font-bold text-brown tabular-nums">
+    <span className="ml-auto min-w-5 rounded-sm bg-gold px-1.5 py-0.5 text-center text-[11px] font-bold text-brown tabular-nums">
       {count}
     </span>
   );
@@ -247,7 +247,7 @@ function Rail({
                     {lit && (
                       <span
                         aria-hidden="true"
-                        className="absolute inset-y-1.5 -left-3 w-[3px] rounded-r bg-marigold"
+                        className="absolute inset-y-1.5 -left-3 w-[3px] rounded-r bg-gold"
                       />
                     )}
                     <Icon name={item.icon} />
@@ -366,7 +366,7 @@ export function AdminChrome({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-plum-deep transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-forest-deep transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -377,7 +377,7 @@ export function AdminChrome({
             className="h-8 w-auto shrink-0 text-white"
           />
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold tracking-[0.16em] text-marigold uppercase">
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-gold uppercase">
               Manage
             </p>
             <p className="truncate text-xs text-cream/50">The site & the giving</p>

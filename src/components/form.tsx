@@ -13,7 +13,7 @@ import { CAPTCHA_FIELD, CHECK_FIELD, CHECK_QUESTION, TRAP } from "@/lib/forms";
  */
 
 export const inputClass =
-  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-plum focus:ring-2 focus:ring-plum/20";
+  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-forest focus:ring-2 focus:ring-forest/20";
 
 export function Field({
   label,
@@ -48,7 +48,7 @@ export function FormError({ children }: { children?: string }) {
   if (!children) return null;
 
   return (
-    <p role="alert" className="rounded-md bg-plum/8 px-4 py-3 text-sm text-plum">
+    <p role="alert" className="rounded-md bg-forest/8 px-4 py-3 text-sm text-forest">
       {children}
     </p>
   );
@@ -302,15 +302,15 @@ export function CaptchaNotice({ className = "" }: { className?: string }) {
  *
  * Green is the giving colour and nothing else's — the rule components/ui.tsx
  * keeps for links and buttons, kept here too. A contact form is not an act of
- * giving, so it gets plum; so does a button that only turns a page.
+ * giving, so it gets ink; so does a button that only turns a page.
  */
 export function buttonClass(tone: "plum" | "green" = "plum") {
   const fill =
     tone === "green"
-      ? "bg-green hover:bg-green-light"
-      : "bg-plum hover:bg-plum-light";
+      ? "bg-forest hover:bg-forest-light"
+      : "bg-charcoal hover:bg-charcoal/85";
 
-  return `inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full px-7 py-4 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60 ${fill}`;
+  return `inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-sm px-7 py-4 text-[0.95rem] font-bold text-white transition-colors disabled:translate-y-0 disabled:opacity-60 ${fill}`;
 }
 
 export function Submit({
@@ -359,8 +359,8 @@ export function Done({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-green/30 bg-green/8 px-6 py-6">
-      <p className="font-display text-xl font-semibold">{heading}</p>
+    <div className="rounded-xl border border-forest/30 bg-forest/8 px-6 py-6">
+      <p className="font-display text-xl font-medium">{heading}</p>
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-smoke">
         {children}
       </div>

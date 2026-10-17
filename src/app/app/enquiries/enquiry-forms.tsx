@@ -9,7 +9,7 @@ import {
 } from "./actions";
 
 const quietButton =
-  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum disabled:opacity-60";
+  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest disabled:opacity-60";
 
 /**
  * Where an enquiry has got to.
@@ -42,7 +42,7 @@ export function StatusButtons({
           type="button"
           disabled={pending}
           onClick={() => move("answered")}
-          className="cursor-pointer rounded bg-green px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60"
+          className="cursor-pointer rounded bg-forest px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60"
         >
           {pending ? "Saving…" : "I have written back"}
         </button>
@@ -97,7 +97,7 @@ export function DeleteButton({ id, parentName }: { id: string; parentName: strin
           void deleteEnquiryAction(id);
         });
       }}
-      className="cursor-pointer text-sm font-medium text-smoke underline underline-offset-4 transition-colors hover:text-plum disabled:opacity-60"
+      className="cursor-pointer text-sm font-medium text-smoke underline underline-offset-4 transition-colors hover:text-forest disabled:opacity-60"
     >
       {pending ? "Deleting…" : "Delete this"}
     </button>
@@ -121,7 +121,7 @@ export function NoteForm({ id, note }: { id: string; note: string }) {
           rows={2}
           defaultValue={note}
           placeholder="Visited on the 14th, wants Grade 2 in January."
-          className="mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20"
+          className="mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20"
         />
       </label>
 
@@ -130,12 +130,12 @@ export function NoteForm({ id, note }: { id: string; note: string }) {
           {pending ? "Saving…" : "Save note"}
         </button>
         {state?.error && (
-          <span role="alert" className="text-sm text-plum">
+          <span role="alert" className="text-sm text-forest">
             {state.error}
           </span>
         )}
         {state?.saved && (
-          <span role="status" className="text-sm text-green">
+          <span role="status" className="text-sm text-forest">
             Saved.
           </span>
         )}

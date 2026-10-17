@@ -22,7 +22,7 @@ function SignOutButton() {
     <form action={partnerSignOutAction}>
       <button
         type="submit"
-        className="cursor-pointer rounded-full border-2 border-white/25 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:border-marigold hover:text-marigold"
+        className="cursor-pointer rounded-sm border-2 border-white/25 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:border-gold hover:text-gold"
       >
         Sign out
       </button>
@@ -51,15 +51,14 @@ function SignOutButton() {
 function SupporterWelcome({ email }: { email: string }) {
   return (
     <>
-      <section className="relative overflow-hidden bg-plum-deep px-6 pt-20 pb-8 sm:pt-24">
-        <div className="grain-layer" />
+      <section className="relative overflow-hidden bg-sand px-6 pt-20 pb-8 sm:pt-24">
         <div className="shell relative flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="eyebrow text-marigold">Signed in</p>
-            <h1 className="font-display mt-3 text-4xl font-bold text-balance text-white sm:text-5xl">
+            <p className="eyebrow text-gold-ink">Signed in</p>
+            <h1 className="font-display mt-3 text-4xl font-medium text-balance text-charcoal sm:text-5xl">
               The figures are open
             </h1>
-            <p className="mt-3 text-white/60">{email}</p>
+            <p className="mt-3 text-smoke">{email}</p>
           </div>
           <SignOutButton />
         </div>
@@ -86,7 +85,7 @@ function SupporterWelcome({ email }: { email: string }) {
         </div>
 
         <div className="mt-14 rounded-2xl border border-dashed border-smoke/30 bg-sand p-7">
-          <p className="eyebrow text-plum">Given before?</p>
+          <p className="eyebrow text-forest">Given before?</p>
           <p className="mt-3 max-w-xl leading-relaxed text-smoke">
             Then it is filed under the address the gift came from, which may not
             be this one — a church office, or a treasurer&apos;s. Sign out and
@@ -94,7 +93,7 @@ function SupporterWelcome({ email }: { email: string }) {
             for, and how the work is going.{" "}
             <Link
               href="/partners"
-              className="font-medium text-plum underline underline-offset-4"
+              className="font-medium text-forest underline underline-offset-4"
             >
               Back to sign in
             </Link>
@@ -146,7 +145,7 @@ async function OwnDashboard() {
         reader ? (
           <div className="mb-10 border-b border-white/15 pb-6 text-white">
             <p className="max-w-2xl text-sm leading-relaxed">
-              <span className="eyebrow mr-3 rounded-full bg-marigold px-3 py-1 text-plum-deep">
+              <span className="eyebrow mr-3 rounded-sm bg-gold px-3 py-1 text-forest-deep">
                 On their behalf
               </span>
               You are seeing{" "}
@@ -173,9 +172,9 @@ export default function PartnerDashboardPage() {
   return (
     <Suspense
       fallback={
-        <section className="bg-plum-deep px-6 pt-20 pb-14 sm:pt-24">
+        <section className="bg-sand px-6 pt-20 pb-14 sm:pt-24">
           <div className="shell">
-            <p className="text-white/60">Loading…</p>
+            <p className="text-smoke">Loading…</p>
           </div>
         </section>
       }

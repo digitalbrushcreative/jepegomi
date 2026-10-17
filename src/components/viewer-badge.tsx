@@ -74,7 +74,7 @@ export async function ViewerBadge() {
     <Link
       href={href}
       title={`Signed in — ${whose}`}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/15 text-xs font-bold tracking-wide text-white transition-colors hover:border-white/60 hover:bg-white/25"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-charcoal/15 bg-sand text-xs font-bold tracking-wide text-charcoal transition-colors hover:border-charcoal/40"
     >
       <span aria-hidden="true">{initialsOf(viewer.name)}</span>
       <span className="sr-only">

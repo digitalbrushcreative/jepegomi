@@ -4,7 +4,6 @@ import { paragraphs } from "@/cms/prose";
 import { EnrolmentEnquiryForm } from "@/app/(site)/academy/enquiry-form";
 import { EditorOnly } from "@/components/editor-only";
 import { AcademyLogo } from "@/components/logos";
-import { ClothEdge } from "@/components/pattern";
 import { PhotoBand, PhotoStrip } from "@/components/photos";
 import {
   ButtonLink,
@@ -125,20 +124,20 @@ export default async function AcademyPage() {
 
   return (
     <>
-      <section className="bg-plum-deep px-6 pt-28 pb-20">
+      <section className="bg-sand px-6 pt-28 pb-20">
         <div className="shell">
           <AcademyLogo
-            variant="mono"
+            variant="color"
             title="Jepegomi Academy"
-            className="h-20 w-auto text-white"
+            className="h-20 w-auto text-charcoal"
           />
-          <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+          <h1 className="font-display mt-4 text-4xl leading-tight font-medium text-charcoal sm:text-5xl">
             {academy.heading}
           </h1>
           {paragraphs(academy.intro).map((text) => (
             <p
               key={text}
-              className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+              className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke"
             >
               {text}
             </p>
@@ -178,7 +177,7 @@ export default async function AcademyPage() {
             <dl className="mt-12 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {confirmed.map((detail) => (
                 <div key={detail.label} className="bg-white p-6">
-                  <dt className="eyebrow text-plum">{detail.label}</dt>
+                  <dt className="eyebrow text-forest">{detail.label}</dt>
                   <dd className="mt-2 font-medium">{detail.value}</dd>
                 </div>
               ))}
@@ -233,7 +232,6 @@ export default async function AcademyPage() {
         arrived is not ready to ask; one who has read this far is.
       */}
       <section className="relative bg-sand px-6 py-20 sm:py-24">
-        <ClothEdge className="text-sand" />
 
         <div className="shell">
           <div className="mx-auto max-w-2xl">

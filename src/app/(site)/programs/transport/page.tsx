@@ -73,16 +73,16 @@ export default async function TransportPage() {
 
   return (
     <>
-      <section className="bg-charcoal px-6 pt-28 pb-20">
+      <section className="bg-sand px-6 pt-28 pb-20">
         <div className="shell">
-          <Icon name="bus" className="h-16 w-16 text-marigold" />
-          <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+          <Icon name="bus" className="h-16 w-16 text-gold-ink" />
+          <h1 className="font-display mt-4 text-4xl leading-tight font-medium text-charcoal sm:text-5xl">
             {transport.heading}
           </h1>
           {paragraphs(transport.intro).map((text) => (
             <p
               key={text}
-              className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+              className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke"
             >
               {text}
             </p>
@@ -159,8 +159,8 @@ export default async function TransportPage() {
           <dl className="relative z-10 grid gap-px overflow-hidden rounded-2xl bg-black/8 shadow-warm">
             {figures.map((figure) => (
               <div key={figure.label} className="bg-white p-7">
-                <dt className="eyebrow text-plum">{figure.label}</dt>
-                <dd className="font-display mt-3 text-3xl font-semibold">
+                <dt className="eyebrow text-forest">{figure.label}</dt>
+                <dd className="font-display mt-3 text-3xl font-medium">
                   {figure.value}
                 </dd>
                 <dd className="mt-2 text-sm leading-relaxed text-smoke">
@@ -201,8 +201,8 @@ export default async function TransportPage() {
                 key={way.title}
                 className="rounded-2xl bg-white p-7 shadow-warm"
               >
-                <Icon name="bus" className="h-8 w-8 text-plum" />
-                <h3 className="font-display mt-4 text-xl font-semibold">
+                <Icon name="bus" className="h-8 w-8 text-forest" />
+                <h3 className="font-display mt-4 text-xl font-medium">
                   {way.title}
                 </h3>
                 {paragraphs(way.body).map((text) => (
@@ -223,7 +223,7 @@ export default async function TransportPage() {
             <ButtonLink href="/give?for=transport#pledge" icon="give">
               Give toward the bus
             </ButtonLink>
-            <ButtonLink href="/academy" variant="ghost" className="text-plum">
+            <ButtonLink href="/academy" variant="ghost" className="text-forest">
               The school it serves
             </ButtonLink>
           </div>

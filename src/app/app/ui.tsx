@@ -21,7 +21,7 @@ export function PageHeader({
   return (
     <header className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b border-black/8 pb-6">
       <div className="min-w-0">
-        <h1 className="font-display text-3xl font-bold">{title}</h1>
+        <h1 className="font-display text-3xl font-medium">{title}</h1>
         {intro && (
           <p className="mt-2 max-w-2xl leading-relaxed text-smoke">{intro}</p>
         )}
@@ -52,7 +52,7 @@ export function Panel({
       {title && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/8 px-5 py-3.5">
           <div className="min-w-0">
-            <h2 className="font-display text-base font-bold">{title}</h2>
+            <h2 className="font-display text-base font-medium">{title}</h2>
             {hint && <p className="mt-0.5 text-xs text-smoke">{hint}</p>}
           </div>
           {actions}
@@ -85,7 +85,7 @@ export function Stat({
   const tones = {
     plain: "text-charcoal",
     waiting: "text-clay",
-    good: "text-green",
+    good: "text-forest",
   };
 
   const body = (
@@ -94,7 +94,7 @@ export function Stat({
         {label}
       </p>
       <p
-        className={`font-display mt-2 text-3xl font-bold tabular-nums ${tones[tone]}`}
+        className={`font-display mt-2 text-3xl font-medium tabular-nums ${tones[tone]}`}
       >
         {value}
       </p>
@@ -106,7 +106,7 @@ export function Stat({
     "block rounded-lg border border-black/8 bg-white p-5 transition-colors";
 
   return href ? (
-    <Link href={href} className={`${className} hover:border-plum/30 hover:bg-sand/60`}>
+    <Link href={href} className={`${className} hover:border-forest/30 hover:bg-sand/60`}>
       {body}
     </Link>
   ) : (

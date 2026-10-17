@@ -82,9 +82,7 @@ function Prose({ text, className = "" }: { text: string; className?: string }) {
 
   What it leaves out is deliberate too. No icons, no shadows, no cloth edges, no
   rotating slides and no figure behind a blur: photographs carry the weight,
-  and the type and the white space do the rest. The rest of the site keeps its
-  warmer furniture; the front page is the institution's front door, and it is
-  dressed for that.
+  and the type and the white space do the rest.
 
   The appeals that used to fill the middle of this page — the kitchen's pot, the
   bus — are on /projects and /needs, one link away from the partnership section.
@@ -110,14 +108,11 @@ export default async function HomePage() {
   return (
     <>
       {/*
-        One photograph, not five. The header is transparent over it and its
-        links are white, so the top of the picture carries a dark band whatever
-        is in it — the promise every hero on this site makes to the header (see
-        components/site-header.tsx). The words sit at the bottom-left over a
-        second, heavier shade, which is what keeps them readable on whatever
-        photograph an editor chooses later.
+        One photograph, not five. The words sit at the bottom-left over a
+        shade, which is what keeps them readable on whatever photograph an
+        editor chooses later.
       */}
-      <section className="relative isolate flex h-[78svh] max-h-[56rem] min-h-[34rem] items-end overflow-hidden bg-charcoal px-6 text-white">
+      <section className="relative isolate mt-16 flex h-[calc(80svh-4rem)] max-h-[52rem] min-h-[32rem] items-end overflow-hidden bg-charcoal px-6 text-white">
         <Image
           src={home.heroPhoto}
           alt={home.heroPhotoAlt}
@@ -126,12 +121,11 @@ export default async function HomePage() {
           sizes="100vw"
           className="-z-10 object-cover"
         />
-        <div className="absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-black/60 via-black/25 to-transparent" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/45 to-black/0" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/45 via-black/15 to-transparent" />
 
         <div className="shell w-full pb-14 sm:pb-20">
-          <h1 className="font-display max-w-4xl text-[2.75rem] leading-[1.02] font-medium text-balance sm:text-6xl lg:text-[5.25rem]">
+          <h1 className="font-display max-w-4xl text-[2.4rem] leading-[1.05] font-normal tracking-tight text-balance sm:text-5xl lg:text-[4.25rem]">
             {home.heroHeading}
           </h1>
 
@@ -150,8 +144,8 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-9 flex flex-wrap gap-x-8 gap-y-4">
-            <ArrowLink href="/about">Discover our story</ArrowLink>
-            <ArrowLink href="#ministries">Explore our ministries</ArrowLink>
+            <ArrowLink href="/about">About the ministry</ArrowLink>
+            <ArrowLink href="#ministries">The four ministries</ArrowLink>
           </div>
         </div>
       </section>
@@ -161,14 +155,14 @@ export default async function HomePage() {
         <div className="shell grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-6">
             <Eyebrow>{home.introLabel}</Eyebrow>
-            <h2 className="font-display mt-4 text-4xl leading-[1.08] font-medium text-balance sm:text-5xl">
+            <h2 className="font-display mt-4 text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
               {home.introHeading}
             </h2>
             <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke sm:text-xl">
               <Prose text={home.introBody} />
             </div>
-            <ArrowLink href="/about" className="mt-9 text-plum">
-              Our story and leadership
+            <ArrowLink href="/about" className="mt-9 text-forest">
+              More about the ministry
             </ArrowLink>
           </div>
 
@@ -194,7 +188,7 @@ export default async function HomePage() {
         className="scroll-mt-20 border-t border-charcoal/10 px-6 py-20 sm:py-28"
       >
         <div className="shell">
-          <h2 className="font-display max-w-2xl text-4xl leading-[1.08] font-medium text-balance sm:text-5xl">
+          <h2 className="font-display max-w-2xl text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
             {home.ministriesHeading}
           </h2>
 
@@ -220,7 +214,7 @@ export default async function HomePage() {
                   <div className="mt-3 max-w-lg leading-relaxed text-smoke">
                     <Prose text={ministry.body} />
                   </div>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-plum">
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-forest">
                     {ministry.cta}
                     <span
                       aria-hidden="true"
@@ -244,7 +238,7 @@ export default async function HomePage() {
       <section className="bg-sand px-6 py-20 sm:py-28">
         <div className="shell">
           <Eyebrow>{home.evidenceLabel}</Eyebrow>
-          <h2 className="font-display mt-4 max-w-2xl text-4xl leading-[1.08] font-medium text-balance sm:text-5xl">
+          <h2 className="font-display mt-4 max-w-2xl text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
             {home.evidenceHeading}
           </h2>
 
@@ -257,7 +251,7 @@ export default async function HomePage() {
                 <dt className="mt-3 max-w-[16rem] leading-snug text-smoke">
                   {figure.label}
                 </dt>
-                <dd className="font-display tabular text-6xl leading-none font-medium text-plum sm:text-7xl">
+                <dd className="font-display tabular text-6xl leading-none font-medium text-forest sm:text-7xl">
                   {figure.value}
                 </dd>
               </div>
@@ -271,11 +265,11 @@ export default async function HomePage() {
           )}
 
           <div className="mt-12 flex flex-col gap-6 border-t border-charcoal/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-display max-w-xl text-xl leading-snug text-pretty italic">
+            <p className="max-w-xl leading-relaxed text-pretty text-smoke">
               {home.evidenceNote}
             </p>
-            <ArrowLink href="/projects" className="shrink-0 text-plum">
-              See our work
+            <ArrowLink href="/academy" className="shrink-0 text-forest">
+              About the academy
             </ArrowLink>
           </div>
         </div>
@@ -296,13 +290,13 @@ export default async function HomePage() {
 
           <div className="lg:col-span-5 lg:col-start-8">
             <Eyebrow>{home.storyLabel}</Eyebrow>
-            <h2 className="font-display mt-4 text-3xl leading-[1.12] font-medium text-balance sm:text-[2.6rem]">
+            <h2 className="font-display mt-4 text-3xl leading-[1.12] font-normal tracking-tight text-balance sm:text-[2.6rem]">
               {home.storyHeading}
             </h2>
             <div className="mt-6 text-lg leading-relaxed text-pretty text-smoke">
               <Prose text={home.storyBody} />
             </div>
-            <ArrowLink href={home.storyHref} className="mt-9 text-plum">
+            <ArrowLink href={home.storyHref} className="mt-9 text-forest">
               {home.storyCta}
             </ArrowLink>
           </div>
@@ -310,70 +304,64 @@ export default async function HomePage() {
       </section>
 
       {/*
-        The leadership, given a section of its own and the page's one dark
-        ground. Plum-deep rather than black: the portrait was taken against a
-        violet backdrop, and the two are close enough to read as one surface.
+        The leadership. The portrait is the cut-out — Simon & Joyce with no
+        backdrop — standing on the foot of the section rather than framed in a
+        box, so they are in the page instead of pinned to it.
 
         The pastors' own words appear only once they have written them. The
         section stands without them; a quotation written on their behalf would
         not.
       */}
-      <section className="bg-plum-deep px-6 py-20 text-white sm:py-28">
-        <div className="shell grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden rounded-sm bg-plum lg:col-span-5 lg:max-w-none">
-            <Image
-              src={home.leadershipPhoto}
-              alt={home.leadershipPhotoAlt}
-              fill
-              sizes="(max-width: 1024px) 28rem, 460px"
-              className="object-cover object-top"
-            />
-          </div>
-
-          <div className="lg:col-span-6 lg:col-start-7">
-            <Eyebrow className="text-marigold-light!">
-              {home.leadershipLabel}
-            </Eyebrow>
-            <h2 className="font-display mt-4 text-4xl leading-[1.08] font-medium text-balance sm:text-5xl">
+      <section className="overflow-hidden bg-sand px-6 pt-20 sm:pt-28">
+        <div className="shell grid items-end gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="pb-4 lg:col-span-6 lg:col-start-7 lg:row-start-1 lg:self-center lg:pb-28">
+            <Eyebrow>{home.leadershipLabel}</Eyebrow>
+            <h2 className="font-display mt-4 text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
               {home.leadershipHeading}
             </h2>
-            <p className="mt-4 text-sm font-medium tracking-wide text-white/70">
-              {site.leaders}
-            </p>
-            <div className="mt-7 text-lg leading-relaxed text-pretty text-white/85">
+            <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke">
               <Prose text={home.leadershipBody} />
             </div>
 
             {home.leadershipMessage.trim() && (
-              <figure className="mt-10 border-l-2 border-marigold pl-6">
+              <figure className="mt-10 border-l-2 border-gold pl-6">
                 <blockquote className="font-display text-xl leading-snug text-pretty italic sm:text-2xl">
                   <Prose text={home.leadershipMessage} />
                 </blockquote>
-                <figcaption className="mt-4 text-sm text-white/70">
+                <figcaption className="mt-4 text-sm text-smoke">
                   — {site.leaders}
                 </figcaption>
               </figure>
             )}
 
-            <ArrowLink href="/about" className="mt-10 text-white">
-              Meet our leadership
+            <ArrowLink href="/about" className="mt-10 text-forest">
+              More about Simon & Joyce
             </ArrowLink>
           </div>
+
+          <Image
+            src={home.leadershipPhoto}
+            alt={home.leadershipPhotoAlt}
+            width={800}
+            height={1034}
+            sizes="(max-width: 1024px) 20rem, 420px"
+            className="mx-auto block w-72 sm:w-80 lg:col-span-5 lg:row-start-1 lg:w-full lg:max-w-[26rem]"
+          />
         </div>
       </section>
 
-      {/* Partnership: the first and only invitation to give on the page. */}
+      {/* Giving: the first and only invitation to give on the page. */}
       <section className="px-6 py-20 sm:py-28">
         <div className="shell grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-6">
             <Eyebrow>{home.partnerLabel}</Eyebrow>
-            <h2 className="font-display mt-4 text-4xl leading-[1.08] font-medium text-balance sm:text-5xl">
+            <h2 className="font-display mt-4 text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
               {home.partnerHeading}
             </h2>
             <div className="mt-7 text-lg leading-relaxed text-pretty text-smoke">
               <Prose text={home.partnerBody} />
             </div>
-            <ArrowLink href="/projects" className="mt-9 text-plum">
+            <ArrowLink href="/projects" className="mt-9 text-forest">
               {home.partnerCta}
             </ArrowLink>
           </div>
@@ -403,15 +391,15 @@ export default async function HomePage() {
 
         <div className="shell">
           <div className="max-w-2xl">
-            <h2 className="font-display text-4xl leading-[1.08] font-medium text-balance sm:text-5xl">
+            <h2 className="font-display text-4xl leading-[1.1] font-normal tracking-tight text-balance sm:text-5xl">
               {home.welcomeHeading}
             </h2>
             <div className="mt-6 text-lg leading-relaxed text-pretty text-white/85">
               <Prose text={home.welcomeBody} />
             </div>
             <div className="mt-10 flex flex-wrap gap-x-8 gap-y-4">
-              <ArrowLink href="/church">Visit Jepegomi</ArrowLink>
-              <ArrowLink href="/contact">Get in touch</ArrowLink>
+              <ArrowLink href="/church">Visiting the church</ArrowLink>
+              <ArrowLink href="/contact">Contact us</ArrowLink>
             </div>
           </div>
         </div>

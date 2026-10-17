@@ -25,8 +25,8 @@ export function GivingDetailsForm({ email }: { email: string }) {
 
   if (state?.done) {
     return (
-      <div className="mx-auto mt-9 max-w-lg rounded-2xl border border-marigold/30 bg-white/10 px-6 py-6 text-left">
-        <p className="font-display text-xl font-semibold text-white">
+      <div className="mx-auto mt-9 max-w-lg rounded-2xl border border-gold/30 bg-white/10 px-6 py-6 text-left">
+        <p className="font-display text-xl font-medium text-white">
           On its way to {state.done.email}.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-white/65">
@@ -51,14 +51,14 @@ export function GivingDetailsForm({ email }: { email: string }) {
             required
             autoComplete="email"
             placeholder="you@example.com"
-            className="w-full rounded-full border border-white/25 bg-white/10 px-6 py-3.5 text-white placeholder:text-white/40 outline-none transition-colors focus:border-marigold focus:bg-white/15"
+            className="w-full rounded-sm border border-white/25 bg-white/10 px-6 py-3.5 text-white placeholder:text-white/40 outline-none transition-colors focus:border-gold focus:bg-white/15"
           />
         </label>
 
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-full bg-green px-7 py-3.5 text-[0.95rem] font-bold whitespace-nowrap text-white shadow-warm transition-all hover:-translate-y-0.5 hover:bg-green-light disabled:translate-y-0 disabled:opacity-60"
+          className="inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-sm bg-forest px-7 py-3.5 text-[0.95rem] font-bold whitespace-nowrap text-white shadow-warm transition-all hover:bg-forest-light disabled:translate-y-0 disabled:opacity-60"
         >
           <Icon name="give" className="h-[1.15em] w-[1.15em]" />
           {pending ? "Sending…" : "Send me the details"}
@@ -70,7 +70,7 @@ export function GivingDetailsForm({ email }: { email: string }) {
       {state?.error && (
         <p
           role="alert"
-          className="mt-4 rounded-xl bg-marigold/15 px-4 py-3 text-sm leading-relaxed text-marigold-light"
+          className="mt-4 rounded-xl bg-gold/15 px-4 py-3 text-sm leading-relaxed text-gold-light"
         >
           {state.error}
         </p>

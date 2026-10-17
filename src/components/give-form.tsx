@@ -186,7 +186,7 @@ function StepMarker({
     <p
       ref={ref}
       tabIndex={-1}
-      className="eyebrow mb-6 block text-plum outline-none"
+      className="eyebrow mb-6 block text-forest outline-none"
     >
       Step {index} of 2 <span className="text-smoke">· {title}</span>
     </p>
@@ -211,9 +211,9 @@ function ChosenSummary({
   onChange: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-xl border border-green/25 bg-green/8 px-4 py-3.5">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-xl border border-forest/25 bg-forest/8 px-4 py-3.5">
       <span className="min-w-0">
-        <span className="font-display tabular text-lg font-semibold text-green">
+        <span className="font-display tabular text-lg font-medium text-forest">
           {amount}
         </span>{" "}
         <span className="text-sm text-smoke">towards {towards}</span>
@@ -221,7 +221,7 @@ function ChosenSummary({
       <button
         type="button"
         onClick={onChange}
-        className="cursor-pointer text-sm font-medium text-plum underline underline-offset-4"
+        className="cursor-pointer text-sm font-medium text-forest underline underline-offset-4"
       >
         Change
       </button>
@@ -254,7 +254,7 @@ function Thanks({
         Anything else, write to{" "}
         <a
           href={`mailto:${email}`}
-          className="font-medium text-plum underline underline-offset-4"
+          className="font-medium text-forest underline underline-offset-4"
         >
           {email}
         </a>
@@ -300,7 +300,7 @@ function Choice({
   return (
     <label
       className={`flex cursor-pointer items-start gap-3.5 border-b border-sand-deep px-4 py-3.5 transition-colors last:border-b-0 ${
-        checked ? "bg-green/8" : "hover:bg-sand/60"
+        checked ? "bg-forest/8" : "hover:bg-sand/60"
       }`}
     >
       <input
@@ -310,7 +310,7 @@ function Choice({
         checked={checked}
         onChange={onChoose}
         required
-        className="mt-1 h-4 w-4 shrink-0 accent-green"
+        className="mt-1 h-4 w-4 shrink-0 accent-forest"
       />
       {/*
         Still wrapping, and still `items-baseline`: a title long enough to run
@@ -321,7 +321,7 @@ function Choice({
       <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span className="font-medium">{title}</span>
         {figure && (
-          <span className="tabular text-sm font-bold text-green">{figure}</span>
+          <span className="tabular text-sm font-bold text-forest">{figure}</span>
         )}
       </span>
     </label>
@@ -364,7 +364,7 @@ function GroupHeading({
   */
   return (
     <div className="sticky top-0 z-10 border-b border-sand-deep bg-sand px-4 py-2.5">
-      {project && <p className="eyebrow text-plum">{project}</p>}
+      {project && <p className="eyebrow text-forest">{project}</p>}
       {part && (
         <p className="mt-1 text-sm font-semibold text-charcoal">{part}</p>
       )}
@@ -412,14 +412,14 @@ function SelectedFigure({
   if (openCents === undefined && !pending) return null;
 
   return (
-    <div className="rounded-xl border border-green/25 bg-green/8 px-5 py-4">
-      <p className="eyebrow text-green">{title}</p>
+    <div className="rounded-xl border border-forest/25 bg-forest/8 px-5 py-4">
+      <p className="eyebrow text-forest">{title}</p>
 
       {openCents === undefined ? (
         <p className="mt-1.5 text-sm text-smoke">Looking up what this costs…</p>
       ) : isItem ? (
         <>
-          <p className="font-display tabular mt-1 text-2xl font-semibold text-green">
+          <p className="font-display tabular mt-1 text-2xl font-medium text-forest">
             {usd(openCents)} still open
           </p>
           {wholeCents !== undefined && wholeCents !== openCents && (
@@ -430,7 +430,7 @@ function SelectedFigure({
         </>
       ) : (
         <>
-          <p className="font-display tabular mt-1 text-2xl font-semibold text-green">
+          <p className="font-display tabular mt-1 text-2xl font-medium text-forest">
             {usd(openCents)}
           </p>
           <p className="mt-0.5 text-sm text-smoke">
@@ -933,7 +933,7 @@ export function GiveForm({
                 <button
                   type="submit"
                   disabled={pending}
-                  className="cursor-pointer font-medium text-plum underline underline-offset-4 disabled:opacity-60"
+                  className="cursor-pointer font-medium text-forest underline underline-offset-4 disabled:opacity-60"
                 >
                   I&apos;d rather send it another way
                 </button>
@@ -1142,7 +1142,7 @@ export function GiveForm({
                     key={suggestion}
                     type="button"
                     onClick={() => setDesignation(suggestion)}
-                    className="cursor-pointer rounded-full border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-plum hover:text-plum"
+                    className="cursor-pointer rounded-sm border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-forest hover:text-forest"
                   >
                     {suggestion}
                   </button>
@@ -1187,8 +1187,8 @@ export function GiveForm({
                   : "Whatever you can. Nothing is taken now — this tells us what to expect, and what to write back to you about."
             }
           >
-            <div className="mt-2 flex items-center gap-2 rounded-md border border-black/15 bg-white px-4 py-3 focus-within:border-plum focus-within:ring-2 focus-within:ring-plum/20">
-              <span className="font-display text-lg font-semibold text-smoke">$</span>
+            <div className="mt-2 flex items-center gap-2 rounded-md border border-black/15 bg-white px-4 py-3 focus-within:border-forest focus-within:ring-2 focus-within:ring-forest/20">
+              <span className="font-display text-lg font-medium text-smoke">$</span>
               <input
                 name="amount"
                 inputMode="decimal"
@@ -1208,7 +1208,7 @@ export function GiveForm({
                   key={cents}
                   type="button"
                   onClick={() => setAmount(String(cents / 100))}
-                  className="cursor-pointer rounded-full border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-green hover:text-green"
+                  className="cursor-pointer rounded-sm border-2 border-black/12 px-4 py-1.5 text-sm font-bold text-smoke transition-colors hover:border-forest hover:text-forest"
                 >
                   {cents === openCents ? `All of it — ${usd(cents)}` : usd(cents)}
                 </button>

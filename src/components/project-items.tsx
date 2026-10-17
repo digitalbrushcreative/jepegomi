@@ -101,7 +101,7 @@ export async function ProjectItems({ area }: { area: string }) {
           <div key={group.part?.id ?? "loose"} className="mt-12">
             {group.part && (
               <div className="mx-auto max-w-2xl text-center">
-                <h3 className="font-display text-xl font-semibold">
+                <h3 className="font-display text-xl font-medium">
                   {group.part.title}
                 </h3>
                 {group.part.summary && (
@@ -124,7 +124,7 @@ export async function ProjectItems({ area }: { area: string }) {
                       name={(need.icon || areaOf(need.area).icon) as IconName}
                       className="h-8 w-8 text-clay"
                     />
-                    <p className="font-display mt-4 text-lg leading-snug font-semibold">
+                    <p className="font-display mt-4 text-lg leading-snug font-medium">
                       {need.title}
                     </p>
                     {need.summary && (
@@ -148,7 +148,7 @@ export async function ProjectItems({ area }: { area: string }) {
 
             {later.map((group) => (
               <div key={group.part?.id ?? "loose"} className="mt-6">
-                <h4 className="font-display text-lg font-semibold text-smoke">
+                <h4 className="font-display text-lg font-medium text-smoke">
                   {group.part?.title}
                 </h4>
                 <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
@@ -163,9 +163,9 @@ export async function ProjectItems({ area }: { area: string }) {
           </div>
         )}
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-forest px-8 py-7 shadow-warm">
           <p className="eyebrow text-white/70">Still needed for all of it</p>
-          <p className="font-display tabular text-4xl font-semibold text-marigold">
+          <p className="font-display tabular text-4xl font-medium text-gold">
             <Money cents={project.stillAskingCents} />
           </p>
         </div>
@@ -176,7 +176,7 @@ export async function ProjectItems({ area }: { area: string }) {
           </ButtonLink>
           <Link
             href="/needs"
-            className="text-sm font-bold text-plum underline underline-offset-4"
+            className="text-sm font-bold text-forest underline underline-offset-4"
           >
             See every line, and what is left on each
           </Link>

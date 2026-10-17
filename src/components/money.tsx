@@ -195,26 +195,26 @@ export function LockedFigures({
           <span className="tabular text-sm text-smoke">of $•,•••</span>
         </div>
         <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-sand-deep">
-          <div className="h-full w-3/5 rounded-full bg-green/50" />
+          <div className="h-full w-3/5 rounded-full bg-forest/50" />
         </div>
         <div className="mt-5 flex gap-10">
-          <span className="font-display tabular text-2xl font-semibold text-smoke">
+          <span className="font-display tabular text-2xl font-medium text-smoke">
             $•••
           </span>
-          <span className="font-display tabular text-2xl font-semibold text-smoke">
+          <span className="font-display tabular text-2xl font-medium text-smoke">
             $•,•••
           </span>
         </div>
       </div>
 
       <div className="relative mt-7">
-        <h3 className="font-display text-xl leading-snug font-semibold text-balance">
+        <h3 className="font-display text-xl leading-snug font-medium text-balance">
           {title}
         </h3>
         <p className="mt-2 max-w-md leading-relaxed text-smoke">{blurb}</p>
         <Link
           href="/partners"
-          className="mt-5 inline-flex rounded-full bg-plum px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-plum-deep"
+          className="mt-5 inline-flex rounded-sm bg-forest px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-forest-deep"
         >
           Sign in to see the figures
         </Link>
@@ -237,7 +237,7 @@ export function LockedNote({ className = "" }: { className?: string }) {
       Figures are shown to partners.{" "}
       <Link
         href="/partners"
-        className="font-medium text-plum underline underline-offset-4"
+        className="font-medium text-forest underline underline-offset-4"
       >
         Sign in to reveal the total cost and the breakdown
       </Link>{" "}

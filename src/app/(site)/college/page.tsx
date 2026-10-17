@@ -3,7 +3,6 @@ import { getContent } from "@/cms/content";
 import { paragraphs } from "@/cms/prose";
 import { EditorOnly } from "@/components/editor-only";
 import { BibleCollegeLogo } from "@/components/logos";
-import { ClothEdge } from "@/components/pattern";
 import { PhotoBand } from "@/components/photos";
 import { ButtonLink, Eyebrow, Placeholder, SectionTitle } from "@/components/ui";
 import { pageMeta } from "@/lib/seo";
@@ -62,20 +61,20 @@ export default async function CollegePage() {
 
   return (
     <>
-      <section className="bg-charcoal px-6 pt-28 pb-20">
+      <section className="bg-sand px-6 pt-28 pb-20">
         <div className="shell">
           <BibleCollegeLogo
-            variant="mono"
+            variant="color"
             title="Contextual Bible Training College"
-            className="h-20 w-auto text-white"
+            className="h-20 w-auto text-charcoal"
           />
-          <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+          <h1 className="font-display mt-4 text-4xl leading-tight font-medium text-charcoal sm:text-5xl">
             {college.heading}
           </h1>
           {paragraphs(college.intro).map((text) => (
             <p
               key={text}
-              className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+              className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke"
             >
               {text}
             </p>
@@ -102,7 +101,7 @@ export default async function CollegePage() {
             <dl className="mt-12 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {confirmed.map((detail) => (
                 <div key={detail.label} className="bg-white p-6">
-                  <dt className="eyebrow text-plum">{detail.label}</dt>
+                  <dt className="eyebrow text-forest">{detail.label}</dt>
                   <dd className="mt-2 font-medium">{detail.value}</dd>
                 </div>
               ))}
@@ -138,7 +137,6 @@ export default async function CollegePage() {
         takes — and until now the page made them write in to find out.
       */}
       <section className="relative bg-sand px-6 py-20 sm:py-24">
-        <ClothEdge className="text-sand" />
 
         <div className="shell">
           <SectionTitle>{college.feesTitle}</SectionTitle>
@@ -159,7 +157,7 @@ export default async function CollegePage() {
                     className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 p-6 sm:p-8"
                   >
                     <div>
-                      <p className="font-display text-lg font-bold">
+                      <p className="font-display text-lg font-medium">
                         {program.name}
                       </p>
                       <p className="mt-1 text-sm text-smoke">
@@ -167,7 +165,7 @@ export default async function CollegePage() {
                       </p>
                     </div>
                     <div className="sm:text-right">
-                      <p className="font-display text-xl font-bold text-plum">
+                      <p className="font-display text-xl font-medium text-forest">
                         Ksh {program.fee}
                         <span className="text-base font-normal text-smoke">
                           {" "}
@@ -191,8 +189,8 @@ export default async function CollegePage() {
             note above the college document in src/cms/schema.ts for why fees
             are the exception. Each line drops out on its own if it is cleared.
           */}
-          <div className="mt-10 rounded-2xl border border-plum/15 bg-white p-8 sm:p-10">
-            <h3 className="font-display text-2xl font-bold">
+          <div className="mt-10 rounded-2xl border border-forest/15 bg-white p-8 sm:p-10">
+            <h3 className="font-display text-2xl font-medium">
               {college.paymentsTitle}
             </h3>
 
@@ -205,8 +203,8 @@ export default async function CollegePage() {
                 .filter((line) => line.value !== "")
                 .map((line) => (
                   <div key={line.label}>
-                    <dt className="eyebrow text-plum">{line.label}</dt>
-                    <dd className="font-display mt-2 text-xl font-bold">
+                    <dt className="eyebrow text-forest">{line.label}</dt>
+                    <dd className="font-display mt-2 text-xl font-medium">
                       {line.value}
                     </dd>
                   </div>
@@ -224,7 +222,7 @@ export default async function CollegePage() {
             <ButtonLink href="/contact" variant="secondary">
               Ask about the college
             </ButtonLink>
-            <ButtonLink href="/church" variant="ghost" className="text-plum">
+            <ButtonLink href="/church" variant="ghost" className="text-forest">
               The church
             </ButtonLink>
           </div>

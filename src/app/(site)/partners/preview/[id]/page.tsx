@@ -66,7 +66,7 @@ async function Preview({ params }: { params: Params }) {
       notice={
         <div className="mb-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-b border-white/15 pb-6 text-white">
           <p className="text-sm leading-relaxed">
-            <span className="eyebrow mr-3 rounded-full bg-marigold px-3 py-1 text-plum-deep">
+            <span className="eyebrow mr-3 rounded-sm bg-gold px-3 py-1 text-forest-deep">
               Preview
             </span>
             This is what <strong className="font-semibold">{partner.name}</strong>{" "}
@@ -81,7 +81,7 @@ async function Preview({ params }: { params: Params }) {
 
           <Link
             href="/app/partners"
-            className="shrink-0 text-sm font-bold text-marigold underline underline-offset-4 hover:text-white"
+            className="shrink-0 text-sm font-bold text-gold underline underline-offset-4 hover:text-white"
           >
             Back to Partners
           </Link>
@@ -95,7 +95,7 @@ async function Preview({ params }: { params: Params }) {
         */
         <Link
           href="/app/partners"
-          className="rounded-full border-2 border-white/25 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:border-marigold hover:text-marigold"
+          className="rounded-sm border-2 border-white/25 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:border-gold hover:text-gold"
         >
           Back to /app
         </Link>
@@ -108,9 +108,9 @@ export default function PartnerPreviewPage({ params }: { params: Params }) {
   return (
     <Suspense
       fallback={
-        <section className="bg-plum-deep px-6 pt-20 pb-14 sm:pt-24">
+        <section className="bg-sand px-6 pt-20 pb-14 sm:pt-24">
           <div className="shell">
-            <p className="text-white/60">Loading…</p>
+            <p className="text-smoke">Loading…</p>
           </div>
         </section>
       }

@@ -114,10 +114,10 @@ function SlotCard({
         }}
         className={`relative flex aspect-[4/3] cursor-pointer items-center justify-center overflow-hidden rounded border-2 border-dashed transition-colors ${
           dragOver
-            ? "border-plum bg-plum/5"
+            ? "border-forest bg-forest/5"
             : error
-              ? "border-plum/50 bg-white"
-              : "border-black/15 bg-white hover:border-plum/50"
+              ? "border-forest/50 bg-white"
+              : "border-black/15 bg-white hover:border-forest/50"
         }`}
       >
         <input
@@ -141,7 +141,7 @@ function SlotCard({
           />
         ) : (
           <div className="px-4 text-center">
-            <p className="font-display text-3xl font-bold text-black/15">
+            <p className="font-display text-3xl font-medium text-black/15">
               {slot.label}
             </p>
             <p className="eyebrow mt-1 text-smoke/60">Drop photo</p>
@@ -156,7 +156,7 @@ function SlotCard({
       </label>
 
       <div className="mt-2 flex items-baseline justify-between gap-2">
-        <p className="eyebrow text-plum">
+        <p className="eyebrow text-forest">
           {slot.category
             ? categories.find((c) => c.id === slot.category)?.label
             : "Before / After"}
@@ -165,7 +165,7 @@ function SlotCard({
           <button
             type="button"
             onClick={remove}
-            className="eyebrow cursor-pointer text-smoke/70 underline underline-offset-2 hover:text-plum"
+            className="eyebrow cursor-pointer text-smoke/70 underline underline-offset-2 hover:text-forest"
           >
             Remove
           </button>
@@ -175,11 +175,11 @@ function SlotCard({
       <p className="mt-1 text-xs leading-relaxed text-smoke">{slot.caption}</p>
 
       {notice && (
-        <p className="mt-1.5 text-xs leading-relaxed text-green">{notice}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-forest">{notice}</p>
       )}
 
       {error && (
-        <p role="alert" className="mt-1.5 text-xs leading-relaxed text-plum">
+        <p role="alert" className="mt-1.5 text-xs leading-relaxed text-forest">
           {error}
         </p>
       )}
@@ -234,10 +234,10 @@ export function Editor({
             type="button"
             onClick={() => setFilter(tab.id)}
             aria-pressed={filter === tab.id}
-            className={`eyebrow cursor-pointer rounded-full border px-5 py-2 transition-colors ${
+            className={`eyebrow cursor-pointer rounded-sm border px-5 py-2 transition-colors ${
               filter === tab.id
-                ? "border-plum bg-plum text-white"
-                : "border-plum/30 text-smoke hover:border-plum hover:text-plum"
+                ? "border-forest bg-forest text-white"
+                : "border-forest/30 text-smoke hover:border-forest hover:text-forest"
             }`}
           >
             {tab.label}

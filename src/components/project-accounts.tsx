@@ -75,7 +75,7 @@ function Row({
       </td>
       <td
         className={`tabular border-b border-sand-deep py-3.5 pl-4 text-right align-top text-sm font-medium ${
-          muted ? "text-smoke" : "text-plum"
+          muted ? "text-smoke" : "text-forest"
         }`}
       >
         {actual}
@@ -108,8 +108,8 @@ export function ProjectAccounts({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-warm">
-      <div className="bg-green px-8 py-7">
-        <h3 className="font-display text-2xl font-semibold text-white">
+      <div className="bg-forest px-8 py-7">
+        <h3 className="font-display text-2xl font-medium text-white">
           {title}
         </h3>
       </div>
@@ -156,7 +156,7 @@ export function ProjectAccounts({
                   <td className="tabular py-4 text-right text-sm font-bold">
                     <Money cents={budget.estimatedCents} />
                   </td>
-                  <td className="tabular py-4 pl-4 text-right text-sm font-bold text-green">
+                  <td className="tabular py-4 pl-4 text-right text-sm font-bold text-forest">
                     <Money cents={budget.spentCents} />
                   </td>
                 </tr>
@@ -166,7 +166,7 @@ export function ProjectAccounts({
         )}
 
         {note && (
-          <div className="mt-6 rounded-xl border border-marigold/30 bg-marigold/10 px-6 py-5">
+          <div className="mt-6 rounded-xl border border-gold/30 bg-gold/10 px-6 py-5">
             {note.split(/\n{2,}/).map((paragraph, index) => (
               <p
                 key={index}
@@ -180,7 +180,7 @@ export function ProjectAccounts({
 
         {budget.outstanding.length > 0 && (
           <>
-            <h4 className="font-display mt-10 text-xl font-semibold">
+            <h4 className="font-display mt-10 text-xl font-medium">
               Never reached — <Money cents={budget.stillNeededCents} /> still
               needed
             </h4>
@@ -202,7 +202,7 @@ export function ProjectAccounts({
                     <td className="py-4 text-sm font-bold">
                       Still needed to finish
                     </td>
-                    <td className="tabular py-4 text-right text-sm font-bold text-plum">
+                    <td className="tabular py-4 text-right text-sm font-bold text-forest">
                       <Money cents={budget.stillNeededCents} />
                     </td>
                     <td className="py-4" />

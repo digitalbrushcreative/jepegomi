@@ -4,10 +4,10 @@ import { useActionState } from "react";
 import { type CodeSignInState, codeSignInAction } from "./actions";
 
 const inputClass =
-  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-plum focus:ring-2 focus:ring-plum/20";
+  "mt-2 w-full rounded-md border border-black/15 bg-white px-4 py-3 outline-none transition-colors focus:border-forest focus:ring-2 focus:ring-forest/20";
 
 const buttonClass =
-  "mt-7 w-full cursor-pointer rounded-full bg-green px-7 py-3.5 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:-translate-y-0.5 hover:bg-green-light disabled:translate-y-0 disabled:opacity-60";
+  "mt-7 w-full cursor-pointer rounded-sm bg-forest px-7 py-3.5 text-[0.95rem] font-bold text-white shadow-warm transition-all hover:bg-forest-light disabled:translate-y-0 disabled:opacity-60";
 
 /**
  * The sentence shown once a code has been asked for.
@@ -100,7 +100,7 @@ export function PartnerLoginForm() {
       )}
 
       {state?.error && (
-        <p role="alert" className="mt-4 text-sm leading-relaxed text-plum">
+        <p role="alert" className="mt-4 text-sm leading-relaxed text-forest">
           {state.error}
         </p>
       )}
@@ -144,7 +144,7 @@ export function PartnerLoginForm() {
             one.
           */
           formNoValidate
-          className="mt-5 w-full cursor-pointer text-sm text-smoke underline underline-offset-4 transition-colors hover:text-plum disabled:opacity-60"
+          className="mt-5 w-full cursor-pointer text-sm text-smoke underline underline-offset-4 transition-colors hover:text-forest disabled:opacity-60"
         >
           Send it again, or use a different address
         </button>

@@ -78,20 +78,20 @@ export default async function ChurchPage() {
   */
   return (
     <>
-      <section className="bg-plum-deep px-6 pt-28 pb-20">
+      <section className="bg-sand px-6 pt-28 pb-20">
         <div className="shell">
           <JepegomiLogo
-            variant="mono"
+            variant="color"
             title={site.longName}
-            className="h-20 w-auto text-white"
+            className="h-20 w-auto text-charcoal"
           />
-          <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+          <h1 className="font-display mt-4 text-4xl leading-tight font-medium text-charcoal sm:text-5xl">
             {church.heading}
           </h1>
           {paragraphs(church.intro).map((text) => (
             <p
               key={text}
-              className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+              className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke"
             >
               {text}
             </p>
@@ -128,7 +128,7 @@ export default async function ChurchPage() {
             <dl className="mt-12 grid gap-px overflow-hidden rounded border border-black/8 bg-black/8 sm:grid-cols-2">
               {church.services.map((service) => (
                 <div key={service.name + service.time} className="bg-white p-6">
-                  <dt className="eyebrow text-plum">{service.name}</dt>
+                  <dt className="eyebrow text-forest">{service.name}</dt>
                   <dd className="mt-2 font-medium">{service.time}</dd>
                   {service.detail && (
                     <dd className="mt-1 text-sm leading-relaxed text-smoke">
@@ -158,7 +158,7 @@ export default async function ChurchPage() {
 
           {church.address ? (
             <div className="mt-8 rounded border border-black/8 bg-white p-6">
-              <p className="eyebrow text-plum">Where we meet</p>
+              <p className="eyebrow text-forest">Where we meet</p>
               <p className="mt-2 leading-relaxed">{church.address}</p>
             </div>
           ) : null}
@@ -200,7 +200,7 @@ export default async function ChurchPage() {
             <ButtonLink href="/about" variant="secondary">
               About the ministry
             </ButtonLink>
-            <ButtonLink href="/contact" variant="ghost" className="text-plum">
+            <ButtonLink href="/contact" variant="ghost" className="text-forest">
               Get in touch
             </ButtonLink>
           </div>

@@ -63,12 +63,12 @@ export default async function AdminNeedPage({
     <div className="max-w-3xl">
       <Link
         href="/app/needs"
-        className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-plum"
+        className="text-sm font-medium text-smoke underline underline-offset-4 hover:text-forest"
       >
         ← All needs
       </Link>
 
-      <h1 className="font-display mt-5 text-3xl font-bold">{need.title}</h1>
+      <h1 className="font-display mt-5 text-3xl font-medium">{need.title}</h1>
       <p className="mt-2 text-smoke">
         {areaOf(need.area).label}
         {need.published ? (
@@ -76,7 +76,7 @@ export default async function AdminNeedPage({
             {" · "}
             <Link
               href={`/needs/${need.slug}`}
-              className="font-medium text-plum underline underline-offset-4"
+              className="font-medium text-forest underline underline-offset-4"
             >
               /needs/{need.slug}
             </Link>
@@ -91,7 +91,7 @@ export default async function AdminNeedPage({
       </div>
 
       {/* -------------------------------------------------- the claims */}
-      <h2 className="font-display mt-14 text-2xl font-bold">
+      <h2 className="font-display mt-14 text-2xl font-medium">
         Who has claimed this
       </h2>
       <p className="mt-2 leading-relaxed text-smoke">
@@ -112,14 +112,14 @@ export default async function AdminNeedPage({
                 <div>
                   <p className="font-medium">
                     {pledge.partnerName ?? "Somebody"}{" "}
-                    <span className="tabular ml-1 text-plum">
+                    <span className="tabular ml-1 text-forest">
                       {usd(pledge.amountCents)}
                     </span>
                   </p>
                   {pledge.partnerEmail && (
                     <a
                       href={`mailto:${pledge.partnerEmail}?subject=${encodeURIComponent(`Giving to ${need.title}`)}`}
-                      className="font-mono text-xs text-smoke underline underline-offset-4 hover:text-plum"
+                      className="font-mono text-xs text-smoke underline underline-offset-4 hover:text-forest"
                     >
                       {pledge.partnerEmail}
                     </a>
@@ -149,7 +149,7 @@ export default async function AdminNeedPage({
       )}
 
       {/* ------------------------------------------------- the updates */}
-      <h2 className="font-display mt-14 text-2xl font-bold">Post an update</h2>
+      <h2 className="font-display mt-14 text-2xl font-medium">Post an update</h2>
       <p className="mt-2 leading-relaxed text-smoke">
         This goes on the item&apos;s public page and on the dashboard of every
         partner who put money towards it. It is the part they are waiting for.
@@ -177,7 +177,7 @@ export default async function AdminNeedPage({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-4">
-                  <p className="eyebrow text-plum">
+                  <p className="eyebrow text-forest">
                     {formatDay(update.createdAt)}
                   </p>
                   <DeleteUpdateButton updateId={update.id} />
@@ -192,7 +192,7 @@ export default async function AdminNeedPage({
       )}
 
       {/* --------------------------------------------------- the fields */}
-      <h2 className="font-display mt-14 text-2xl font-bold">Edit this item</h2>
+      <h2 className="font-display mt-14 text-2xl font-medium">Edit this item</h2>
       <EditNeedForm need={need} parts={parts} projects={projects} />
 
       <div className="mt-12 border-t border-black/8 pt-8">

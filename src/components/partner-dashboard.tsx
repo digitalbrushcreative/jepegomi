@@ -232,19 +232,18 @@ export async function PartnerDashboard({
         be read, on top of the church's own name. Opening on plum, like the rest
         of the site, is what makes the nav legible.
       */}
-      <section className="relative overflow-hidden bg-plum-deep px-6 pt-20 pb-8 sm:pt-24">
-        <div className="grain-layer" />
+      <section className="relative overflow-hidden bg-sand px-6 pt-20 pb-8 sm:pt-24">
 
         <div className="shell relative">
           {notice}
 
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <h1 className="font-display mt-3 text-4xl font-bold text-balance text-white sm:text-5xl">
+              <h1 className="font-display mt-3 text-4xl font-medium text-balance text-charcoal sm:text-5xl">
                 {partner.name}
               </h1>
               {partner.location && (
-                <p className="mt-2 text-white/60">{partner.location}</p>
+                <p className="mt-2 text-smoke">{partner.location}</p>
               )}
             </div>
 
@@ -396,7 +395,7 @@ export async function PartnerDashboard({
 
           <div className="mt-20 grid gap-14 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
             <div>
-              <p className="eyebrow text-plum">Updates</p>
+              <p className="eyebrow text-forest">Updates</p>
               {/*
                 Partnered with, not paid for. These churches are not customers
                 who bought a kitchen; the money is one part of a thing they are
@@ -428,7 +427,7 @@ export async function PartnerDashboard({
                     <p className="mt-6 text-sm text-smoke">
                       <Link
                         href="/projects/kitchen"
-                        className="font-medium text-plum underline underline-offset-4"
+                        className="font-medium text-forest underline underline-offset-4"
                       >
                         See the whole kitchen project
                       </Link>
@@ -461,21 +460,21 @@ export async function PartnerDashboard({
                       {pledge.needSlug && pledge.needPublished ? (
                         <Link
                           href={`/needs/${pledge.needSlug}`}
-                          className="font-medium hover:text-plum"
+                          className="font-medium hover:text-forest"
                         >
                           {pledge.needTitle}
                         </Link>
                       ) : (
                         <span className="font-medium">{pledgeTowards(pledge)}</span>
                       )}
-                      <span className="font-display tabular text-lg font-semibold">
+                      <span className="font-display tabular text-lg font-medium">
                         {usd(pledge.amountCents)}
                       </span>
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-3">
                       <span
-                        className={`eyebrow rounded-full px-3 py-1 ${statusStyles[pledge.status]}`}
+                        className={`eyebrow rounded-sm px-3 py-1 ${statusStyles[pledge.status]}`}
                       >
                         {PLEDGE_LABELS[pledge.status]}
                       </span>
@@ -493,7 +492,7 @@ export async function PartnerDashboard({
                 Something not right? Write to{" "}
                 <a
                   href={`mailto:${site.email}`}
-                  className="font-medium text-plum underline underline-offset-4"
+                  className="font-medium text-forest underline underline-offset-4"
                 >
                   {site.email}
                 </a>{" "}
@@ -568,7 +567,7 @@ export async function PartnerDashboard({
 
                   {elsewhere.length > 0 && (
                     <>
-                      <h3 className="font-display mt-14 text-xl font-semibold">
+                      <h3 className="font-display mt-14 text-xl font-medium">
                         Items in the rest of the ministry
                       </h3>
                       <p className="mt-3 max-w-2xl leading-relaxed text-smoke">
@@ -608,8 +607,8 @@ function OpenNeed({ need }: { need: NeedWithLedger }) {
   return (
     <li className="rounded-2xl bg-white p-6 shadow-warm">
       <p className="eyebrow text-smoke">{projectName(areaOf(need.area))}</p>
-      <h4 className="font-display mt-2 text-lg font-semibold">
-        <Link href={`/needs/${need.slug}`} className="hover:text-plum">
+      <h4 className="font-display mt-2 text-lg font-medium">
+        <Link href={`/needs/${need.slug}`} className="hover:text-forest">
           {need.title}
         </Link>
       </h4>
@@ -622,14 +621,14 @@ function OpenNeed({ need }: { need: NeedWithLedger }) {
 
       <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-sm text-smoke">
-          <span className="font-display tabular text-lg font-semibold text-charcoal">
+          <span className="font-display tabular text-lg font-medium text-charcoal">
             {usd(need.ledger.openCents)}
           </span>{" "}
           of {usd(need.costCents)} still open
         </p>
         <Link
           href={`/needs/${need.slug}`}
-          className="text-sm font-bold text-plum underline underline-offset-4 hover:text-green"
+          className="text-sm font-bold text-forest underline underline-offset-4 hover:text-forest"
         >
           Partner with this
         </Link>
@@ -654,9 +653,9 @@ function OpenNeed({ need }: { need: NeedWithLedger }) {
 function WholeProject({ appeal }: { appeal: Appeal }) {
   return (
     <div className="flex flex-col rounded-2xl bg-white p-7 shadow-warm">
-      <Icon name={appeal.area.icon} className="h-8 w-8 text-plum" />
-      <h4 className="font-display mt-4 text-xl leading-snug font-semibold">
-        <Link href={appeal.area.href} className="hover:text-plum">
+      <Icon name={appeal.area.icon} className="h-8 w-8 text-forest" />
+      <h4 className="font-display mt-4 text-xl leading-snug font-medium">
+        <Link href={appeal.area.href} className="hover:text-forest">
           {projectName(appeal.area)}
         </Link>
       </h4>
@@ -665,20 +664,20 @@ function WholeProject({ appeal }: { appeal: Appeal }) {
       </p>
 
       <p className="eyebrow mt-6 text-smoke">The whole job</p>
-      <p className="font-display tabular mt-1 text-2xl font-semibold text-plum">
+      <p className="font-display tabular mt-1 text-2xl font-medium text-forest">
         {usd(appeal.costCents)}
       </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
         <Link
           href={`/give?for=${appeal.area.id}#pledge`}
-          className="text-sm font-bold text-plum underline underline-offset-4 hover:text-green"
+          className="text-sm font-bold text-forest underline underline-offset-4 hover:text-forest"
         >
           Give to this
         </Link>
         <Link
           href={appeal.area.href}
-          className="text-sm text-smoke underline underline-offset-4 hover:text-plum"
+          className="text-sm text-smoke underline underline-offset-4 hover:text-forest"
         >
           See the work
         </Link>
@@ -688,9 +687,9 @@ function WholeProject({ appeal }: { appeal: Appeal }) {
 }
 
 const statusStyles: Record<PledgeStatus, string> = {
-  pending: "bg-marigold/15 text-clay",
-  promised: "bg-plum/10 text-plum",
-  received: "bg-green/12 text-green",
+  pending: "bg-gold/15 text-clay",
+  promised: "bg-forest/10 text-forest",
+  received: "bg-forest/12 text-forest",
   declined: "bg-black/6 text-smoke",
 };
 
@@ -704,9 +703,9 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div className="bg-plum-deep px-7 py-6">
+    <div className="bg-forest-deep px-7 py-6">
       <dt className="eyebrow text-white/50">{label}</dt>
-      <dd className="font-display tabular mt-1.5 text-3xl font-semibold text-marigold">
+      <dd className="font-display tabular mt-1.5 text-3xl font-medium text-gold">
         {value}
       </dd>
       {hint && <p className="mt-1.5 text-xs text-white/45">{hint}</p>}
@@ -735,8 +734,8 @@ function Project({ project }: { project: PartnerProject }) {
               ? `${project.needs.length} ${project.needs.length === 1 ? "item" : "items"}`
               : "Given towards"}
           </p>
-          <h3 className="font-display mt-2 text-2xl font-semibold">
-            <Link href={area.href} className="hover:text-plum">
+          <h3 className="font-display mt-2 text-2xl font-medium">
+            <Link href={area.href} className="hover:text-forest">
               {projectName(area)}
             </Link>
           </h3>
@@ -744,7 +743,7 @@ function Project({ project }: { project: PartnerProject }) {
 
         <div>
           <p className="eyebrow text-smoke">You gave</p>
-          <p className="font-display tabular mt-1 text-3xl font-semibold text-green">
+          <p className="font-display tabular mt-1 text-3xl font-medium text-forest">
             {usd(project.yoursCents)}
           </p>
         </div>
@@ -764,14 +763,14 @@ function Project({ project }: { project: PartnerProject }) {
                 */}
                 <h4 className="font-medium">
                   {need.published ? (
-                    <Link href={`/needs/${need.slug}`} className="hover:text-plum">
+                    <Link href={`/needs/${need.slug}`} className="hover:text-forest">
                       {need.title}
                     </Link>
                   ) : (
                     need.title
                   )}
                 </h4>
-                <p className="font-display tabular text-lg font-semibold">
+                <p className="font-display tabular text-lg font-medium">
                   {usd(need.yoursCents)}
                   {need.yoursCents !== need.costCents && (
                     <span className="ml-1.5 text-sm font-normal text-smoke">

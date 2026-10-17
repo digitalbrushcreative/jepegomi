@@ -44,10 +44,9 @@ export async function SiteFooter() {
   const content = await getContent("site");
 
   return (
-    <footer className="relative overflow-hidden bg-plum-deep">
-      <div className="grain-layer" />
+    <footer className="relative overflow-hidden bg-charcoal px-6">
 
-      <div className="relative mx-auto max-w-6xl px-6 py-14">
+      <div className="shell relative py-14">
         <div className="flex flex-wrap items-center justify-between gap-8">
           <div className="flex flex-wrap items-center gap-6">
             {logos.map(({ Mark, label }) => (
@@ -62,7 +61,7 @@ export async function SiteFooter() {
 
           <Link
             href="/give"
-            className="rounded-full bg-green px-7 py-3 text-sm font-bold text-white shadow-warm transition-colors hover:bg-green-light"
+            className="rounded-sm bg-forest px-7 py-3 text-sm font-bold text-white shadow-warm transition-colors hover:bg-forest-light"
           >
             Give
           </Link>

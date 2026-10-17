@@ -27,12 +27,12 @@ import {
  */
 
 const field =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-2.5 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-2.5 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
 const label = "block";
 const labelText = "eyebrow text-smoke";
 
 const quietButton =
-  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum disabled:opacity-60";
+  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest disabled:opacity-60";
 
 const empty: Draft = {
   audienceId: "partners",
@@ -224,7 +224,7 @@ export function LetterForm({
               type="checkbox"
               checked={draft.greet}
               onChange={(event) => set("greet", event.target.checked)}
-              className="mt-1 h-4 w-4 accent-plum"
+              className="mt-1 h-4 w-4 accent-forest"
             />
             <span className="text-sm">
               Open with <span className="font-medium">Dear …</span>, and their own
@@ -239,7 +239,7 @@ export function LetterForm({
 
         {/* ------------------------------------------------------ button */}
         <section className="rounded-lg border border-black/8 bg-white p-5">
-          <p className="font-display text-base font-bold">A button (optional)</p>
+          <p className="font-display text-base font-medium">A button (optional)</p>
           <p className="mt-1 text-sm text-smoke">
             One place to send people. Both boxes or neither.
           </p>
@@ -283,7 +283,7 @@ export function LetterForm({
               type="button"
               disabled={!ready || sending}
               onClick={sendIt}
-              className="cursor-pointer rounded bg-plum px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-plum-deep disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer rounded bg-forest px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-forest-deep disabled:cursor-not-allowed disabled:opacity-50"
             >
               {sending
                 ? "Sending…"
@@ -305,12 +305,12 @@ export function LetterForm({
           </div>
 
           {state?.error && (
-            <p role="alert" className="mt-4 text-sm text-plum">
+            <p role="alert" className="mt-4 text-sm text-forest">
               {state.error}
             </p>
           )}
           {state?.sent && (
-            <p role="status" className="mt-4 text-sm text-green">
+            <p role="status" className="mt-4 text-sm text-forest">
               {state.sent}
             </p>
           )}
@@ -320,7 +320,7 @@ export function LetterForm({
       {/* --------------------------------------------------------- preview */}
       <div className="lg:sticky lg:top-24">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-base font-bold">As it will arrive</h2>
+          <h2 className="font-display text-base font-medium">As it will arrive</h2>
           <p className="text-xs text-smoke">
             {preview.html ? "The real template" : "Waiting for words"}
           </p>

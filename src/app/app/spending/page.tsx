@@ -89,7 +89,7 @@ export default async function AdminSpendingPage() {
             under{" "}
             <Link
               href="/app/pages/projectAccounts"
-              className="font-medium text-plum underline underline-offset-4"
+              className="font-medium text-forest underline underline-offset-4"
             >
               Project accounts
             </Link>
@@ -114,7 +114,7 @@ export default async function AdminSpendingPage() {
       )}
 
       {/* --------------------------------------------- recording another */}
-      <h2 className="font-display mt-12 text-2xl font-bold">
+      <h2 className="font-display mt-12 text-2xl font-medium">
         Record something bought
       </h2>
       <p className="mt-2 max-w-2xl leading-relaxed text-smoke">
@@ -130,7 +130,7 @@ export default async function AdminSpendingPage() {
       </div>
 
       {/* ------------------------------------------- what is on the books */}
-      <h2 className="font-display mt-14 text-2xl font-bold">
+      <h2 className="font-display mt-14 text-2xl font-medium">
         {projects.length === 0 ? "Nothing recorded yet" : "On the books"}
       </h2>
 
@@ -183,7 +183,7 @@ function ProjectSpending({
       actions={
         <Link
           href="/app/pages/projectAccounts"
-          className="rounded border border-black/15 px-3 py-1.5 text-xs font-medium text-smoke transition-colors hover:bg-sand hover:text-plum"
+          className="rounded border border-black/15 px-3 py-1.5 text-xs font-medium text-smoke transition-colors hover:bg-sand hover:text-forest"
         >
           Read by: {setting?.label ?? "The people who paid for it"}
         </Link>
@@ -213,7 +213,7 @@ function ProjectSpending({
                     screen that gets somebody to "correct" it to a number they
                     made up.
                   */}
-                  <span className="w-24 text-right font-semibold text-plum">
+                  <span className="w-24 text-right font-semibold text-forest">
                     {need.costCents > 0 ? usd(need.costCents) : "Used"}
                   </span>
                 </div>
@@ -229,7 +229,7 @@ function ProjectSpending({
         <span>Total</span>
         <div className="flex shrink-0 items-baseline gap-5">
           <span className="text-smoke">{usd(estimated)} est.</span>
-          <span className="w-24 text-right text-green">{usd(actual)}</span>
+          <span className="w-24 text-right text-forest">{usd(actual)}</span>
         </div>
       </div>
     </Panel>

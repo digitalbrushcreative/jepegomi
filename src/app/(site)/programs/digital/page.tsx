@@ -87,21 +87,21 @@ export default async function DigitalPage() {
 
   return (
     <>
-      <section className="bg-charcoal px-6 pt-28 pb-20">
+      <section className="bg-sand px-6 pt-28 pb-20">
         <div className="shell grid items-center gap-12 lg:grid-cols-[1fr_20rem]">
           <div>
             <JepegomiLogo
-              variant="mono"
+              variant="color"
               title="Jepegomi Digital"
-              className="h-20 w-auto text-white"
+              className="h-20 w-auto text-charcoal"
             />
-            <h1 className="font-display mt-4 text-4xl leading-tight font-bold text-white sm:text-5xl">
+            <h1 className="font-display mt-4 text-4xl leading-tight font-medium text-charcoal sm:text-5xl">
               {digital.heading}
             </h1>
             {paragraphs(digital.intro).map((text) => (
               <p
                 key={text}
-                className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65"
+                className="mt-6 max-w-2xl text-lg leading-relaxed text-smoke"
               >
                 {text}
               </p>
@@ -117,7 +117,7 @@ export default async function DigitalPage() {
             a band — the preacher is at the top of the shot and the desk is at
             the bottom, so any wide crop of it loses one or the other.
           */}
-          <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl bg-white/5 shadow-warm lg:mx-0">
+          <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl bg-sand-deep shadow-warm lg:mx-0">
             <Image
               src={stream.src}
               alt={stream.alt}
@@ -257,8 +257,8 @@ export default async function DigitalPage() {
                 key={way.title}
                 className="rounded-2xl bg-white p-7 shadow-warm"
               >
-                <Icon name="give" className="h-8 w-8 text-plum" />
-                <h3 className="font-display mt-4 text-xl font-semibold">
+                <Icon name="give" className="h-8 w-8 text-forest" />
+                <h3 className="font-display mt-4 text-xl font-medium">
                   {way.title}
                 </h3>
                 {paragraphs(way.body).map((text) => (
@@ -272,7 +272,7 @@ export default async function DigitalPage() {
 
           {/* What the whole of it costs, as one figure and one ask. */}
           {kit && (
-            <div className="mt-12 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-plum px-8 py-7 shadow-warm">
+            <div className="mt-12 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-forest px-8 py-7 shadow-warm">
               <div>
                 <p className="eyebrow text-white/70">{digital.kitHeading}</p>
                 {paragraphs(digital.kitBody).map((text) => (
@@ -281,7 +281,7 @@ export default async function DigitalPage() {
                   </p>
                 ))}
               </div>
-              <p className="font-display tabular text-4xl font-semibold text-marigold">
+              <p className="font-display tabular text-4xl font-medium text-gold">
                 <Money cents={kit.costCents} />
               </p>
             </div>
@@ -291,7 +291,7 @@ export default async function DigitalPage() {
             <ButtonLink href="/give?for=digital#pledge" icon="give">
               Give toward the kit
             </ButtonLink>
-            <ButtonLink href="/church" variant="ghost" className="text-plum">
+            <ButtonLink href="/church" variant="ghost" className="text-forest">
               The church behind it
             </ButtonLink>
           </div>

@@ -21,13 +21,13 @@ import {
 } from "./actions";
 
 const inputClass =
-  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-plum focus:ring-2 focus:ring-plum/20";
+  "mt-2 w-full rounded border border-black/15 bg-white px-4 py-3 outline-none focus:border-forest focus:ring-2 focus:ring-forest/20";
 
 const quietButton =
-  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-plum disabled:opacity-60";
+  "cursor-pointer rounded border border-black/15 px-4 py-2 text-sm font-medium text-smoke transition-colors hover:bg-sand hover:text-forest disabled:opacity-60";
 
 const primaryButton =
-  "cursor-pointer rounded bg-green px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60";
+  "cursor-pointer rounded bg-forest px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60";
 
 /** One item a gift can be recorded against, as the page hands it over. */
 export type GiftTarget = {
@@ -90,7 +90,7 @@ export function SeedEncounterForm() {
         gone by the time the page comes back — replaced by their card.
       */}
       {error && (
-        <p role="alert" className="mt-4 text-sm text-plum">
+        <p role="alert" className="mt-4 text-sm text-forest">
           {error}
         </p>
       )}
@@ -238,7 +238,7 @@ export function AddPartnerForm() {
           type="checkbox"
           checked={fields.verified}
           onChange={(event) => set("verified", event.target.checked)}
-          className="mt-0.5 h-4 w-4 accent-green"
+          className="mt-0.5 h-4 w-4 accent-forest"
         />
         <span>
           I know who this is — mark them verified. For a church or an
@@ -252,7 +252,7 @@ export function AddPartnerForm() {
         card is on it, which says more than a sentence would.
       */}
       {error && (
-        <p role="alert" className="mt-4 text-sm text-plum">
+        <p role="alert" className="mt-4 text-sm text-forest">
           {error}
         </p>
       )}
@@ -408,12 +408,12 @@ export function RecordGiftForm({
       </label>
 
       {state?.error && (
-        <p role="alert" className="mt-4 text-sm text-plum">
+        <p role="alert" className="mt-4 text-sm text-forest">
           {state.error}
         </p>
       )}
       {state?.saved && (
-        <p role="status" className="mt-4 text-sm text-green">
+        <p role="status" className="mt-4 text-sm text-forest">
           {state.message}
         </p>
       )}
@@ -481,7 +481,7 @@ export function VerifyButton({
       className={
         verified
           ? quietButton
-          : "cursor-pointer rounded bg-green px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60"
+          : "cursor-pointer rounded bg-forest px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60"
       }
     >
       {pending ? "Saving…" : verified ? "Un-verify" : "Verify this partner"}
@@ -578,7 +578,7 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
           name="notify"
           checked={notify}
           onChange={(event) => setNotify(event.target.checked)}
-          className="mt-0.5 h-4 w-4 accent-green"
+          className="mt-0.5 h-4 w-4 accent-forest"
         />
         <span>
           Email it to <strong className="text-charcoal">{partner.email}</strong>{" "}
@@ -605,7 +605,7 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
               );
             });
           }}
-          className="cursor-pointer rounded bg-green px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-green-light disabled:opacity-60"
+          className="cursor-pointer rounded bg-forest px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-forest-light disabled:opacity-60"
         >
           {pending ? "Saving…" : partner.hasLogin ? "Change it" : "Give them a login"}
         </button>
@@ -617,12 +617,12 @@ export function IssueLoginForm({ partner }: { partner: PartnerWithTotals }) {
       </p>
 
       {state?.error && (
-        <p role="alert" className="mt-3 text-sm text-plum">
+        <p role="alert" className="mt-3 text-sm text-forest">
           {state.error}
         </p>
       )}
       {state?.saved && (
-        <p role="status" className="mt-3 text-sm text-green">
+        <p role="status" className="mt-3 text-sm text-forest">
           {state.message}
         </p>
       )}
@@ -675,7 +675,7 @@ export function ReadersPanel({
               className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-4"
             >
               <div className="min-w-0">
-                <p className="font-mono text-xs break-all text-plum">
+                <p className="font-mono text-xs break-all text-forest">
                   {reader.email}
                 </p>
                 <p className="mt-1 text-sm text-smoke">
@@ -734,7 +734,7 @@ export function ReadersPanel({
       </label>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm text-plum">
+        <p role="alert" className="mt-4 text-sm text-forest">
           {error}
         </p>
       )}
@@ -889,12 +889,12 @@ export function PartnerDetailsForm({ partner }: { partner: PartnerWithTotals }) 
       </label>
 
       {state?.error && (
-        <p role="alert" className="mt-3 text-sm text-plum">
+        <p role="alert" className="mt-3 text-sm text-forest">
           {state.error}
         </p>
       )}
       {state?.saved && (
-        <p role="status" className="mt-3 text-sm text-green">
+        <p role="status" className="mt-3 text-sm text-forest">
           Saved.
         </p>
       )}

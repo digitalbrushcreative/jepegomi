@@ -679,7 +679,11 @@ const home = {
       label: "A word from the pastors",
       help: "In Simon & Joyce's own words, shown as a quotation. Blank until they write it — the section reads fine without it, and it should never be written for them.",
     },
-    leadershipPhoto: { type: "image", label: "Leadership — portrait" },
+    leadershipPhoto: {
+      type: "image",
+      label: "Leadership — portrait",
+      help: "A cut-out with no background — a PNG with a transparent background, like the one of Simon & Joyce. It stands on the bottom edge of the section, so a photograph with a backdrop will look like a box.",
+    },
     leadershipPhotoAlt: { type: "text", label: "Leadership — portrait description" },
 
     partnerLabel: { type: "text", label: "Partner with us — label" },
@@ -699,9 +703,8 @@ const home = {
     welcomePhotoAlt: { type: "text", label: "Closing — photograph description" },
   },
   defaults: {
-    heroHeading: "Rooted in faith. Committed to people.",
-    heroBody:
-      "A Christian ministry serving Kahawa Sukari through worship, education, biblical training, and practical care.",
+    heroHeading: "A church in Kahawa Sukari, and the school, college and kitchen it runs.",
+    heroBody: `${siteDefaults.longName} is led by ${siteDefaults.leaders}. Alongside the church it runs Jepegomi Academy, the Contextual Bible Training College, and a kitchen that feeds the academy's pupils twice a day.`,
     /*
       Children at their desks over lunch, rather than the congregation the
       brief asks for. The only photographs of a service are 636px crops out of
@@ -713,17 +716,17 @@ const home = {
     heroPhotoAlt:
       "Children in green and white uniform at their classroom desks, eating lunch from red plates",
 
-    introLabel: "Who we are",
-    introHeading: "One ministry. Many ways to serve.",
+    introLabel: "About the ministry",
+    introHeading: "The church, and what grew out of it",
     introBody: [
-      `${siteDefaults.longName} is rooted in Kahawa Sukari, Nairobi, and led by ${siteDefaults.leaders}. Our work extends from the congregation to the classroom, from biblical training to the meals children eat at school every day.`,
-      "Through each of these ministries, we seek to put our faith into practice.",
+      "Sunday worship in Kahawa Sukari is the oldest thing the ministry does. From that congregation came a school for the neighbourhood's children, a college that teaches the Bible to adults, and a kitchen that cooks breakfast and lunch for every pupil.",
+      `All four are led by ${siteDefaults.leaders}.`,
     ].join("\n\n"),
     introPhoto: "/photos/academy/assembly.jpg",
     introPhotoAlt:
       "A long line of children in green uniform standing outdoors at assembly, a teacher reading to them",
 
-    ministriesHeading: "Our work in the community",
+    ministriesHeading: "The four ministries",
     /*
       The church first, then what it runs — the same order as the nav and the
       about page. The college photograph is a seminar group outside the
@@ -733,8 +736,8 @@ const home = {
     ministries: [
       {
         name: "The Church",
-        title: "A place to worship and belong",
-        body: "Worship, prayer and teaching in Kahawa Sukari, week by week. The oldest thing the ministry does, and visitors are welcome.",
+        title: "Sunday services in Kahawa Sukari",
+        body: "Worship, prayer and Bible teaching every week. Visitors are welcome.",
         photo: "/photos/church/congregation.jpg",
         photoAlt: "The congregation seated on white chairs inside the sanctuary during a service",
         href: "/church",
@@ -742,8 +745,8 @@ const home = {
       },
       {
         name: "Jepegomi Academy",
-        title: "Education that nurtures knowledge and character",
-        body: "Quality education with values, from kindergarten to Grade 6, at the school in the middle of the community.",
+        title: "Kindergarten to Grade 6",
+        body: "Jepegomi Academy teaches the children of Kahawa Sukari. Its motto is “Quality Education With Values”.",
         photo: "/photos/academy/graduation.jpg",
         photoAlt: "Kindergarten graduates in green gowns and mortarboards, standing with two of their teachers",
         href: "/academy",
@@ -751,8 +754,8 @@ const home = {
       },
       {
         name: "Contextual Bible Training College",
-        title: "Preparing people for a life of ministry",
-        body: "The ministry's training arm, teaching the Scriptures in and for the community the church already serves.",
+        title: "Bible training for adults",
+        body: "The Contextual Bible Training College teaches the Scriptures in and for the community the church serves.",
         photo: "/photos/college/seminar.jpg",
         photoAlt: "A group of pastors and ministry leaders standing together outside the church after a seminar",
         href: "/college",
@@ -760,21 +763,21 @@ const home = {
       },
       {
         name: "Food at School",
-        title: "Supporting learning through daily meals",
-        body: "Morning porridge and a cooked lunch, every school day — what a child needs to get through a full day of lessons.",
+        title: "Porridge and lunch, every school day",
+        body: "Every pupil at the academy gets porridge in the morning and a cooked lunch at midday.",
         photo: "/photos/school/lunch-queue-01.jpg",
         photoAlt: "Children in green uniform queueing along a wall, plates in hand",
         href: "/programs/food-at-school",
-        cta: "About the programme",
+        cta: "About the feeding programme",
       },
     ],
 
-    evidenceLabel: "Our ministry in practice",
-    evidenceHeading: "Faith made visible in everyday life.",
-    childrenFedLabel: "Children receiving school meals every day",
+    evidenceLabel: "Jepegomi Academy",
+    evidenceHeading: "The academy in figures",
+    childrenFedLabel: "Pupils, every one of them fed at school",
     figures: [
-      { value: "2", label: "Meals provided each school day" },
-      { value: "4", label: "Connected areas of ministry" },
+      { value: "2", label: "Meals a day — porridge, then a cooked lunch" },
+      { value: "KG–6", label: "Kindergarten to Grade 6" },
     ],
     /*
       Blank on purpose. Nobody has confirmed when these were last counted, and
@@ -783,40 +786,40 @@ const home = {
     */
     figuresAsOf: "",
     evidenceNote:
-      "Behind every number is a child, a family, or a neighbour we have the privilege of serving.",
+      "The number of pupils is the academy's current enrolment. The school feeds every child it teaches, so it is also the number fed each day.",
 
-    storyLabel: "Stories from Jepegomi",
-    storyHeading: `From open fires to a kitchen serving ${pupilsEnrolled} children`,
+    storyLabel: "The kitchen",
+    storyHeading: "How the school stopped cooking over open fires",
     storyBody: [
-      "Every school day, Jepegomi Academy prepares two meals for its pupils. For years they were cooked over open fires in the yard. With the support of a partner church in the United States, the school now has a dedicated kitchen of its own.",
-      "The kitchen is in use today, and work continues on the dining area beside it.",
+      `For years the academy's meals were cooked over open fires in the school yard. A partner church in the United States paid for a kitchen and store room, and it has cooked for all ${pupilsEnrolled} pupils every school day since.`,
+      "The dining area beside it is not finished yet. The kitchen page shows the build from the foundations up, and what is left to do.",
     ].join("\n\n"),
     storyPhoto: "/photos/kitchen/16.jpg",
     storyPhotoAlt: "A wood fire burning in the new kitchen's stove, two cooking plates above it",
     storyHref: "/projects/kitchen",
-    storyCta: "Read the story",
+    storyCta: "Read about the kitchen build",
 
-    leadershipLabel: "Our leadership",
-    leadershipHeading: "A ministry built on faith and service.",
-    leadershipBody: `${siteDefaults.longName} is led by ${siteDefaults.leaders}. Together they oversee the church, Jepegomi Academy, the Bible college and the Food at School programme from Kahawa Sukari.`,
+    leadershipLabel: "Leadership",
+    leadershipHeading: siteDefaults.leaders,
+    leadershipBody:
+      "Simon and Joyce lead the church in Kahawa Sukari, and oversee the academy, the Bible college and the feeding programme that grew up around it.",
     leadershipMessage: "",
-    leadershipPhoto: "/photos/founders/founder-edit.jpg",
+    leadershipPhoto: "/photos/founders/simon-and-joyce.png",
     leadershipPhotoAlt: `${siteDefaults.leaders}, standing together and smiling`,
 
-    partnerLabel: "Partner with us",
-    partnerHeading: "Building what our community needs, together.",
+    partnerLabel: "Giving",
+    partnerHeading: "What is being raised for now",
     partnerBody: [
-      "The ministry's work has grown through the commitment of its congregation and the generosity of people who believe in it — among them a partner church in the United States that built the school kitchen with us.",
-      "Each project sets out what is needed and how far the work has come, so you can see where your support would go before you give.",
+      "Four projects are open: the kitchen's dining area, a bus for the academy, a new playground, and the equipment the Sunday services are streamed on.",
+      "Each has its own page, with photographs of where things stand and what is still needed.",
     ].join("\n\n"),
     partnerPhoto: "/photos/kitchen/11.jpg",
     partnerPhotoAlt:
       "The finished kitchen — plastered walls, a tiled roof and a chimney, standing in the school yard",
-    partnerCta: "Explore partnership opportunities",
+    partnerCta: "See the projects",
 
-    welcomeHeading: "There is a place for you in our story.",
-    welcomeBody:
-      "Whether you are looking for a church, learning about our work, or considering a partnership, we would be glad to hear from you.",
+    welcomeHeading: "Visit, or get in touch",
+    welcomeBody: `Services are held at the church in Kahawa Sukari, and visitors are welcome. For anything else — the academy, the college, or giving — write to ${siteDefaults.email}.`,
     welcomePhoto: "/photos/church/sanctuary-wide.jpg",
     welcomePhotoAlt: "The church building in Kahawa Sukari under a clear sky",
   },

@@ -5,7 +5,6 @@ import { Icon, type IconName } from "@/components/icons";
 import { Money } from "@/components/money";
 import { ProjectAccounts } from "@/components/project-accounts";
 import { FoodAtSchoolLogo } from "@/components/logos";
-import { ClothEdge } from "@/components/pattern";
 import { PhotoGallery } from "@/components/photo-gallery";
 import { ProgressPot } from "@/components/progress-pot";
 import { ButtonLink, SectionTitle } from "@/components/ui";
@@ -48,7 +47,7 @@ function BeforeAfterCard({
     <div className="overflow-hidden rounded-2xl bg-white shadow-warm">
       <p
         className={`eyebrow px-6 py-3.5 text-white ${
-          tone === "before" ? "bg-smoke" : "bg-green"
+          tone === "before" ? "bg-smoke" : "bg-forest"
         }`}
       >
         {card.heading}
@@ -71,7 +70,7 @@ function BeforeAfterCard({
           <li key={bullet} className="flex gap-2.5 text-sm text-smoke">
             <span
               aria-hidden="true"
-              className={tone === "before" ? "text-clay" : "text-green"}
+              className={tone === "before" ? "text-clay" : "text-forest"}
             >
               ●
             </span>
@@ -210,20 +209,19 @@ export default async function KitchenPage() {
   return (
     <>
       {/* The hero: who gave, what for, and how far it has got. */}
-      <section className="relative overflow-hidden bg-plum-deep">
-        <div className="grain-layer" />
+      <section className="relative overflow-hidden bg-sand px-6">
 
-        <div className="shell relative flex flex-col gap-12 px-6 pt-28 pb-24 sm:flex-row sm:items-start sm:pb-28">
+        <div className="shell relative flex flex-col gap-12 pt-28 pb-24 sm:flex-row sm:items-start sm:pb-28">
           <div className="flex-1">
-            <p className="eyebrow flex items-center gap-3 text-marigold">
-              <span aria-hidden="true" className="h-px w-7 bg-marigold" />
+            <p className="eyebrow flex items-center gap-3 text-gold-ink">
+              <span aria-hidden="true" className="h-px w-7 bg-gold" />
               Funded by {report.donor} in {report.donorLocation}
             </p>
 
             <FoodAtSchoolLogo
-              variant="mono"
+              variant="color"
               title="Food at School"
-              className="mt-7 h-28 w-auto text-white"
+              className="mt-7 h-28 w-auto text-charcoal"
             />
 
             <h1 className="sr-only">
@@ -234,13 +232,13 @@ export default async function KitchenPage() {
               {[
                 <>
                   Partner:{" "}
-                  <strong className="font-bold text-white">
+                  <strong className="font-bold text-charcoal">
                     {report.donor} in {report.donorLocation}
                   </strong>
                 </>,
                 <>
                   Built:{" "}
-                  <strong className="font-bold text-white">
+                  <strong className="font-bold text-charcoal">
                     a kitchen and store room
                   </strong>
                   , with a dining area beside it
@@ -248,21 +246,21 @@ export default async function KitchenPage() {
                 <>Location: Jepegomi Academy, Nairobi, Kenya</>,
                 <>
                   Impact: Hot meals daily for{" "}
-                  <strong className="font-bold text-white">{fed}</strong>
+                  <strong className="font-bold text-charcoal">{fed}</strong>
                 </>,
                 <>
                   Status:{" "}
-                  <strong className="font-bold text-white">Built and cooking</strong>
+                  <strong className="font-bold text-charcoal">Built and cooking</strong>
                   . The dining area is still to finish
                 </>,
               ].map((item, index) => (
                 <li
                   key={index}
-                  className="flex items-start gap-3 border-b border-white/10 py-2.5 text-sm text-white/70"
+                  className="flex items-start gap-3 border-b border-charcoal/10 py-2.5 text-sm text-smoke"
                 >
                   <span
                     aria-hidden="true"
-                    className="mt-[0.7em] h-px w-3.5 shrink-0 bg-marigold"
+                    className="mt-[0.7em] h-px w-3.5 shrink-0 bg-gold"
                   />
                   <span>{item}</span>
                 </li>
@@ -273,22 +271,21 @@ export default async function KitchenPage() {
           <div className="flex flex-col items-start sm:items-center">
             <ProgressPot
               percent={report.percentComplete}
-              className="h-28 w-auto text-white/80"
+              className="h-28 w-auto text-smoke"
             />
-            <p className="font-display mt-4 text-6xl leading-none font-semibold text-white">
+            <p className="font-display mt-4 text-6xl leading-none font-medium text-charcoal">
               {report.percentComplete}%
             </p>
-            <p className="eyebrow mt-2 text-marigold">Of the build done</p>
-            <p className="mt-2 max-w-[13rem] text-sm text-white/50 sm:text-center">
+            <p className="eyebrow mt-2 text-gold-ink">Of the build done</p>
+            <p className="mt-2 max-w-[13rem] text-sm text-smoke sm:text-center">
               {report.progressCaption}
             </p>
           </div>
         </div>
 
-        <ClothEdge anchor="inside-bottom" className="text-cream" />
       </section>
 
-      {/* The three headline numbers, on cloth rather than in a plum strip. */}
+      {/* The three headline numbers. */}
       <section className="bg-cream px-6">
         <dl className="shell grid gap-5 sm:grid-cols-3">
           {stats.map((stat) => (
@@ -297,7 +294,7 @@ export default async function KitchenPage() {
               className="overflow-hidden rounded-2xl bg-white text-center shadow-warm"
             >
               <div className="px-6 py-7">
-                <dd className="font-display tabular text-4xl leading-none font-semibold text-plum">
+                <dd className="font-display tabular text-4xl leading-none font-medium text-forest">
                   {stat.value}
                 </dd>
                 <dt className="eyebrow mt-3 text-smoke">{stat.label}</dt>
@@ -314,7 +311,7 @@ export default async function KitchenPage() {
             <SectionTitle className="mt-3">
               {report.donorTitled} in {report.donorLocation}
               <br />
-              <span className="text-plum">→</span> Jepegomi Academy, Nairobi
+              <span className="text-forest">→</span> Jepegomi Academy, Nairobi
             </SectionTitle>
             <ul className="mt-7">
               {storyPoints.map((point, index) => (
@@ -324,7 +321,7 @@ export default async function KitchenPage() {
                 >
                   <span
                     aria-hidden="true"
-                    className="mt-[0.7em] h-px w-3.5 shrink-0 bg-marigold"
+                    className="mt-[0.7em] h-px w-3.5 shrink-0 bg-gold"
                   />
                   <span>{point}</span>
                 </li>
@@ -332,10 +329,10 @@ export default async function KitchenPage() {
             </ul>
           </div>
 
-          <aside className="overflow-hidden rounded-2xl bg-green shadow-warm">
+          <aside className="overflow-hidden rounded-2xl bg-forest shadow-warm">
             <div className="p-8 sm:p-9">
               <p className="eyebrow text-white/60">About Jepegomi Academy</p>
-              <p className="font-display mt-4 text-2xl leading-snug font-semibold text-white">
+              <p className="font-display mt-4 text-2xl leading-snug font-medium text-white">
                 &ldquo;Quality Education With Values&rdquo;
               </p>
               <div className="mt-7">
@@ -346,7 +343,7 @@ export default async function KitchenPage() {
                   >
                     <Icon
                       name={fact.icon}
-                      className="h-6 w-6 shrink-0 text-marigold-light"
+                      className="h-6 w-6 shrink-0 text-gold-light"
                     />
                     <p className="text-sm leading-relaxed text-white/85">
                       {fact.text}
@@ -361,7 +358,6 @@ export default async function KitchenPage() {
 
       {/* Then & now. */}
       <section className="relative bg-sand px-6 py-20 sm:py-24">
-        <ClothEdge className="text-sand" />
 
         <div className="shell">
           <div className="flex flex-col items-center text-center">
@@ -385,13 +381,11 @@ export default async function KitchenPage() {
       </section>
 
       {/* The photo journal. */}
-      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 sm:py-24">
-        <div className="grain-layer" />
-        <ClothEdge className="text-plum-deep" />
+      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 sm:py-24">
 
         <div className="shell relative">
           <div className="flex flex-col items-center text-center">
-            <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
+            <h2 className="font-display mt-3 text-3xl font-medium text-white sm:text-[2.6rem]">
               Watching it come together
             </h2>
             <p className="mt-3 mb-10 text-sm text-white/45">
@@ -404,7 +398,6 @@ export default async function KitchenPage() {
 
       {/* What is left to build. */}
       <section className="relative bg-cream px-6 py-20 sm:py-24">
-        <ClothEdge className="text-cream" />
 
         <div className="shell">
           <div className="flex flex-col items-center text-center">
@@ -447,9 +440,9 @@ export default async function KitchenPage() {
             ))}
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-plum px-8 py-7 shadow-warm">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-forest px-8 py-7 shadow-warm">
             <p className="eyebrow text-white/70">Still needed to finish</p>
-            <p className="font-display tabular text-4xl font-semibold text-marigold">
+            <p className="font-display tabular text-4xl font-medium text-gold">
               <Money cents={stillNeededCents} />
             </p>
           </div>
@@ -477,7 +470,6 @@ export default async function KitchenPage() {
       */}
       {mentionAccounts && (
         <div className="relative bg-sand px-6 py-20">
-          <ClothEdge className="text-sand" />
 
           <div className="shell">
             {budget ? (
@@ -532,7 +524,7 @@ export default async function KitchenPage() {
               </>
             ) : (
               <div className="text-center">
-                <p className="font-display mx-auto max-w-lg text-2xl leading-snug font-semibold text-balance">
+                <p className="font-display mx-auto max-w-lg text-2xl leading-snug font-medium text-balance">
                   Every shilling of the gift is accounted for.
                 </p>
                 <p className="mx-auto mt-5 max-w-xl leading-relaxed text-smoke">
@@ -551,13 +543,11 @@ export default async function KitchenPage() {
       )}
 
       {/* The ask. */}
-      <section className="relative overflow-hidden bg-plum-deep px-6 py-20 text-center sm:py-24">
-        <div className="grain-layer" />
-        <ClothEdge className="text-plum-deep" />
+      <section className="relative overflow-hidden bg-forest-deep px-6 py-20 text-center sm:py-24">
 
         <div className="shell relative">
           <div className="mx-auto max-w-md">
-            <h2 className="font-display mt-3 text-3xl font-semibold text-white sm:text-[2.6rem]">
+            <h2 className="font-display mt-3 text-3xl font-medium text-white sm:text-[2.6rem]">
               Finish the kitchen with us
             </h2>
 

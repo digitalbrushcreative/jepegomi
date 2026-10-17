@@ -2,26 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { JepegomiLogo } from "@/components/logos";
 import { type NavLink, navLinks } from "@/lib/site";
 
 /**
- * The header has no colour of its own.
+ * A plain white bar, the same on every page and at every scroll position.
  *
- * It is transparent and sits *on* the hero, so whatever the hero is wearing is
- * what the header wears. Every page on this site opens on a dark hero, which is
- * what makes white nav type safe to lay straight over it.
- *
- * "Dark" is a promise the heroes have to keep rather than a fact about flat
- * colour. The homepage opens on a photograph, so the outer links and the menu
- * button sit over open picture — which is why it lays a scrim band across the
- * top of it. A hero that puts a photograph up there owes this header the same
- * band.
- *
- * Once you scroll off the hero there is nothing dark left underneath, so it
- * takes on a solid plum of its own rather than leaving white links floating
- * over cream paper.
+ * It used to be transparent over a dark hero and turn plum once you scrolled,
+ * which made every page's first screen a colour block and obliged every hero
+ * to stay dark for the white links to be readable. It is solid now, with the
+ * full-colour mark and dark links, so a hero is free to be light, a photograph,
+ * or anything else.
  *
  * The links go wide at `lg`, not `md`. Naming all four arms of the ministry grew
  * the nav, and grouping the school and the college under Education pulled it back
@@ -51,14 +43,6 @@ export function SiteHeader({
   badge?: ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   /*
     A link is lit when you are on it — or on anything hanging off it. The second
@@ -72,21 +56,16 @@ export function SiteHeader({
     return link.children?.some((child) => pathname.startsWith(child.href)) ?? false;
   };
 
-  // An open mobile menu needs something solid behind it whatever the scroll is.
-  const solid = scrolled || mobileOpen;
-
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        solid ? "bg-plum-deep/95 shadow-warm backdrop-blur-sm" : "bg-transparent"
-      }`}
+      className="fixed inset-x-0 top-0 z-50 border-b border-charcoal/10 bg-white/95 px-6 backdrop-blur-sm"
     >
-      <div className="shell flex h-16 items-center justify-between gap-4 px-6">
+      <div className="shell flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-3">
           <JepegomiLogo
-            variant="mono"
+            variant="color"
             title="Jepegomi — Jesus People Gospel Ministries"
-            className="h-9 w-auto text-white"
+            className="h-9 w-auto"
           />
         </Link>
 
@@ -99,8 +78,8 @@ export function SiteHeader({
                   href={link.href}
                   className={`flex items-center gap-1.5 rounded px-3 py-2 text-sm transition-colors ${
                     isActive(link)
-                      ? "text-white"
-                      : "text-white/75 hover:text-white"
+                      ? "text-charcoal"
+                      : "text-smoke hover:text-charcoal"
                   }`}
                 >
                   {link.label}
@@ -126,7 +105,7 @@ export function SiteHeader({
                   panel visible at rest.
                 */}
                 <div className="invisible absolute left-0 top-full w-72 pt-2 opacity-0 transition-[opacity,visibility] group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                  <div className="overflow-hidden rounded-xl bg-white shadow-warm-lg">
+                  <div className="overflow-hidden rounded-sm border border-charcoal/10 bg-white">
                     {link.children.map((child) => (
                       <Link
                         key={child.href}
@@ -149,7 +128,7 @@ export function SiteHeader({
                 key={link.href}
                 href={link.href}
                 className={`rounded px-3 py-2 text-sm transition-colors ${
-                  isActive(link) ? "text-white" : "text-white/75 hover:text-white"
+                  isActive(link) ? "text-charcoal" : "text-smoke hover:text-charcoal"
                 }`}
               >
                 {link.label}
@@ -165,7 +144,7 @@ export function SiteHeader({
           <div className="ml-2 flex items-center empty:hidden">{badge}</div>
           <Link
             href="/give"
-            className="ml-2 rounded-full bg-green px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-green-light"
+            className="ml-2 rounded-sm bg-forest px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-forest-light"
           >
             Give
           </Link>
@@ -175,7 +154,7 @@ export function SiteHeader({
           {badge}
           <Link
             href="/give"
-            className="rounded-full bg-green px-4 py-2 text-sm font-bold text-white"
+            className="rounded-sm bg-forest px-4 py-2 text-sm font-semibold text-white"
           >
             Give
           </Link>
@@ -185,7 +164,7 @@ export function SiteHeader({
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            className="flex h-10 w-10 items-center justify-center rounded text-white"
+            className="flex h-10 w-10 items-center justify-center rounded text-charcoal"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
               {mobileOpen ? (
@@ -212,19 +191,19 @@ export function SiteHeader({
         <nav
           id="mobile-nav"
           aria-label="Main"
-          className="border-t border-white/10 bg-plum-deep px-6 pt-2 pb-6 lg:hidden"
+          className="-mx-6 border-t border-charcoal/10 bg-white px-6 pt-2 pb-6 lg:hidden"
           onClick={() => setMobileOpen(false)}
         >
           {navLinks.map((link) => (
-            <div key={link.href} className="border-b border-white/5 last:border-0">
-              <Link href={link.href} className="block py-3 text-sm text-white/80">
+            <div key={link.href} className="border-b border-charcoal/8 last:border-0">
+              <Link href={link.href} className="block py-3 text-sm font-medium text-charcoal">
                 {link.label}
               </Link>
               {link.children?.map((child) => (
                 <Link
                   key={child.href}
                   href={child.href}
-                  className="block py-2 pl-4 text-sm text-white/45"
+                  className="block py-2 pl-4 text-sm text-smoke"
                 >
                   {child.label}
                 </Link>

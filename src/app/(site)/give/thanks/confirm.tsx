@@ -26,8 +26,8 @@ const ATTEMPTS = 8;
 
 function Waiting() {
   return (
-    <div className="rounded-xl border border-marigold/30 bg-marigold/8 px-6 py-6">
-      <p className="font-display text-xl font-semibold">
+    <div className="rounded-xl border border-gold/30 bg-gold/8 px-6 py-6">
+      <p className="font-display text-xl font-medium">
         Checking with Pesapal…
       </p>
       <p className="mt-4 text-sm leading-relaxed text-smoke">
@@ -116,8 +116,8 @@ export function Confirm({ trackingId }: { trackingId: string }) {
 
   if (outcome.state === "failed") {
     return (
-      <div className="rounded-xl border border-plum/30 bg-plum/8 px-6 py-6">
-        <p className="font-display text-xl font-semibold">
+      <div className="rounded-xl border border-forest/30 bg-forest/8 px-6 py-6">
+        <p className="font-display text-xl font-medium">
           That payment didn&apos;t go through.
         </p>
         <div className="mt-4 space-y-3 text-sm leading-relaxed text-smoke">
@@ -132,7 +132,7 @@ export function Confirm({ trackingId }: { trackingId: string }) {
             Do try again, and if it will not have it, write to{" "}
             <a
               href={`mailto:${site.email}`}
-              className="font-medium text-plum underline underline-offset-4"
+              className="font-medium text-forest underline underline-offset-4"
             >
               {site.email}
             </a>{" "}
@@ -154,8 +154,8 @@ export function Confirm({ trackingId }: { trackingId: string }) {
     you from here", and neither is a reason to alarm somebody about money.
   */
   return (
-    <div className="rounded-xl border border-marigold/30 bg-marigold/8 px-6 py-6">
-      <p className="font-display text-xl font-semibold">
+    <div className="rounded-xl border border-gold/30 bg-gold/8 px-6 py-6">
+      <p className="font-display text-xl font-medium">
         {givenUp ? "Still waiting to hear back." : "We can't find that payment."}
       </p>
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-smoke">
@@ -168,7 +168,7 @@ export function Confirm({ trackingId }: { trackingId: string }) {
           If you have been charged and hear nothing within the hour, write to{" "}
           <a
             href={`mailto:${site.email}`}
-            className="font-medium text-plum underline underline-offset-4"
+            className="font-medium text-forest underline underline-offset-4"
           >
             {site.email}
           </a>{" "}

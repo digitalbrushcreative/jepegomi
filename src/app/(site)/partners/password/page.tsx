@@ -31,7 +31,7 @@ async function PasswordEntrance() {
   return (
     <div className="shell max-w-lg">
       <div className="rounded-2xl bg-white p-8 shadow-warm-lg">
-        <h2 className="font-display text-2xl font-semibold">
+        <h2 className="font-display text-2xl font-medium">
           Sign in with a password
         </h2>
         <p className="mt-2 mb-7 text-sm leading-relaxed text-smoke">
@@ -39,7 +39,7 @@ async function PasswordEntrance() {
           one, you do not need it —{" "}
           <Link
             href="/partners"
-            className="font-medium text-plum underline underline-offset-4"
+            className="font-medium text-forest underline underline-offset-4"
           >
             sign in with a code instead
           </Link>
