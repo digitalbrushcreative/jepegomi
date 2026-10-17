@@ -2,7 +2,7 @@
 
 import { STRICT, checkCaptcha } from "@/lib/captcha";
 import { recordEnrolmentEnquiry } from "@/lib/enquiries";
-import { hasGarbledText, humanCheck, isEmail, looksAutomated, text } from "@/lib/forms";
+import { hasGarbledText, hasLink, humanCheck, isEmail, looksAutomated, text } from "@/lib/forms";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import {
   enrolmentAcknowledgement,
@@ -67,6 +67,11 @@ export async function sendEnrolmentEnquiryAction(
   }
   if (check === "wrong") {
     return { error: "That answer to the question at the end is not right. Have another go." };
+  }
+  if (hasLink(enquiry.parentName, enquiry.childName, enquiry.message)) {
+    return {
+      error: `Please leave web links out of the message. If you need to send us one, write straight to ${publicInbox()}.`,
+    };
   }
 
   /*

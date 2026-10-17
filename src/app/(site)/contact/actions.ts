@@ -1,7 +1,7 @@
 "use server";
 
 import { STRICT, checkCaptcha } from "@/lib/captcha";
-import { hasGarbledText, humanCheck, isEmail, looksAutomated, text } from "@/lib/forms";
+import { hasGarbledText, hasLink, humanCheck, isEmail, looksAutomated, text } from "@/lib/forms";
 import { RATES, callerKey, consume, retryWording } from "@/lib/rate-limit";
 import {
   contactAcknowledgement,
@@ -63,6 +63,11 @@ export async function sendContactAction(
   if (hasGarbledText(enquiry.name, enquiry.message)) return { done: true };
   if (check === "wrong") {
     return { error: "That answer to the question at the end is not right. Have another go." };
+  }
+  if (hasLink(enquiry.name, enquiry.message)) {
+    return {
+      error: `Please leave web links out of the message. If you need to send us one, write straight to ${publicInbox()}.`,
+    };
   }
 
   /*

@@ -197,6 +197,23 @@ test.describe("the contact form", () => {
 
     await expect(form.getByRole("alert")).toContainText(/not right/i);
   });
+
+  test("refuses a message with a link in it, and says so", async ({ page }) => {
+    await page.goto("/contact");
+
+    const form = page.locator("form").filter({ visible: true }).first();
+    await form.getByLabel("Your name").fill("Ruth Wanjiku");
+    await form.getByLabel("Your email").fill("ruth@example.invalid");
+    await form
+      .getByLabel("Your message")
+      .fill("We just opened a lead finder, see freeb2bdata.org/start for more.");
+    await form.getByLabel(/three plus four/i).fill("7");
+
+    await page.waitForTimeout(2_500);
+    await form.getByRole("button", { name: /send message/i }).click();
+
+    await expect(form.getByRole("alert")).toContainText(/leave web links out/i);
+  });
 });
 
 test.describe("giving, signed out", () => {

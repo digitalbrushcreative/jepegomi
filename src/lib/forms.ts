@@ -80,6 +80,25 @@ export function hasGarbledText(...values: string[]) {
 }
 
 /**
+ * Whether any of these values carries a web link.
+ *
+ * The spam that got past the question was people, or tools driving a browser
+ * like people, selling something — and selling online means a link. A person
+ * writing to the ministry almost never needs one, and one who does can say the
+ * address in words or send it by email. So a link is refused in plain words
+ * rather than swallowed: the cost of being wrong is a message written again.
+ *
+ * A scheme or `www.` catches nearly all of it. A bare domain is matched only
+ * with a path after it, so that "my gmail.com address" is not a link.
+ */
+const LINK =
+  /https?:\/\/|\bwww\.|\[url|<a\s|\b[a-z0-9-]+\.(?:com|net|org|io|co|info|biz|xyz|site|online|shop|store|app|ly|me)\//i;
+
+export function hasLink(...values: string[]) {
+  return values.some((value) => LINK.test(value));
+}
+
+/**
  * Whether a submission looks automated.
  *
  * Two cheap signals, both of which a real submission passes without noticing:
