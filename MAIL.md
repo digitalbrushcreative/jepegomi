@@ -294,26 +294,30 @@ out in `.env.local`) lifts the restriction entirely.
 
 ## Design of the emails themselves
 
-`src/lib/mail/template.ts` carries the ministry's look into a medium with almost
-none of the site's tools — no Tailwind, no web fonts, no flexbox, and Outlook
-rendering through Microsoft Word. The translation is set out in that file's
-comment: Fraunces becomes Georgia, the cloth edge becomes a band of marigold,
-the paper grain is dropped.
+`src/lib/mail/template.ts` carries the site's institutional, editorial look
+into a medium with almost none of its tools — no Tailwind, no flexbox, and
+Outlook rendering through Microsoft Word. The translation is set out in that
+file's comment: the masthead is the site header (the full-colour mark on white
+over a hairline), the small print closes on plum-deep as the site footer does,
+Newsreader and Inter load where a client allows web fonts and fall back to
+Georgia and the system sans where it does not, and every corner is 2px. Forest
+green marks giving and nothing else; plum is an accent, never the top of a
+message.
 
 **One image, and only one.** The mark in the masthead, as a PNG — no mail client
 renders SVG. Everything else is type, because every major client blocks remote
 images until the reader asks for them, and an email that falls apart without
 them is an email half its readers never see properly.
 
-So the masthead is built to work both ways. The logo sits on the plum block, and
-its `alt` is styled to *be* the masthead when the image does not load: white,
-letterspaced, in the display face, on the same plum. The line under it is the
+So the masthead is built to work both ways. The logo sits on white, and its
+`alt` is styled to *be* the masthead when the image does not load: the
+ministry's name in the display face. The line under it is the
 ministry's town rather than its name, which is also why it is there — it says
 something the mark does not, so nothing is printed twice when the image loads.
 
 The file is `public/email/jepegomi-logo.png`, drawn at twice the size it is
 displayed so it stays sharp on a phone. It is rendered from
-`public/logos/jepegomi-white.svg` — change the mark and run:
+`public/logos/jepegomi.svg` — change the mark and run:
 
 ```
 npm run logo:email

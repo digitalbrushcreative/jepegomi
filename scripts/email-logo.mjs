@@ -9,11 +9,11 @@ import { chromium } from "playwright";
  * Email needs a raster file — Gmail, Outlook and Yahoo all drop SVG — so the one
  * image in `src/lib/mail/template.ts` cannot be the mark the pages use. This
  * exists so that file is not a mystery binary somebody made once on a laptop:
- * change `public/logos/jepegomi-white.svg` and run this, and the two cannot
+ * change `public/logos/jepegomi.svg` and run this, and the two cannot
  * drift apart.
  *
- * The white knockout, not the full-colour art, because the masthead behind it is
- * plum and the colour lettering is charcoal — invisible there.
+ * The full-colour art, because the masthead behind it is white, as the site
+ * header is.
  *
  * It draws at twice the displayed width for the phone screens most of this mail
  * is read on. `LOGO` in the template is the *displayed* size; if you change
@@ -23,10 +23,10 @@ import { chromium } from "playwright";
  * this cannot find a browser: `npx playwright install chromium`.
  */
 
-const SOURCE = "public/logos/jepegomi-white.svg";
+const SOURCE = "public/logos/jepegomi.svg";
 const TARGET = "public/email/jepegomi-logo.png";
-/* Twice the 280px the template displays it at. */
-const WIDTH = 560;
+/* Twice the 200px the template displays it at. */
+const WIDTH = 400;
 
 const svg = await readFile(SOURCE, "utf8");
 
@@ -44,8 +44,8 @@ const page = await browser.newPage({
 });
 
 /*
-  Transparent, not plum. The masthead paints its own background, and a PNG with
-  the colour baked in would have a visible edge the day that colour changes.
+  Transparent, not white. The masthead paints its own background, and a PNG
+  with the colour baked in would have a visible edge the day that colour changes.
 */
 await page.setContent(
   `<style>html,body{margin:0;padding:0;background:transparent}
